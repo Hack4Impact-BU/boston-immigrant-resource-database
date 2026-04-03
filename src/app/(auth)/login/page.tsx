@@ -15,7 +15,7 @@ export default function Login() {
     return ( 
         <main className="
                 relative h-screen w-screen 
-                overflow-scroll overscroll-none
+                min-h-100
                 flex justify-center items-center
             ">
             <Image
@@ -27,7 +27,7 @@ export default function Login() {
             />
             <div className="
                 relative z-10
-                h-[75%] aspect-[9/10] min-h-100 max-h-screen
+                h-[75%] aspect-[9/10]
                 [container-type:inline-size]
             ">
                 <div className="
@@ -83,7 +83,7 @@ export default function Login() {
                         <Link href="" className="font-medium text-[2.5cqw] text-[var(--chart-3)] ">Forgot Password?</Link>
                     </div>
                     <Button className="w-[45cqw] h-[8cqw] mx-auto rounded-sm bg-[#4E61F6] hover:bg-[#9747FF] text-[3cqw] font-semibold mb-[2cqw]">Sign in</Button>
-                    <Link href="" className="mx-auto font-medium text-[2cqw] text-[var(--chart-3)] underline">Create Account</Link>
+                    <Link href="" className="mx-auto font-medium text-[2.5cqw] text-[var(--chart-3)] underline">Create Account</Link>
                 </div>
             </div>
         </main>
