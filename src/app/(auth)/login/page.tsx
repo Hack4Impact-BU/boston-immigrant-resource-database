@@ -51,7 +51,7 @@ export default function Login() {
                             <InputGroupInput 
                                 type="email" 
                                 placeholder="Email" 
-                                className="h-full text-[2.75cqw] placeholder:text-[2.75cqw] placeholder:leading-[10cqw]" 
+                                className="h-full !text-[2.75cqw] !placeholder:text-[2.75cqw]" 
                             />
                             <InputGroupAddon className="px-[2.25cqw] py-[1cqw]">
                                 <MailIcon className="size-[3cqw]" />
@@ -65,7 +65,7 @@ export default function Login() {
                                 id="inline-end-input"
                                 type="password"
                                 placeholder="Password"
-                                className="h-full text-[2.75cqw] placeholder:text-[2.75cqw]"
+                                className="h-full !text-[2.75cqw] !placeholder:text-[2.75cqw]"
                             />
                             <InputGroupAddon align="inline-end" className="px-[2.25cqw] py-[1.2cqw]">
                                 <EyeOffIcon className="size-[3cqw]"/>
