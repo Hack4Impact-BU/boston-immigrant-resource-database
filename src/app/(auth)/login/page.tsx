@@ -27,7 +27,7 @@ export default function Login() {
             />
             <div className="
                 relative z-10
-                h-[75%] aspect-[9/10]
+                h-[75%] aspect-[9/10] min-h-100 
                 [container-type:inline-size]
             ">
                 <div className="
