@@ -80,7 +80,7 @@ export default function faq() {
         ]    
     
     return (
-        <div className="min-h-screen ">
+        <div className="min-h-screen min-w-2xl">
             <aside className="w-[260px] fixed inset-y-0 left-0 z-50">
                 <Sidebar isOpen activePage="FAQs" />
             </aside>
