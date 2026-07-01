@@ -1,23 +1,31 @@
 import Image from "next/image";
 import FaqAccordion from "./FaqAccordion";
 import { client } from "@/lib/sanity";
+import { GENERAL_FAQ } from "./data";
 
 async function getGeneralFaqs() {
-  return client.fetch(`*[_type == "faqItem" && section == "general"]{
-    _id,
-    trigger,
-    content
-  }`)
+  try {
+    const faqs = await client.fetch<
+      { _id: string; trigger: string; content: string }[]
+    >(`*[_type == "faqItem" && section == "general"]{
+      _id,
+      trigger,
+      content
+    }`);
+    return faqs?.length ? faqs : [...GENERAL_FAQ];
+  } catch {
+    return [...GENERAL_FAQ];
+  }
 }
 
 export default async function FaqSection() {
-  const faqs = await getGeneralFaqs()
+  const faqs = await getGeneralFaqs();
 
   return (
     <section className="bg-white py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <h2 className="text-2xl font-bold text-bird-accent md:text-3xl">
-          Frequently Asked Question
+          Frequently Asked Questions
         </h2>
         <p className="mt-1 text-sm text-bird-accent/80 md:text-base">
           Boston Immigrant Resource Dashboard
@@ -30,7 +38,7 @@ export default async function FaqSection() {
 
           <div className="relative min-h-[320px] overflow-hidden rounded-2xl lg:min-h-[400px]">
             <Image
-              src="/img/helping.png"
+              src="/img/about-right-1.png"
               alt="Community members shaking hands"
               fill
               className="object-cover"

@@ -1,39 +1,40 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import BirdLogo from "./BirdLogo";
+
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "#about" },
+  { label: "Our Partners", href: "#mission" },
+  { label: "Services", href: "#services" },
+  { label: "Forum", href: "/forum" },
+  { label: "Contact", href: "#contact" },
+] as const;
 
 export default function HomeHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-10">
-        <Link href="/" className="flex items-center gap-3 no-underline">
-          <Image
-            src="/icons/Just_BIRD_logo_blue.png"
-            alt="BIRD"
-            width={40}
-            height={40}
-            className="h-10 w-10 object-contain"
-          />
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold leading-tight text-[#27317B]">BIRD</p>
-            <p className="text-[10px] font-medium uppercase tracking-wide text-bird-accent">
-              Boston Immigrant Resource Dashboard
-            </p>
-          </div>
-        </Link>
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 lg:px-10">
+        <BirdLogo />
 
-        <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
-          <Link href="/login" className="no-underline hover:text-bird-accent">
-            Create Account
-          </Link>
-          <Link
-            href="/login"
-            className="flex items-center gap-1 no-underline hover:text-bird-accent"
-          >
-            Sign In
-            <ChevronRight className="h-4 w-4" />
-          </Link>
+        <nav className="hidden items-center gap-6 text-sm font-medium text-[#27317B] lg:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="no-underline transition-colors hover:text-bird-accent"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
+
+        <Button
+          asChild
+          className="shrink-0 rounded-full bg-bird-accent px-5 text-sm font-semibold hover:bg-bird-accent-hover"
+        >
+          <Link href="#contact">Donate</Link>
+        </Button>
       </div>
     </header>
   );
