@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Users, Search, Bookmark, Plus, Mail } from "lucide-react";
 import { client } from "@/lib/sanity";
 
 type SidebarProps = {
@@ -10,65 +10,95 @@ type SidebarProps = {
   activePage?: string;
 };
 
+interface MenuItem {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) => {
-  const [menuItems, setMenuItems] = useState<Array<{ name: string; icon: string; href: string }>>([]);
+  const workflowItems: MenuItem[] = [
+    { name: "Community Forum", href: "/community", icon: <Users size={20} /> },
+    { name: "Search Resources", href: "/resources", icon: <Search size={20} /> },
+    { name: "Saved Resources", href: "/saved", icon: <Bookmark size={20} /> },
+  ];
 
-  useEffect(() => {
-    async function fetchMenuItems() {
-      try {
-        const items = await client.fetch(`*[_type == "menuItem"]{
-          name,
-          "icon": icon.asset->url,
-          href
-        }`);
-        setMenuItems(items);
-      } catch (error) {
-        console.error("Failed to fetch menu items:", error);
-      }
-    }
-
-    fetchMenuItems();
-  }, []);
+  const helpcenterItems: MenuItem[] = [
+    { name: "Additional Resources", href: "/resources", icon: <Plus size={20} /> },
+    { name: "Contact us", href: "/contact", icon: <Mail size={20} /> },
+  ];
 
   return (
     <div
-      className={`flex flex-col h-screen bg-gradient-to-b from-[#4E61F6] to-[#2C2F8F] text-white transition-all duration-300 ease-in-out shadow-2xl ${
-        isOpen ? "w-[260px]" : "w-0"
-      } overflow-hidden border-r border-white/10`}
+      className={`fixed left-0 top-0 z-30 flex h-screen flex-col bg-white text-slate-900 transition-all duration-300 ease-in-out shadow-lg border-r border-slate-200 ${
+        isOpen ? "w-55" : "w-0"
+      } overflow-hidden`}
     >
       {/* Logo Section */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+      <div className="p-1 flex items-center gap-2 border-b border-slate-200">
+        <div className="flex items-center justify-center shrink-0">
           <img
-            src="/icons/Just_BIRD_logo_white.png"
+            src="/icons/BIRDLogo_Blue.svg"
             alt="BIRD"
-            className="w-10 h-10 object-contain"
+            className="w-15 object-contain"
           />
         </div>
-        <h2 className="text-xl font-bold tracking-tight leading-none">BIRD</h2>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-4 mt-2">
-        <ul className="space-y-1">
-          {menuItems.map((item) => {
+      {/* Workflows Section */}
+      <nav className="px-3 py-4">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
+          Workflows
+        </h3>
+        <ul className="space-y-2">
+          {workflowItems.map((item) => {
             const isActive = activePage === item.name;
             return (
               <li key={item.name}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-colors text-sm font-medium text-white no-underline ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium no-underline ${
                     isActive
-                      ? "bg-white/20 backdrop-blur-sm"
-                      : "hover:bg-white/10"
+                      ? "bg-[#5B8FD4] text-white"
+                      : "text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  <img
-                    src={item.icon}
-                    alt={item.name}
-                    className="w-5 h-5 object-contain opacity-70 filter brightness-0 invert"
-                  />
-                  <span className="whitespace-nowrap">{item.name}</span>
+                  <span className={`shrink-0 ${isActive ? "text-white" : "text-slate-500"}`}>
+                    {item.icon}
+                  </span>
+                  <span className="whitespace-nowrap text-sm">{item.name}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Spacer - pushes Helpcenter to bottom */}
+      <div className="flex-1"></div>
+
+      {/* Helpcenter Section */}
+      <nav className="px-3 py-4 border-t border-slate-200">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
+          Helpcenter
+        </h3>
+        <ul className="space-y-2">
+          {helpcenterItems.map((item) => {
+            const isActive = activePage === item.name;
+            return (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium no-underline ${
+                    isActive
+                      ? "bg-[#5B8FD4] text-white"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span className={`shrink-0 ${isActive ? "text-white" : "text-slate-500"}`}>
+                    {item.icon}
+                  </span>
+                  <span className="whitespace-nowrap text-sm">{item.name}</span>
                 </Link>
               </li>
             );
@@ -77,27 +107,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
       </nav>
 
       {/* User Profile Section (Pinned to Bottom) */}
-      <div className="p-4 mb-4">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/5">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-full bg-slate-400 shrink-0 border border-white/20 overflow-hidden">
+      <div className="p-3 border-t border-slate-200">
+        <div className="flex items-center justify-between p-2 rounded-md bg-slate-50 hover:bg-slate-100 transition-colors">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-slate-300 shrink-0 border border-slate-400 overflow-hidden">
               <img
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Brooklyn"
                 alt="User"
+                className="w-full h-full"
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold truncate leading-tight">
+              <span className="text-xs font-bold truncate leading-tight text-slate-900">
                 Brooklyn Simmons
               </span>
-              <span className="text-[9px] opacity-60 truncate">
+              <span className="text-[10px] text-slate-500 truncate">
                 brooklyn@simmons.com
               </span>
             </div>
           </div>
           <MoreVertical
             size={14}
-            className="opacity-40 hover:opacity-100 cursor-pointer shrink-0"
+            className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0 ml-1"
           />
         </div>
       </div>
