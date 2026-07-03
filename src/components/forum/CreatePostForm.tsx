@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Plus, UploadCloud, X, ChevronDown } from "lucide-react";
-import { createPost } from "@/app/(dashboard)/forum/actions";
+import { createPost } from "@/app/(marketing)/forum/actions";
 
 function SubmitButton({
   intent,
@@ -199,9 +199,9 @@ export default function CreatePostForm() {
           <SubmitButton intent="post" variant="solid">
             Finish and Post
           </SubmitButton>
-          <SubmitButton intent="draft" variant="soft">
+          {/* <SubmitButton intent="draft" variant="soft">
             Save Draft
-          </SubmitButton>
+          </SubmitButton> */}
         </div>
       </div>
     </form>

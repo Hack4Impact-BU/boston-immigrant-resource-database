@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import { Open_Sans, Inter, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
@@ -19,8 +21,8 @@ export const metadata: Metadata = {
   title: "Boston Immigrant Resource Database",
   description: "",
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
   },
 };
 
@@ -36,7 +38,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        {children}
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );

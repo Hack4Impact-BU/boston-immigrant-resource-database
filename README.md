@@ -35,3 +35,20 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Twilio weekly service updates
+
+Set these environment variables before using the SMS workflow:
+
+- `AIRTABLE_API_KEY`
+- `AIRTABLE_BASE_ID`
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_PHONE_NUMBER`
+
+Two API routes power the flow:
+
+- `POST /api/twilio/weekly-updates` sends one reminder text per service record, even when a provider has multiple services.
+- `POST /api/twilio/webhook` receives inbound Twilio replies and lets providers confirm or update the specific service by including the exact service name at the start of the message, for example `Legal Aid Clinic 1` or `Legal Aid Clinic STATUS: Open`.
+
+If a provider has multiple services, the reply needs the exact service name because SMS replies do not carry the original message context.

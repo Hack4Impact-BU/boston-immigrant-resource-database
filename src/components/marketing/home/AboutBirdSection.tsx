@@ -31,7 +31,7 @@ export default function AboutBirdSection() {
               asChild
               className="rounded-full bg-bird-accent px-8 py-5 text-sm font-semibold hover:bg-bird-accent-hover"
             >
-              <Link href="/login">Activate your Account</Link>
+              <Link href="/register">Activate your Account</Link>
             </Button>
           </div>
 

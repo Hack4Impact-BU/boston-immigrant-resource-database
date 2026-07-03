@@ -1,8 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+import { LoginForm } from "@/features/auth/login/login-form";
 
 export default function Login() {
     return (
@@ -31,38 +30,7 @@ export default function Login() {
                     </p>
                 </div>
 
-                <form className="space-y-5">
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                            Email
-                        </Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="Your email address"
-                            className="h-12 rounded-lg border-slate-300 px-4 text-sm shadow-sm placeholder:text-slate-400"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="password"
-                            className="text-sm font-medium text-slate-700"
-                        >
-                            Password
-                        </Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            placeholder="Your Password"
-                            className="h-12 rounded-lg border-slate-300 px-4 text-sm shadow-sm placeholder:text-slate-400"
-                        />
-                    </div>
-
-                    <Button className="h-12 w-full rounded-lg bg-[#5d93c7] text-base font-semibold text-white shadow-[0_10px_24px_rgba(93,147,199,0.28)] transition-colors hover:bg-[#4b81b6]">
-                        Sign In
-                    </Button>
-                </form>
+                <LoginForm />
 
                 <p className="mt-6 text-center text-sm text-slate-600">
                     Don&apos;t have an account?{" "}

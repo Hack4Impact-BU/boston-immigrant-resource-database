@@ -18,9 +18,8 @@ interface MenuItem {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) => {
   const workflowItems: MenuItem[] = [
-    { name: "Community Forum", href: "/community", icon: <Users size={20} /> },
-    { name: "Search Resources", href: "/resources", icon: <Search size={20} /> },
-    { name: "Saved Resources", href: "/saved", icon: <Bookmark size={20} /> },
+    { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
+    { name: "Search Resources", href: "/map", icon: <Search size={20} /> },
   ];
 
   const helpcenterItems: MenuItem[] = [
@@ -31,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   return (
     <div
       className={`fixed left-0 top-0 z-30 flex h-screen flex-col bg-white text-slate-900 transition-all duration-300 ease-in-out shadow-lg border-r border-slate-200 ${
-        isOpen ? "w-55" : "w-0"
+        isOpen ? "w-52" : "w-0"
       } overflow-hidden`}
     >
       {/* Logo Section */}
@@ -40,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
           <img
             src="/icons/BIRDLogo_Blue.svg"
             alt="BIRD"
-            className="w-15 object-contain"
+            className="w-14 object-contain"
           />
         </div>
       </div>

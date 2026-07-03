@@ -27,6 +27,14 @@ export default function HomeHeader() {
               {link.label}
             </Link>
           ))}
+        <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
+          <Link href="/register" className="no-underline hover:text-bird-accent">
+            Create Account
+          </Link>
+          <Link href="/login" className="flex items-center gap-1 no-underline hover:text-bird-accent">
+            Sign In
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </nav>
 
         <Button

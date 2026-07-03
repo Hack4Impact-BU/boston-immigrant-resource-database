@@ -1,5 +1,5 @@
 import { ThumbsUp, ThumbsDown, MessageSquare, Share2 } from "lucide-react";
-import { votePost } from "@/app/(dashboard)/forum/actions";
+import { votePost } from "@/app/(marketing)/forum/actions";
 
 export default function VoteButtons({
   postId,

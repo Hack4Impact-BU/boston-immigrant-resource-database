@@ -1,5 +1,5 @@
 import { Plus, Smile, ChevronUp } from "lucide-react";
-import { addComment } from "@/app/(dashboard)/forum/actions";
+import { addComment } from "@/app/(marketing)/forum/actions";
 
 export default function CommentForm({
   postId,

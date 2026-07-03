@@ -11,7 +11,7 @@ import {
 import RightRail from "@/components/forum/RightRail";
 import VoteButtons from "@/components/forum/VoteButtons";
 import CommentForm from "@/components/forum/CommentForm";
-import { voteComment } from "@/app/(dashboard)/forum/actions";
+import { voteComment } from "@/app/(marketing)/forum/actions";
 import { getForumPost, formatRelativeTime, formatDate } from "@/lib/forum";
 
 export default async function PostDetailPage({
@@ -25,7 +25,7 @@ export default async function PostDetailPage({
   if (!post) notFound();
 
   return (
-    <div className="flex gap-6">
+    <div className="mx-auto mt-8 flex w-full gap-6 px-4">
       <div className="min-w-0 flex-1">
         <article className="rounded-xl border border-slate-200 bg-white p-6">
           {/* Header */}

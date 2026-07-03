@@ -6,7 +6,7 @@ export default async function RightRail() {
 
   return (
     <aside className="hidden w-[230px] shrink-0 flex-col gap-4 lg:flex">
-      <section className="rounded-xl border border-slate-200 bg-white p-4">
+      {/* <section className="rounded-xl border border-slate-200 bg-white p-4">
         <h3 className="text-sm font-bold text-[#27317B]">Important Links</h3>
         <div className="mt-3 flex flex-col">
           {importantLinks.map((link, i) => (
@@ -19,7 +19,7 @@ export default async function RightRail() {
             </Link>
           ))}
         </div>
-      </section>
+      </section> */}
 
       <section className="rounded-xl border border-slate-200 bg-white p-4">
         <h3 className="text-sm font-bold text-[#27317B]">Rules</h3>
