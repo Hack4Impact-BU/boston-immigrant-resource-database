@@ -1,6 +1,6 @@
-import Airtable, { FieldSet, Record } from "airtable";
+import Airtable, { FieldSet, Record as AirtableRecord } from "airtable";
 
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID ?? "appKHrrX5ekPYIQBm";
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID ?? "";
 
 const base = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY!,
@@ -87,7 +87,7 @@ function getAttachmentUrl(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function getLastModifiedValue(record: Record<FieldSet>) {
+function getLastModifiedValue(record: AirtableRecord<FieldSet>) {
   const value = record.get("Last modified time") ?? record.get("Last Modified");
 
   if (value instanceof Date) {
@@ -102,7 +102,7 @@ function getLastModifiedValue(record: Record<FieldSet>) {
   return "";
 }
 
-function getDisplayFieldValue(record: Record<FieldSet>, fieldNames: string[]) {
+function getDisplayFieldValue(record: AirtableRecord<FieldSet>, fieldNames: string[]) {
   for (const fieldName of fieldNames) {
     const value = record.get(fieldName);
     if (typeof value === "string" && value.trim()) {
@@ -110,14 +110,16 @@ function getDisplayFieldValue(record: Record<FieldSet>, fieldNames: string[]) {
     }
   }
 
-  const fields = (record as Record<string, unknown>).fields ?? {};
+  const fields = (record as unknown as { fields?: Record<string, unknown> }).fields ?? {};
   for (const value of Object.values(fields)) {
     if (typeof value === "string" && value.trim()) {
       return value.trim();
     }
 
     if (Array.isArray(value)) {
-      const joinedValue = value.filter((entry): entry is string => typeof entry === "string" && entry.trim()).join(", ");
+      const joinedValue = value
+        .filter((entry): entry is string => typeof entry === "string" && Boolean(entry.trim()))
+        .join(", ");
       if (joinedValue) {
         return joinedValue;
       }
@@ -127,13 +129,13 @@ function getDisplayFieldValue(record: Record<FieldSet>, fieldNames: string[]) {
   return record.id;
 }
 
-function getDisplayNameById(records: Record<FieldSet>[]) {
+function getDisplayNameById(records: ReadonlyArray<AirtableRecord<FieldSet>>) {
   return new Map(
     records.map((record) => [record.id, getDisplayFieldValue(record, ["Name", "Service Type", "Title"])])
   );
 }
 
-function toProvider(r: Record<FieldSet>, languageNameById: Map<string, string>): Provider {
+function toProvider(r: AirtableRecord<FieldSet>, languageNameById: Map<string, string>): Provider {
   const languageSupportIds = normalizeLinkedRecordIds(r.get("Language Support"));
 
   return {
@@ -169,7 +171,7 @@ function toProviderUpdateFields(input: ProviderUpdateInput): Record<string, stri
   return fields;
 }
 
-function toService(r: Record<FieldSet>): Service {
+function toService(r: AirtableRecord<FieldSet>): Service {
   const providerRecordId = normalizeLinkedRecordId(r.get("Providers")) || normalizeLinkedRecordId(r.get("Provider RECORD ID"));
 
   return {

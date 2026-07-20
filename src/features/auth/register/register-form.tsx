@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,29 @@ export function RegisterForm() {
     verifyEmailCode,
   } = useClerkSignUp();
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [isActionInFlight, setIsActionInFlight] = useState(false);
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
   const [pendingUserInput, setPendingUserInput] = useState<PendingRegisteredUserInput>();
+  const isBusyRef = useRef(false);
 
-  const isBusy = isSubmitting || isSavingUser;
+  const isBusy = isSubmitting || isSavingUser || isActionInFlight;
+
+  function beginBusyAction() {
+    if (isBusy || isBusyRef.current) {
+      return false;
+    }
+
+    isBusyRef.current = true;
+    setIsActionInFlight(true);
+
+    return true;
+  }
+
+  function endBusyAction() {
+    isBusyRef.current = false;
+    setIsActionInFlight(false);
+  }
 
   async function saveProfileAndRedirect(userInput: SaveRegisteredUserInput) {
     setIsSavingUser(true);
@@ -74,8 +92,17 @@ export function RegisterForm() {
     const confirmPassword = getRequiredFormString(formData, "confirmPassword");
     const username = getRequiredFormString(formData, "username");
 
+    if (password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    if (!beginBusyAction()) {
       return;
     }
 
@@ -96,6 +123,8 @@ export function RegisterForm() {
       await finishRegistration(userInput, result.clerkUserId);
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Registration could not be completed."));
+    } finally {
+      endBusyAction();
     }
   }
 
@@ -112,12 +141,18 @@ export function RegisterForm() {
       return;
     }
 
+    if (!beginBusyAction()) {
+      return;
+    }
+
     try {
       const result = await verifyEmailCode(code);
       setNeedsEmailVerification(false);
       await finishRegistration(pendingUserInput, result.clerkUserId);
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Registration could not be completed."));
+    } finally {
+      endBusyAction();
     }
   }
 

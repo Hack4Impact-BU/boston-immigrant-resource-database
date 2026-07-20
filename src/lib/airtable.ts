@@ -1,25 +1,8 @@
 import Airtable from "airtable";
 
-const AIRTABLE_BASE_ID = "appKHrrX5ekPYIQBm";
 const AIRTABLE_CONTACT_US_TABLE_NAME = "Contact Us Requests";
 const AIRTABLE_CLIENT_REFERRALS_TABLE_NAME = "Client Referrals";
 const AIRTABLE_USER_TABLE_NAME = "User";
-
-const airtableClient = new Airtable({
-	apiKey: process.env.AIRTABLE_API_KEY,
-});
-
-const base = airtableClient.base(AIRTABLE_BASE_ID);
-
-const contactUsRequestsTable: Airtable.Table<ContactUsRequestFieldSet> =
-	base(AIRTABLE_CONTACT_US_TABLE_NAME) as Airtable.Table<ContactUsRequestFieldSet>;
-
-const clientReferralsTable: Airtable.Table<ClientReferralFieldSet> =
-	base(AIRTABLE_CLIENT_REFERRALS_TABLE_NAME) as Airtable.Table<ClientReferralFieldSet>;
-
-const userTable: Airtable.Table<UserFieldSet> = base(
-	AIRTABLE_USER_TABLE_NAME,
-) as Airtable.Table<UserFieldSet>;
 
 type ContactUsRequestFieldSet = {
 	Organization: string;
@@ -40,12 +23,16 @@ type ClientReferralFieldSet = {
 	"Target Service Preselected"?: string;
 };
 
+export type UserAccessStatus = "approved" | "pending" | "rejected" | "error" | "no config";
+
 type UserFieldSet = {
 	clerkUserId: string;
 	organizationName: string;
 	website: string;
 	phoneNumber: string;
 	email: string;
+	access?: UserAccessStatus | UserAccessStatus[];
+	Access?: UserAccessStatus | UserAccessStatus[];
 };
 
 export type CreateContactUsRequestInput = {
@@ -87,18 +74,95 @@ export type CreateUserResult = {
 	id: string;
 };
 
-function requireAirtableApiKey() {
-	if (!process.env.AIRTABLE_API_KEY) {
+function getAirtableApiKey() {
+	return process.env.AIRTABLE_API_KEY;
+}
+
+function getAirtableBaseId() {
+	return process.env.AIRTABLE_BASE_ID;
+}
+
+function requireAirtableConfig() {
+	const apiKey = getAirtableApiKey();
+	const baseId = getAirtableBaseId();
+
+	if (!apiKey) {
 		throw new Error("AIRTABLE_API_KEY is not set.");
 	}
+
+	if (!baseId) {
+		throw new Error("AIRTABLE_BASE_ID is not set.");
+	}
+
+	return { apiKey, baseId };
+}
+
+function hasAirtableConfig() {
+	return Boolean(getAirtableApiKey() && getAirtableBaseId());
+}
+
+function getAirtableBase() {
+	const { apiKey, baseId } = requireAirtableConfig();
+
+	return new Airtable({ apiKey }).base(baseId);
+}
+
+function getContactUsRequestsTable() {
+	return getAirtableBase()(AIRTABLE_CONTACT_US_TABLE_NAME) as Airtable.Table<ContactUsRequestFieldSet>;
+}
+
+function getClientReferralsTable() {
+	return getAirtableBase()(AIRTABLE_CLIENT_REFERRALS_TABLE_NAME) as Airtable.Table<ClientReferralFieldSet>;
+}
+
+function getUserTable() {
+	return getAirtableBase()(AIRTABLE_USER_TABLE_NAME) as Airtable.Table<UserFieldSet>;
+}
+
+function escapeAirtableFormulaValue(value: string) {
+	return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function normalizeUserAccessStatus(value: unknown): UserAccessStatus {
+	const accessValue = Array.isArray(value) ? value[0] : value;
+
+	if (typeof accessValue !== "string") {
+		return "pending";
+	}
+
+	const normalizedValue = accessValue.trim().toLowerCase();
+
+	if (
+		normalizedValue === "approved" ||
+		normalizedValue === "pending" ||
+		normalizedValue === "rejected"
+	) {
+		return normalizedValue;
+	}
+
+	return "pending";
+}
+
+function chooseUserAccessStatus(records: ReadonlyArray<Airtable.Record<UserFieldSet>>) {
+	const statuses = records.map((record) =>
+		normalizeUserAccessStatus(record.get("access") ?? record.get("Access")),
+	);
+
+	if (statuses.includes("approved")) {
+		return "approved";
+	}
+
+	if (statuses.includes("rejected")) {
+		return "rejected";
+	}
+
+	return "pending";
 }
 
 export async function createContactUsRequest(
 	input: CreateContactUsRequestInput,
 ): Promise<CreateContactUsRequestResult> {
-	requireAirtableApiKey();
-
-	const record = await contactUsRequestsTable.create(
+	const record = await getContactUsRequestsTable().create(
 		{
 			Organization: input.organizationName,
 			"First Name": input.firstName,
@@ -118,9 +182,7 @@ export async function createContactUsRequest(
 export async function createClientReferral(
 	input: CreateClientReferralInput,
 ): Promise<CreateClientReferralResult> {
-	requireAirtableApiKey();
-
-	const record = await clientReferralsTable.create(
+	const record = await getClientReferralsTable().create(
 		{
 			Message: input.message,
 			"Services copy": input.servicesCopyRecordIds,
@@ -135,18 +197,36 @@ export async function createClientReferral(
 }
 
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
-	requireAirtableApiKey();
-
-	const record = await userTable.create(
+	const record = await getUserTable().create(
 		{
 			clerkUserId: input.clerkUserId,
 			organizationName: input.organizationName,
 			website: input.website,
 			phoneNumber: input.phoneNumber,
 			email: input.email,
+			access: "pending",
 		},
 		{ typecast: true },
 	);
 
 	return { id: record.id };
+}
+
+export async function getUserAccessStatus(clerkUserId: string): Promise<UserAccessStatus> {
+	if (!hasAirtableConfig()) {
+		return "no config";
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 10,
+			})
+			.all();
+
+		return chooseUserAccessStatus(records);
+	} catch {
+		return "error";
+	}
 }

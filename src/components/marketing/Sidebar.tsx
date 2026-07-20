@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { UserButton, useUser } from "@clerk/nextjs";
+import React from "react";
 import Link from "next/link";
-import { MoreVertical, Users, Search, Bookmark, Plus, Mail } from "lucide-react";
-import { client } from "@/lib/sanity";
+import { Users, Search, Plus, Mail } from "lucide-react";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -15,6 +17,11 @@ interface MenuItem {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) => {
+  const { user } = useUser();
+  const email = user?.primaryEmailAddress?.emailAddress;
+  const displayName =
+    user?.fullName || user?.username || email?.split("@")[0] || "Account";
+
   const workflowItems: MenuItem[] = [
     { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
     { name: "Search Resources", href: "/map", icon: <Search size={20} /> },
@@ -107,26 +114,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
       <div className="p-3 border-t border-slate-200">
         <div className="flex items-center justify-between p-2 rounded-md bg-slate-50 hover:bg-slate-100 transition-colors">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-slate-300 shrink-0 border border-slate-400 overflow-hidden">
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Brooklyn"
-                alt="User"
-                className="w-full h-full"
-              />
-            </div>
+            <UserButton
+              appearance={{
+                elements: {
+                  userButtonAvatarBox: "h-8 w-8",
+                  userButtonTrigger:
+                    "rounded-full focus:shadow-none focus:ring-2 focus:ring-[#5B8FD4]",
+                },
+              }}
+            />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-bold truncate leading-tight text-slate-900">
-                Brooklyn Simmons
+                {displayName}
               </span>
-              <span className="text-[10px] text-slate-500 truncate">
-                brooklyn@simmons.com
-              </span>
+              <span className="text-[10px] text-slate-500 truncate">{email || "Signed in"}</span>
             </div>
           </div>
-          <MoreVertical
-            size={14}
-            className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0 ml-1"
-          />
         </div>
       </div>
     </div>
