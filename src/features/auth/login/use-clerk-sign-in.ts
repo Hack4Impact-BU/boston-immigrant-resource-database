@@ -4,7 +4,7 @@ import { useSignIn } from "@clerk/nextjs/legacy";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-const AFTER_SIGN_IN_PATH = "/contact";
+const AFTER_SIGN_IN_PATH = "/map";
 
 const SIGN_IN_ERROR_MESSAGES = {
 	loading: "Sign in is still loading. Please try again in a moment.",

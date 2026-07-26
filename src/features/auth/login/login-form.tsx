@@ -329,19 +329,19 @@ export function LoginForm() {
         )}
 
         <p className="rounded-lg bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
-          Enter your username or email and we&apos;ll send a password reset code.
+          Enter your email and we&apos;ll send a password reset code.
         </p>
 
         <div className="space-y-2">
           <Label htmlFor="reset-identifier" className="text-sm font-medium text-slate-700">
-            Username or Email
+            Email
           </Label>
           <Input
             id="reset-identifier"
             name="identifier"
-            type="text"
-            autoComplete="username"
-            placeholder="Your username or email"
+            type="email"
+            autoComplete="email"
+            placeholder="Your email"
             required
             className="h-12 rounded-lg border-slate-300 px-4 text-sm shadow-sm placeholder:text-slate-400"
           />
@@ -377,14 +377,14 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="identifier" className="text-sm font-medium text-slate-700">
-          Username or Email
+          Email
         </Label>
         <Input
           id="identifier"
           name="identifier"
-          type="text"
-          autoComplete="username"
-          placeholder="Your username or email"
+          type="email"
+          autoComplete="email"
+          placeholder="Your email"
           required
           className="h-12 rounded-lg border-slate-300 px-4 text-sm shadow-sm placeholder:text-slate-400"
         />
