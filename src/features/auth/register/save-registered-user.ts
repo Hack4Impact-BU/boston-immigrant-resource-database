@@ -53,6 +53,12 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
   const clerkUserId = clerkUser.id;
 
   try {
+    await client.users.updateUser(clerkUserId, {
+      publicMetadata: {
+        organizationName: requireNonEmptyString(input.organizationName, "organizationName"),
+      },
+    });
+
     await createUser({
       clerkUserId,
       organizationName: requireNonEmptyString(input.organizationName, "organizationName"),

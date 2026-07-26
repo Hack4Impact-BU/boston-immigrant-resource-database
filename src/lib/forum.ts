@@ -68,7 +68,11 @@ async function resolveForumAuthorNames(
   entries: Array<{ authorHandle: string | null }>,
 ): Promise<Map<string, string>> {
   const usernames = Array.from(
-    new Set(entries.map((entry) => normalizeForumHandle(entry.authorHandle)).filter(Boolean)),
+    new Set(
+      entries
+        .map((entry) => normalizeForumHandle(entry.authorHandle))
+        .filter((value): value is string => Boolean(value)),
+    ),
   );
 
   if (usernames.length === 0) {

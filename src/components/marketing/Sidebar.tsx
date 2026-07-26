@@ -19,9 +19,37 @@ interface MenuItem {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) => {
   const { user } = useUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
-  const displayName =
-    user?.fullName || user?.username || email?.split("@")[0] || "Account";
+  const [displayName, setDisplayName] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrganizationName() {
+      try {
+        const response = await fetch("/api/me");
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as { organizationName?: string | null };
+
+        if (!cancelled) {
+          setDisplayName(data.organizationName?.trim() || "");
+        }
+      } catch {
+        if (!cancelled) {
+          setDisplayName("");
+        }
+      }
+    }
+
+    loadOrganizationName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const workflowItems: MenuItem[] = [
     { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
@@ -122,9 +150,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
             />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-bold truncate leading-tight text-slate-900">
-                {displayName}
+                {displayName || ""}
               </span>
-              <span className="text-[10px] text-slate-500 truncate">{email || "Signed in"}</span>
+              <span className="text-[10px] text-slate-500 truncate">{user?.primaryEmailAddress?.emailAddress || "Signed in"}</span>
             </div>
           </div>
         </div>

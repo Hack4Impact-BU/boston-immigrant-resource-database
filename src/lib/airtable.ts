@@ -230,3 +230,26 @@ export async function getUserAccessStatus(clerkUserId: string): Promise<UserAcce
 		return "error";
 	}
 }
+
+export async function getUserOrganizationName(clerkUserId: string): Promise<string | null> {
+	if (!hasAirtableConfig()) {
+		return null;
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const organizationName = records[0]?.get("organizationName");
+
+		return typeof organizationName === "string" && organizationName.trim()
+			? organizationName.trim()
+			: null;
+	} catch {
+		return null;
+	}
+}
