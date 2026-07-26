@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { getUserAccessStatus, type UserAccessStatus } from './lib/airtable'
 
 const ACCESS_STATUS_PATH = '/access-status'
-const APPROVED_REDIRECT_PATH = '/contact'
+const APPROVED_REDIRECT_PATH = '/map'
 const SIGN_IN_PATH = '/login'
 
 const signedInRedirectPaths = new Set([

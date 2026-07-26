@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Users, Search, Plus, Mail } from "lucide-react";
+import BirdLogo from "./home/BirdLogo";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -41,11 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
       {/* Logo Section */}
       <div className="p-1 flex items-center gap-2 border-b border-slate-200">
         <div className="flex items-center justify-center shrink-0">
-          <img
-            src="/icons/BIRDLogo_Blue.svg"
-            alt="BIRD"
-            className="w-14 object-contain"
-          />
+          <BirdLogo/>
         </div>
       </div>
 

@@ -34,7 +34,7 @@ export default async function WhyBirdMattersSection() {
           Our Purpose
         </p>
         <h2 className="mt-2 text-3xl font-bold text-[#27317B] md:text-4xl">
-          Why UB Matters
+          Why BIRD Matters
         </h2>
 
         <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">

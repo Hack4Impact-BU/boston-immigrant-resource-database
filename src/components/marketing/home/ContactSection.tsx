@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Play, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,48 +18,6 @@ export default function ContactSection() {
     "Requesting Access",
   ]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [loadingSettings, setLoadingSettings] = useState<boolean>(true);
-
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const response = await fetch("/api/contact-settings");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch contact settings.");
-        }
-
-        const settings = (await response.json()) as {
-          contactMethods?: string[];
-          contactReasons?: string[];
-        };
-
-        if (settings) {
-          const nextContactMethods = settings.contactMethods || ["Email", "Phone"];
-          const nextContactReasons = settings.contactReasons || [
-            "More information",
-            "Requesting Access",
-          ];
-
-          setContactMethods(nextContactMethods);
-          setContactReasons(nextContactReasons);
-
-          if (nextContactMethods.length > 0 && contactMethod === "Email") {
-            setContactMethod(nextContactMethods[0]);
-          }
-          if (nextContactReasons.length > 0 && contactReason === "More information") {
-            setContactReason(nextContactReasons[0]);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch contact settings:", error);
-      } finally {
-        setLoadingSettings(false);
-      }
-    }
-
-    fetchSettings();
-  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -252,7 +210,7 @@ export default function ContactSection() {
             </Button>
             <Button
               type="submit"
-              disabled={status === "loading" || loadingSettings}
+              disabled={status === "loading"}
               className="rounded-full bg-bird-accent px-6 hover:bg-bird-accent-hover"
             >
               {status === "loading" ? "Submitting…" : "Submit"}
