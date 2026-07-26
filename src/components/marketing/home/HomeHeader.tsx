@@ -18,34 +18,17 @@ export default function HomeHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 lg:px-10">
         <BirdLogo />
 
-        <nav className="hidden items-center gap-6 text-sm font-medium text-[#27317B] lg:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="no-underline transition-colors hover:text-bird-accent"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
         <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
           <Link href="/register" className="no-underline hover:text-bird-accent">
             Create Account
           </Link>
+          |
           <Link href="/login" className="flex items-center gap-1 no-underline hover:text-bird-accent">
             Sign In
             <ChevronRight className="h-4 w-4" />
           </Link>
         </nav>
 
-        <Button
-          asChild
-          className="shrink-0 rounded-full bg-bird-accent px-5 text-sm font-semibold hover:bg-bird-accent-hover"
-        >
-          <Link href="#contact">Donate</Link>
-        </Button>
       </div>
     </header>
   );
