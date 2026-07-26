@@ -16,6 +16,7 @@ export default function ContactSection() {
   const [contactReasons, setContactReasons] = useState<string[]>([
     "More information",
     "Requesting Access",
+    "Technical Support"
   ]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -214,7 +215,6 @@ export default function ContactSection() {
               className="rounded-full bg-bird-accent px-6 hover:bg-bird-accent-hover"
             >
               {status === "loading" ? "Submitting…" : "Submit"}
-              <Play className="ml-1 h-3 w-3 fill-current" />
             </Button>
           </div>
         </form>
