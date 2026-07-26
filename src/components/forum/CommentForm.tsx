@@ -15,17 +15,17 @@ export default function CommentForm({
     >
       <input type="hidden" name="postId" value={postId} />
       <input type="hidden" name="slug" value={slug} />
-      <span className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100" />
+      {/* <span className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100" /> */}
 
       <div className="flex flex-1 items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
-        <Plus className="h-4 w-4 shrink-0 text-slate-400" />
+        {/* <Plus className="h-4 w-4 shrink-0 text-slate-400" /> */}
         <input
           name="body"
           required
           placeholder="Write a comment..."
           className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
         />
-        <Smile className="h-4 w-4 shrink-0 text-slate-400" />
+        {/* <Smile className="h-4 w-4 shrink-0 text-slate-400" /> */}
         <button
           type="submit"
           aria-label="Post comment"

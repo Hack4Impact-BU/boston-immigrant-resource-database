@@ -604,7 +604,7 @@ export default function MapPage() {
 
       <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-3 py-2 text-slate-800">
         <section className="mx-auto flex h-[calc(100dvh-1rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)]">
-          <div className="space-y-3 border-b border-slate-200 pb-3">
+          <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
             <div className="space-y-2">
               <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">
                 Search Resources
@@ -612,7 +612,7 @@ export default function MapPage() {
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-3 shadow-sm">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-3 shadow-sm xl:max-w-[560px]">
                 <Search size={16} className="shrink-0 text-slate-400" />
                 <input
                   value={search}
@@ -637,7 +637,7 @@ export default function MapPage() {
                   const isOpen = openFilterMenu === filter.key;
 
                   return (
-                    <div key={filter.key} className="relative" data-filter-menu-root>
+                    <div key={filter.key} className="relative z-50" data-filter-menu-root>
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
@@ -654,7 +654,7 @@ export default function MapPage() {
                       </button>
 
                       {isOpen ? (
-                        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-20 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+                        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
                           <div className="max-h-72 overflow-y-auto p-2">
                             {filter.options.map((option) => {
                               const isActive = filter.value === option;
@@ -685,7 +685,7 @@ export default function MapPage() {
             </div>
           </div>
 
-          <div className="grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
+          <div className="relative z-0 grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
             <div className="min-h-0 rounded-[24px] bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="h-full space-y-4 overflow-y-auto pr-1">
                 {loading ? (

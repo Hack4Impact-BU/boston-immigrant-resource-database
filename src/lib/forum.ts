@@ -1,3 +1,4 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { client } from "@/lib/sanity";
 
 export type ForumTab = "recent" | "unanswered" | "unsolved" | "solved";
@@ -46,6 +47,67 @@ export type ForumSettings = {
   rules: string[];
 };
 
+function normalizeForumHandle(handle: string | null): string | null {
+  const normalized = handle?.trim().replace(/^@/, "");
+  return normalized ? normalized : null;
+}
+
+function getClerkDisplayName(user: {
+  fullName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+}) {
+  return (
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+    user.fullName ||
+    null
+  );
+}
+
+async function resolveForumAuthorNames(
+  entries: Array<{ authorHandle: string | null }>,
+): Promise<Map<string, string>> {
+  const usernames = Array.from(
+    new Set(entries.map((entry) => normalizeForumHandle(entry.authorHandle)).filter(Boolean)),
+  );
+
+  if (usernames.length === 0) {
+    return new Map();
+  }
+
+  const client = await clerkClient();
+  const users = await client.users.getUserList({
+    username: usernames,
+    limit: Math.min(usernames.length, 100),
+  });
+
+  const displayNames = new Map<string, string>();
+
+  for (const user of users.data) {
+    const username = user.username;
+    const displayName = getClerkDisplayName(user);
+
+    if (username && displayName) {
+      displayNames.set(username, displayName);
+    }
+  }
+
+  return displayNames;
+}
+
+function applyResolvedAuthorNames<T extends { authorName: string | null; authorHandle: string | null }>(
+  entries: T[],
+  displayNames: Map<string, string>,
+) {
+  return entries.map((entry) => {
+    const username = normalizeForumHandle(entry.authorHandle);
+    return {
+      ...entry,
+      authorName: (username ? displayNames.get(username) : null) || entry.authorName,
+    };
+  });
+}
+
 const POST_LIST_FIELDS = `
   _id,
   title,
@@ -85,7 +147,9 @@ export async function getForumPosts(
   }`;
 
   try {
-    return await client.fetch(query);
+    const posts = await client.fetch<ForumPostListItem[]>(query);
+    const displayNames = await resolveForumAuthorNames(posts);
+    return applyResolvedAuthorNames(posts, displayNames);
   } catch (error) {
     console.error("Failed to fetch forum posts:", error);
     return [];
@@ -111,7 +175,24 @@ export async function getForumPost(
   }`;
 
   try {
-    return await client.fetch(query, { slug });
+    const post = await client.fetch<ForumPostDetail | null>(query, { slug });
+
+    if (!post) {
+      return null;
+    }
+
+    const displayNames = await resolveForumAuthorNames([
+      post,
+      ...(post.comments ?? []),
+    ]);
+
+    return {
+      ...post,
+      authorName: (normalizeForumHandle(post.authorHandle)
+        ? displayNames.get(normalizeForumHandle(post.authorHandle)!)
+        : null) || post.authorName,
+      comments: applyResolvedAuthorNames(post.comments ?? [], displayNames),
+    };
   } catch (error) {
     console.error("Failed to fetch forum post:", error);
     return null;

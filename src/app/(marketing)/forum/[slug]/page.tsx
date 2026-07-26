@@ -42,18 +42,15 @@ export default async function PostDetailPage({
               >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <span className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100" />
+              {/* <span className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100" /> */}
               <div className="leading-tight">
                 <p className="text-sm">
                   <span className="font-semibold text-slate-700">
-                    {post.category || "Community"}
+                    {post.authorName || "Anonymous"}
                   </span>{" "}
                   <span className="text-slate-400">
                     · {formatRelativeTime(post.createdAt)}
                   </span>
-                </p>
-                <p className="text-xs text-slate-500">
-                  {post.authorName || "Anonymous"}
                 </p>
               </div>
             </div>
@@ -124,23 +121,20 @@ export default async function PostDetailPage({
                   className="rounded-xl bg-slate-50 p-4"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="h-7 w-7 shrink-0 rounded-full border border-slate-200 bg-slate-100" />
+                    {/* <span className="h-7 w-7 shrink-0 rounded-full border border-slate-200 bg-slate-100" /> */}
                     <p className="text-xs">
                       <span className="font-semibold text-slate-700">
                         {comment.authorName || "Anonymous"}
-                      </span>{" "}
-                      <span className="text-slate-400">
-                        {comment.authorHandle}
                       </span>{" "}
                       <span className="text-slate-400">
                         · {formatRelativeTime(comment.createdAt)}
                       </span>
                     </p>
                   </div>
-                  <p className="mt-2 pl-9 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-slate-600">
                     {comment.body}
                   </p>
-                  <div className="mt-2 flex items-center gap-4 pl-9 text-xs text-slate-500">
+                  <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
                     <form action={voteComment} className="contents">
                       <input
                         type="hidden"

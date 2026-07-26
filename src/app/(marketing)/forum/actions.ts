@@ -24,9 +24,10 @@ async function getCurrentForumUser() {
   const user = await client.users.getUser(userId);
   const email = user.primaryEmailAddress?.emailAddress;
   const fallbackHandle = email ? email.split("@")[0] : "member";
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.fullName || fallbackHandle;
 
   return {
-    name: user.fullName || user.username || fallbackHandle,
+    name: displayName,
     handle: user.username ? `@${user.username}` : `@${fallbackHandle}`,
   };
 }
