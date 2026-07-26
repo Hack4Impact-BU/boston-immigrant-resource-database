@@ -6,7 +6,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Image from "next/image";
-import helpingImg from "/public/img/helping.png";
 
 
 export default function faq() {
@@ -89,7 +88,7 @@ export default function faq() {
                     <div className="w-full lg:flex-[9]">
                         <h2 className="text-[#4151CD] font-bold text-2xl mb-2">Frequently Asked Question</h2>
                         <p className="mb-12">Boston Immigrant Resource Dashboard</p>
-                        <Image src={helpingImg} alt="" className="w-[80%] mb-10 rounded-2xl"></Image>
+                        <Image src="/img/helping.png" alt="" width={800} height={600} className="w-[80%] mb-10 rounded-2xl" />
                     </div>
                     <div className="w-full lg:flex-[11] p-6 bg-[#F9FBFF]">
                         <Accordion
