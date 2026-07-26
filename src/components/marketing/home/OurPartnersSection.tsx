@@ -36,14 +36,15 @@ async function getPartnersSection() {
 
 export default async function OurPartnersSection() {
   const section = (await getPartnersSection()) ?? FALLBACK;
-  const imageUrl = section.image
-    ? urlFor(section.image).width(1080).url()
-    : FALLBACK.image;
+  const imageSource = section.image ?? FALLBACK.image;
+  const imageUrl = typeof imageSource === "string"
+    ? imageSource
+    : urlFor(imageSource).width(1080).url();
 
   return (
     <section id="mission" className="bg-[#f5f7fa] py-20 md:py-28">
       <div className="mx-auto grid max-w-screen-2xl grid-cols-1 gap-6 px-6 md:gap-8 lg:grid-cols-2 lg:items-stretch lg:px-14">
-        <div className="flex min-h-[360px] flex-col justify-between rounded-3xl bg-white p-10 shadow-sm md:min-h-[400px] md:p-12 lg:min-h-[440px]">
+        <div className="flex min-h-90 flex-col justify-between rounded-3xl bg-white p-10 shadow-sm md:min-h-100 md:p-12 lg:min-h-110">
           <div>
             <h2 className="text-3xl font-bold text-bird-accent md:text-4xl">
               {section.heading}
@@ -61,7 +62,7 @@ export default async function OurPartnersSection() {
             </a>
           </Button>
         </div>
-        <div className="relative min-h-[360px] overflow-hidden rounded-3xl md:min-h-[400px] lg:min-h-[440px]">
+        <div className="relative min-h-90 overflow-hidden rounded-3xl md:min-h-100 lg:min-h-110">
           <Image
             src={imageUrl}
             alt="A woman and young girl smiling together"

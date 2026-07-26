@@ -9,14 +9,13 @@ export default function PostCard({ post }: { post: ForumPostListItem }) {
       className="block rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md"
     >
       <div className="flex gap-4">
-        <span className="h-11 w-11 shrink-0 rounded-full border border-slate-200 bg-slate-100" />
+        {/* <span className="h-11 w-11 shrink-0 rounded-full border border-slate-200 bg-slate-100" /> */}
 
         <div className="min-w-0 flex-1">
           <p className="text-xs text-slate-500">
             <span className="font-semibold text-slate-700">
               {post.authorName || "Anonymous"}
             </span>{" "}
-            · Asked in {post.category || "Community"}
           </p>
 
           <h3 className="mt-1 text-base font-bold text-slate-800">

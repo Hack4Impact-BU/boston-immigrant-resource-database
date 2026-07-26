@@ -49,13 +49,6 @@ export default function VoteButtons({
         {commentCount}
       </span>
 
-      <button
-        type="button"
-        className="flex items-center gap-1.5 transition-colors hover:text-[#2F80C2]"
-      >
-        <Share2 className="h-4 w-4" />
-        Share
-      </button>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export function RegisterForm() {
     try {
       await saveRegisteredUser(userInput);
       await activateClerkSession();
-      router.push("/contact");
+      router.push("/access-status");
     } catch (error) {
       try {
         await signOut();
@@ -90,7 +90,6 @@ export function RegisterForm() {
     };
     const password = getRequiredFormString(formData, "password");
     const confirmPassword = getRequiredFormString(formData, "confirmPassword");
-    const username = getRequiredFormString(formData, "username");
 
     if (password.length < 8) {
       setErrorMessage("Password must be at least 8 characters.");
@@ -109,7 +108,6 @@ export function RegisterForm() {
     try {
       const result = await createClerkSignUp({
         email: userInput.email,
-        username,
         password,
       });
 
@@ -258,21 +256,6 @@ export function RegisterForm() {
           name="email"
           type="email"
           placeholder="Email"
-          required
-          className="h-8 rounded-[0.22rem] border-slate-300 px-2.5 text-[0.72rem] shadow-none placeholder:text-slate-400"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="username" className="text-xs font-medium text-slate-500">
-          Username
-        </Label>
-        <Input
-          id="username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          placeholder="Username"
           required
           className="h-8 rounded-[0.22rem] border-slate-300 px-2.5 text-[0.72rem] shadow-none placeholder:text-slate-400"
         />

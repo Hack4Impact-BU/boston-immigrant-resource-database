@@ -32,6 +32,8 @@ export default function Login() {
 
                 <LoginForm />
 
+                <div id="clerk-captcha" className="mt-6 flex justify-center" />
+
                 <p className="mt-6 text-center text-sm text-slate-600">
                     Don&apos;t have an account?{" "}
                     <Link href="/register" className="font-semibold text-slate-900 underline underline-offset-4">

@@ -1,17 +1,9 @@
 "use server";
 
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { writeClient, hasWriteToken } from "@/lib/sanity";
-
-// NOTE: This app does not yet have authentication wired up (see src/lib/auth.ts).
-// Until it does, posts/comments are attributed to a placeholder current user.
-// When auth lands, replace this with the authenticated session user and verify
-// authorization inside each action (Server Actions are reachable via direct POST).
-const CURRENT_USER = {
-  name: "Brooklyn Simmons",
-  handle: "@brooklyn",
-};
 
 function ensureWritable() {
   if (!hasWriteToken) {
@@ -19,6 +11,24 @@ function ensureWritable() {
       "Sanity write token is missing. Set SANITY_WRITE_TOKEN in your environment to enable posting.",
     );
   }
+}
+
+async function getCurrentForumUser() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be signed in to post in the forum.");
+  }
+
+  const client = await clerkClient();
+  const user = await client.users.getUser(userId);
+  const email = user.primaryEmailAddress?.emailAddress;
+  const fallbackHandle = email ? email.split("@")[0] : "member";
+
+  return {
+    name: user.fullName || user.username || fallbackHandle,
+    handle: user.username ? `@${user.username}` : `@${fallbackHandle}`,
+  };
 }
 
 function slugify(input: string): string {
@@ -35,6 +45,7 @@ function slugify(input: string): string {
 
 export async function createPost(formData: FormData) {
   ensureWritable();
+  const currentUser = await getCurrentForumUser();
 
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
@@ -74,8 +85,8 @@ export async function createPost(formData: FormData) {
     _type: "forumPost",
     title,
     slug: { _type: "slug", current: slug },
-    authorName: CURRENT_USER.name,
-    authorHandle: CURRENT_USER.handle,
+    authorName: currentUser.name,
+    authorHandle: currentUser.handle,
     category: "Community",
     body,
     upvotes: 0,
@@ -106,6 +117,7 @@ export async function createPost(formData: FormData) {
 
 export async function addComment(formData: FormData) {
   ensureWritable();
+  const currentUser = await getCurrentForumUser();
 
   const postId = String(formData.get("postId") ?? "");
   const slug = String(formData.get("slug") ?? "");
@@ -116,8 +128,8 @@ export async function addComment(formData: FormData) {
   await writeClient.create({
     _type: "forumComment",
     post: { _type: "reference", _ref: postId },
-    authorName: CURRENT_USER.name,
-    authorHandle: CURRENT_USER.handle,
+    authorName: currentUser.name,
+    authorHandle: currentUser.handle,
     body,
     upvotes: 0,
     createdAt: new Date().toISOString(),

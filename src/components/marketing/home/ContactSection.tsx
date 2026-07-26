@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { client } from "@/lib/sanity";
 
 export default function ContactSection() {
   const [contactMethod, setContactMethod] = useState<string>("Email");
@@ -24,21 +23,32 @@ export default function ContactSection() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const settings = await client.fetch(`*[_type == "contactSettings"][0]{
-          contactMethods,
-          contactReasons
-        }`);
+        const response = await fetch("/api/contact-settings");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch contact settings.");
+        }
+
+        const settings = (await response.json()) as {
+          contactMethods?: string[];
+          contactReasons?: string[];
+        };
+
         if (settings) {
-          setContactMethods(settings.contactMethods || ["Email", "Phone"]);
-          setContactReasons(settings.contactReasons || [
+          const nextContactMethods = settings.contactMethods || ["Email", "Phone"];
+          const nextContactReasons = settings.contactReasons || [
             "More information",
             "Requesting Access",
-          ]);
-          if (contactMethods.length > 0 && contactMethod === "Email") {
-            setContactMethod(contactMethods[0]);
+          ];
+
+          setContactMethods(nextContactMethods);
+          setContactReasons(nextContactReasons);
+
+          if (nextContactMethods.length > 0 && contactMethod === "Email") {
+            setContactMethod(nextContactMethods[0]);
           }
-          if (contactReasons.length > 0 && contactReason === "More information") {
-            setContactReason(contactReasons[0]);
+          if (nextContactReasons.length > 0 && contactReason === "More information") {
+            setContactReason(nextContactReasons[0]);
           }
         }
       } catch (error) {

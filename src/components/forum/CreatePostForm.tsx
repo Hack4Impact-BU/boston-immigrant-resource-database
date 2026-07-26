@@ -98,7 +98,7 @@ export default function CreatePostForm() {
         <input
           name="linkUrl"
           type="url"
-          placeholder="Link URL *"
+          placeholder="Link URL"
           className="mb-5 h-11 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-[#2F80C2] focus:outline-none focus:ring-2 focus:ring-[#2F80C2]/20"
         />
 

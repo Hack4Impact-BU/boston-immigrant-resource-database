@@ -27,6 +27,8 @@ export default function Register() {
 
         <RegisterForm />
 
+        <div id="clerk-captcha" className="mt-6 flex justify-center" />
+
         <p className="mt-24 text-center text-[0.72rem] text-slate-500">
           Boston Immigrant Resource Dashboard • Secure Access Portal
         </p>

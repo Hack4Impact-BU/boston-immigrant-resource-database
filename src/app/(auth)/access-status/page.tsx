@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { AccessStatusSignOutButton } from "./access-status-sign-out-button";
 
+const APPLICATION_FORM_URL =
+	"https://docs.google.com/forms/d/e/1FAIpQLSdqYSqnLboSSSz7Px92sejXMp3TZmjASkgLXii5e-lmlcRkkw/viewform";
+
 type AccessStatusPageProps = {
 	searchParams: Promise<{
 		access?: string | string[];
@@ -43,17 +46,31 @@ export default async function AccessStatusPage({ searchParams }: AccessStatusPag
 				<p className="mt-4 text-base leading-7 text-slate-700">
 					{isRejected
 						? "Your account access request was rejected."
-						: "Your account is pending approval. Please check back later."}
+						: "Your account is pending approval. Please complete the application form and wait for manual review."}
 				</p>
 
-				<Link
-					href="/"
-					className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[#5d93c7] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(93,147,199,0.28)] transition-colors hover:bg-[#4b81b6]"
-				>
-					Return home
-				</Link>
-				<div>
-					<AccessStatusSignOutButton />
+				<div className="mt-8 flex flex-col gap-4">
+					{!isRejected && (
+						<a
+							href={APPLICATION_FORM_URL}
+							target="_blank"
+							rel="noreferrer"
+							className="inline-flex h-11 items-center justify-center rounded-lg border border-[#5d93c7] px-5 text-sm font-semibold text-[#2f5f96] transition-colors hover:bg-[#eef5fb]"
+						>
+							Open application form
+						</a>
+					)}
+
+					<Link
+						href="/"
+						className="inline-flex h-11 items-center justify-center rounded-lg bg-[#5d93c7] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(93,147,199,0.28)] transition-colors hover:bg-[#4b81b6]"
+					>
+						Return home
+					</Link>
+
+					<div className="pt-1">
+						<AccessStatusSignOutButton />
+					</div>
 				</div>
 			</div>
 		</main>

@@ -6,7 +6,6 @@ import { throwIfClerkError } from "@/features/auth/auth-helpers";
 
 export type RegisterClerkValues = {
   email: string;
-  username: string;
   password: string;
 };
 
@@ -25,7 +24,6 @@ export function useClerkSignUp() {
   async function createClerkSignUp(values: RegisterClerkValues) {
     const result = await signUp.create({
       emailAddress: values.email,
-      username: values.username,
       password: values.password,
     });
 

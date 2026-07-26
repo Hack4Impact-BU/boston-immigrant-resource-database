@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Sidebar from "@/components/marketing/Sidebar";
 import {
   ArrowLeft,
   CalendarDays,
@@ -26,7 +27,10 @@ export default async function PostDetailPage({
 
   return (
     <div className="mx-auto mt-8 flex w-full gap-6 px-4">
-      <div className="min-w-0 flex-1">
+      <aside className="w-[260px] fixed inset-y-0 left-0 z-50">
+          <Sidebar isOpen activePage="FAQs" />
+      </aside>
+      <div className="min-w-0 flex-1  ml-[260px]">
         <article className="rounded-xl border border-slate-200 bg-white p-6">
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
@@ -105,21 +109,6 @@ export default async function PostDetailPage({
               downvotes={post.downvotes ?? 0}
               commentCount={post.commentCount}
             />
-          </div>
-
-          {/* Sort + search comments */}
-          <div className="mt-5 flex items-center gap-3">
-            <span className="text-xs text-slate-500">Sort by:</span>
-            <button
-              type="button"
-              className="flex items-center gap-1 text-xs font-medium text-slate-700"
-            >
-              Best <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500">
-              <Search className="h-3.5 w-3.5" />
-              Search Comments
-            </div>
           </div>
 
           {/* Comments */}

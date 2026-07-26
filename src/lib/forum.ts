@@ -126,7 +126,7 @@ const DEFAULT_SETTINGS: ForumSettings = {
   rules: [
     "Prioritize Privacy: Keep client data completely anonymous and don't share on public platforms.",
     "Keep Information Accurate: Only share verified updates and policy shifts.",
-    "Cultivate SoNo profanitylidarity: We are here to collaborate and problem-solve to support our collective work.",
+    "Cultivate Solidarity: We are here to collaborate and problem-solve to support our collective work.",
   ],
 };
 
