@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BirdLogo from "./BirdLogo";
 
@@ -27,6 +28,8 @@ export default function HomeHeader() {
               {link.label}
             </Link>
           ))}
+        </nav>
+
         <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
           <Link href="/register" className="no-underline hover:text-bird-accent">
             Create Account
