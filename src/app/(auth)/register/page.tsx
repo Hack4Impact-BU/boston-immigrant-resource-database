@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { RegisterForm } from "@/features/auth/register/register-form";
 
@@ -26,6 +27,13 @@ export default function Register() {
         </div>
 
         <RegisterForm />
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link href="/login" className="font-semibold text-slate-900 underline underline-offset-4">
+            Login
+          </Link>
+        </p>
 
         <div id="clerk-captcha" className="mt-6 flex justify-center" />
 
