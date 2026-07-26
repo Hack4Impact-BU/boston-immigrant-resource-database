@@ -325,7 +325,7 @@ export default function MapPage() {
 
     async function resolveCoordinates() {
       const entries = await Promise.all(
-        providers.map(async (provider) => {
+        providers.slice(0, 40).map(async (provider) => {
           const fromLink = parseCoordinatesFromGoogleMapsLink(provider.google_maps_link);
           const coordinates = fromLink ?? (await geocodeAddress(`${provider.address}, Boston, MA`));
           return [provider.id, coordinates] as const;

@@ -1,6 +1,5 @@
 import { FileText, Globe, Users, UsersRound } from "lucide-react";
-import { client } from "@/lib/sanity";
-import { STATS } from "./data";
+import { getMarketingPageContent } from "@/lib/marketing-content";
 
 const ICONS = {
   users: Users,
@@ -9,23 +8,34 @@ const ICONS = {
   resources: FileText,
 } as const;
 
-async function getStats() {
-  try {
-    const stats = await client.fetch<
-      { value: string; label: string; icon: string }[]
-    >(`*[_type == "stat"] | order(_createdAt asc) {
-      value,
-      label,
-      icon
-    }`);
-    return stats?.length ? stats : [...STATS];
-  } catch {
-    return [...STATS];
+function normalizeIconKey(value: string | undefined) {
+  return value?.trim().toLowerCase().replace(/[^a-z]/g, "") || "";
+}
+
+function getIconKey(stat: { icon?: string; label: string }) {
+  const normalizedIcon = normalizeIconKey(stat.icon);
+  if (normalizedIcon in ICONS) {
+    return normalizedIcon as keyof typeof ICONS;
   }
+
+  const normalizedLabel = stat.label.toLowerCase();
+  if (normalizedLabel.includes("year") || normalizedLabel.includes("experience")) {
+    return "globe";
+  }
+
+  if (normalizedLabel.includes("resource")) {
+    return "resources";
+  }
+
+  if (normalizedLabel.includes("service") || normalizedLabel.includes("location")) {
+    return "community";
+  }
+
+  return "users";
 }
 
 export default async function WhyBirdMattersSection() {
-  const stats = await getStats();
+  const { stats } = await getMarketingPageContent();
 
   return (
     <section className="bg-white py-16 md:py-20">
@@ -39,15 +49,14 @@ export default async function WhyBirdMattersSection() {
 
         <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
-            const Icon =
-              ICONS[stat.icon as keyof typeof ICONS] ?? Users;
+            const Icon = ICONS[getIconKey(stat)];
             return (
               <div key={stat.label} className="flex flex-col items-center gap-3">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#27317B] text-white">
                   <Icon className="h-7 w-7" strokeWidth={1.75} />
                 </div>
                 <p className="text-2xl font-bold text-[#1a1a1a]">{stat.value}</p>
-                <p className="max-w-[180px] text-sm text-black">{stat.label}</p>
+                <p className="max-w-45 text-sm text-black">{stat.label}</p>
               </div>
             );
           })}

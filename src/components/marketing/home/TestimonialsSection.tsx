@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Star } from "lucide-react";
-import { client, urlFor } from "@/lib/sanity";
-import { TESTIMONIALS } from "./data";
+import { urlFor } from "@/lib/sanity";
+import { getMarketingPageContent } from "@/lib/marketing-content";
 
 function getInitials(name: string) {
   return name
@@ -21,23 +21,6 @@ type Testimonial = {
   photo?: string | { asset: { _ref: string } };
 };
 
-async function getTestimonials(): Promise<Testimonial[]> {
-  try {
-    const testimonials = await client.fetch<Testimonial[]>(
-      `*[_type == "testimonial"]{
-        _id,
-        name,
-        title,
-        quote,
-        photo
-      }`,
-    );
-    return testimonials?.length ? testimonials.slice(0, 3) : [...TESTIMONIALS.slice(0, 3)];
-  } catch {
-    return [...TESTIMONIALS.slice(0, 3)];
-  }
-}
-
 function getPhotoSrc(testimonial: Testimonial): string | null {
   if (!testimonial.photo) return null;
   if (typeof testimonial.photo === "string") return testimonial.photo;
@@ -45,7 +28,7 @@ function getPhotoSrc(testimonial: Testimonial): string | null {
 }
 
 export default async function TestimonialsSection() {
-  const testimonials = await getTestimonials();
+  const { testimonials } = await getMarketingPageContent();
 
   return (
     <section className="bg-[#f5f7fa] py-16 md:py-20">

@@ -21,7 +21,7 @@ export default function Home() {
         <ImageBanner />
         <OurPartnersSection />
         <SponsorLogos />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <ForProvidersSection />
         <FaqSection />
         <ContactSection />

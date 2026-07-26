@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { client, urlFor } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity";
+import { getMarketingPageContent } from "@/lib/marketing-content";
 
 const FALLBACK = {
   heading: "Our Partners",
@@ -11,31 +12,9 @@ const FALLBACK = {
   image: "/img/partners-photo.png",
 };
 
-async function getPartnersSection() {
-  try {
-    const sections = await client.fetch<
-      {
-        heading: string;
-        paragraph: string;
-        buttonText: string;
-        buttonLink: string;
-        image?: { asset: { _ref: string } };
-      }[]
-    >(`*[_type == "partnersSection"]{
-      heading,
-      paragraph,
-      buttonText,
-      buttonLink,
-      image
-    }`);
-    return sections[0] ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function OurPartnersSection() {
-  const section = (await getPartnersSection()) ?? FALLBACK;
+  const { partnersSection } = await getMarketingPageContent();
+  const section = partnersSection ?? FALLBACK;
   const imageSource = section.image ?? FALLBACK.image;
   const imageUrl = typeof imageSource === "string"
     ? imageSource

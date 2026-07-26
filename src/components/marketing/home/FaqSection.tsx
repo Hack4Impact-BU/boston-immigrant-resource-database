@@ -1,25 +1,9 @@
 import Image from "next/image";
 import FaqAccordion from "./FaqAccordion";
-import { client } from "@/lib/sanity";
-import { GENERAL_FAQ } from "./data";
-
-async function getGeneralFaqs() {
-  try {
-    const faqs = await client.fetch<
-      { _id: string; trigger: string; content: string }[]
-    >(`*[_type == "faqItem" && section == "general"]{
-      _id,
-      trigger,
-      content
-    }`);
-    return faqs?.length ? faqs : [...GENERAL_FAQ];
-  } catch {
-    return [...GENERAL_FAQ];
-  }
-}
+import { getMarketingPageContent } from "@/lib/marketing-content";
 
 export default async function FaqSection() {
-  const faqs = await getGeneralFaqs();
+  const { faqs } = await getMarketingPageContent();
 
   return (
     <section className="bg-white py-16 md:py-20">
