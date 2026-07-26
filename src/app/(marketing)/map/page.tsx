@@ -95,6 +95,7 @@ function formatRelativeUpdateDateShort(value?: string) {
 }
 
 const geocodeCache = new Map<string, Coordinates | null>();
+const geocodeAbortControllers = new Map<string, AbortController>();
 
 function normalizeText(value: string | undefined) {
   return (value ?? "").toLowerCase().trim();
@@ -125,9 +126,13 @@ async function geocodeAddress(address: string) {
     return cached;
   }
 
+  const controller = new AbortController();
+  geocodeAbortControllers.set(normalizedAddress, controller);
+
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(normalizedAddress)}`
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(normalizedAddress)}`,
+      { signal: controller.signal }
     );
 
     if (!response.ok) {
@@ -145,9 +150,15 @@ async function geocodeAddress(address: string) {
 
     geocodeCache.set(normalizedAddress, coordinates);
     return coordinates;
-  } catch {
+  } catch (error) {
+    if ((error as DOMException | undefined)?.name === "AbortError") {
+      return null;
+    }
+
     geocodeCache.set(normalizedAddress, null);
     return null;
+  } finally {
+    geocodeAbortControllers.delete(normalizedAddress);
   }
 }
 
@@ -179,8 +190,9 @@ export default function MapPage() {
   const [search, setSearch] = useState("");
   const [providerFilter, setProviderFilter] = useState("All Providers");
   const [languageFilter, setLanguageFilter] = useState("Any Language");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("All Service Types");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
-  const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "status" | null>(null);
+  const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +207,7 @@ export default function MapPage() {
 
   useEffect(() => {
     let active = true;
+    const abortController = new AbortController();
 
     async function loadData() {
       try {
@@ -202,8 +215,8 @@ export default function MapPage() {
         setError(null);
 
         const [servicesResponse, providersResponse] = await Promise.all([
-          fetch("/api/services"),
-          fetch("/api/providers"),
+          fetch("/api/services", { signal: abortController.signal }),
+          fetch("/api/providers", { signal: abortController.signal }),
         ]);
 
         if (!servicesResponse.ok || !providersResponse.ok) {
@@ -238,6 +251,7 @@ export default function MapPage() {
 
     return () => {
       active = false;
+      abortController.abort();
     };
   }, []);
 
@@ -267,6 +281,20 @@ export default function MapPage() {
     return ["All Statuses", "Open", "Contact Provider", "Waitlist", "Closed"];
   }, []);
 
+  const serviceTypeOptions = useMemo(() => {
+    const uniqueServiceTypes = new Set<string>();
+
+    services.forEach((service) => {
+      service.service_types
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .forEach((value) => uniqueServiceTypes.add(value));
+    });
+
+    return ["All Service Types", ...Array.from(uniqueServiceTypes).sort((left, right) => left.localeCompare(right))];
+  }, [services]);
+
   const servicesWithProviders = useMemo<ServiceWithProvider[]>(() => {
     return services.map((service) => ({
       ...service,
@@ -279,16 +307,28 @@ export default function MapPage() {
     return servicesWithProviders.filter((service) => {
       const providerName = service.providerDetails?.name || "";
       const serviceLanguages = service.providerDetails?.language_support || [];
+      const serviceTypes = service.service_types
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
       const matchesProvider = providerFilter === "All Providers" || providerName === providerFilter;
       const matchesLanguage =
         languageFilter === "Any Language" ||
         serviceLanguages.includes(languageFilter) ||
         serviceLanguages.includes("All Languages");
+      const matchesServiceType =
+        serviceTypeFilter === "All Service Types" || serviceTypes.includes(serviceTypeFilter);
       const matchesStatus = statusFilter === "All Statuses" || service.status === statusFilter;
 
-      return matchesSearch(service, normalizedSearch) && matchesProvider && matchesLanguage && matchesStatus;
+      return (
+        matchesSearch(service, normalizedSearch) &&
+        matchesProvider &&
+        matchesLanguage &&
+        matchesServiceType &&
+        matchesStatus
+      );
     });
-  }, [languageFilter, providerFilter, search, servicesWithProviders, statusFilter]);
+  }, [languageFilter, providerFilter, search, serviceTypeFilter, servicesWithProviders, statusFilter]);
 
   const selectedService = useMemo(() => {
     return filteredServices.find((service) => service.id === selectedServiceId) ?? null;
@@ -343,6 +383,8 @@ export default function MapPage() {
 
     return () => {
       cancelled = true;
+      geocodeAbortControllers.forEach((controller) => controller.abort());
+      geocodeAbortControllers.clear();
     };
   }, [providers]);
 
@@ -498,6 +540,12 @@ export default function MapPage() {
   }, [languageFilter, languageOptions]);
 
   useEffect(() => {
+    if (!serviceTypeOptions.includes(serviceTypeFilter)) {
+      setServiceTypeFilter("All Service Types");
+    }
+  }, [serviceTypeFilter, serviceTypeOptions]);
+
+  useEffect(() => {
     if (!statusOptions.includes(statusFilter)) {
       setStatusFilter("All Statuses");
     }
@@ -519,6 +567,14 @@ export default function MapPage() {
       value: languageFilter,
       options: languageOptions,
       onSelect: setLanguageFilter,
+    },
+    {
+      key: "serviceType" as const,
+      label: "Service Type",
+      defaultValue: "All Service Types",
+      value: serviceTypeFilter,
+      options: serviceTypeOptions,
+      onSelect: setServiceTypeFilter,
     },
     {
       key: "status" as const,
@@ -546,37 +602,37 @@ export default function MapPage() {
     <div className="flex min-h-dvh items-stretch bg-slate-100 p-0 m-0">
       <Sidebar isOpen={true} activePage="Search Resources" />
 
-      <main className="ml-55 flex min-h-dvh flex-1 bg-[#f2f4f7] px-3 py-2 text-slate-800">
-        <section className="mx-auto flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)]">
-          <div className="flex flex-col gap-4 xl:flex-row">
-            <div className="flex min-w-0 flex-1 flex-col gap-4 xl:max-w-136">
-              <div className="space-y-2">
-                <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">
-                  Search Resources
-                </h1>
+      <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-3 py-2 text-slate-800">
+        <section className="mx-auto flex h-[calc(100dvh-1rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)]">
+          <div className="space-y-3 border-b border-slate-200 pb-3">
+            <div className="space-y-2">
+              <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">
+                Search Resources
+              </h1>
+            </div>
+
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-3 shadow-sm">
+                <Search size={16} className="shrink-0 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search services by name or keywords"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                />
+                {search ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-3 shadow-sm">
-                  <Search size={16} className="shrink-0 text-slate-400" />
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search"
-                    className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                  {search ? (
-                    <button
-                      type="button"
-                      onClick={() => setSearch("")}
-                      className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                      aria-label="Clear search"
-                    >
-                      <X size={14} />
-                    </button>
-                  ) : null}
-                </div>
-
+              <div className="flex flex-wrap gap-2 xl:justify-end">
                 {filterButtons.map((filter) => {
                   const isOpen = openFilterMenu === filter.key;
 
@@ -586,14 +642,14 @@ export default function MapPage() {
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
                         className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
-                            filter.value === filter.defaultValue
+                          filter.value === filter.defaultValue
                             ? "border-[#a8d0e6] bg-white text-slate-700"
                             : "border-sky-200 bg-[#f7fbff] text-sky-800"
                         }`}
                         aria-expanded={isOpen}
                         aria-haspopup="listbox"
                       >
-                          <span>{filter.value === filter.defaultValue ? filter.label : filter.value}</span>
+                        <span>{filter.value === filter.defaultValue ? filter.label : filter.value}</span>
                         <ChevronDown size={14} className={isOpen ? "rotate-180 transition-transform" : "transition-transform"} />
                       </button>
 
@@ -626,99 +682,102 @@ export default function MapPage() {
                   );
                 })}
               </div>
+            </div>
+          </div>
 
-              <div className="rounded-[24px] bg-white p-0">
-                <div className=" space-y-4 overflow-y-auto pr-1 xl:h-[calc(100vh-12rem)]">
-                  {loading ? (
-                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
-                      <LoaderCircle className="h-4 w-4 animate-spin text-sky-600" />
-                      Loading services
-                    </div>
-                  ) : error ? (
-                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
-                      {error}
-                    </div>
-                  ) : filteredServices.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
-                      No services matched your search.
-                    </div>
-                  ) : (
-                    filteredServices.map((service) => {
-                      const provider = service.providerDetails;
-                      const languageList = provider?.language_support || [];
-                      const visibleLanguages = activeLanguageFilter && languageList.includes(activeLanguageFilter)
-                        ? [activeLanguageFilter, ...languageList.filter((language) => language !== activeLanguageFilter)]
-                        : languageList;
-                      const languages = visibleLanguages.join(", ") || "Not listed";
-                      const location = provider?.address?.split(",")[0] || "Location unavailable";
-                      const providerName = provider?.name || "Provider unavailable";
-                      const isSelected = selectedServiceId === service.id;
-                      const description = service.description || service.service_types || provider?.description || "No description available.";
+          <div className="grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
+            <div className="min-h-0 rounded-[24px] bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <div className="h-full space-y-4 overflow-y-auto pr-1">
+                {loading ? (
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
+                    <LoaderCircle className="h-4 w-4 animate-spin text-sky-600" />
+                    Loading services
+                  </div>
+                ) : error ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
+                    {error}
+                  </div>
+                ) : filteredServices.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
+                    No services matched your search.
+                  </div>
+                ) : (
+                  filteredServices.map((service) => {
+                    const provider = service.providerDetails;
+                    const languageList = provider?.language_support || [];
+                    const visibleLanguages = activeLanguageFilter && languageList.includes(activeLanguageFilter)
+                      ? [activeLanguageFilter, ...languageList.filter((language) => language !== activeLanguageFilter)]
+                      : languageList;
+                    const languages = visibleLanguages.join(", ") || "Not listed";
+                    const location = provider?.address?.split(",")[0] || "Location unavailable";
+                    const providerName = provider?.name || "Provider unavailable";
+                    const isSelected = selectedServiceId === service.id;
+                    const description = service.description || service.service_types || provider?.description || "No description available.";
 
-                      return (
-                        <button
-                          key={service.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedServiceId(service.id);
-                            setPanelView("description");
-                          }}
-                          className={`flex h-32 w-full rounded-[22px] border bg-white p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${
-                            isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
-                          }`}
-                        >
-                          <div className="flex h-full w-full gap-4">
-                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
-                              <img
-                                src={provider?.logo || "/icons/Just_BIRD_logo_blue.png"}
-                                alt={provider?.name ?? "Provider logo"}
-                                className="h-full w-full object-contain p-2"
-                              />
+                    return (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedServiceId(service.id);
+                          setPanelView("description");
+                        }}
+                        className={`flex h-32 w-full border bg-white p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${
+                          isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
+                        }`}
+                      >
+                        <div className="flex h-full w-full gap-2">
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
+                            <img
+                              src={provider?.logo || "/icons/Just_BIRD_logo_blue.png"}
+                              alt={provider?.name ?? "Provider logo"}
+                              className="h-full w-full object-contain p-2"
+                            />
+                          </div>
+
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-[0.72rem] text-slate-900">{providerName}</p>
+                                <h2 className="truncate text-[1.05rem] font-semibold tracking-tight text-slate-900">
+                                  {service.name}
+                                </h2>
+                              </div>
+                              <p
+                                className={`mt-1 h-4 shrink-0 rounded-xs px-1 text-xs ${
+                                  service.status === "Open"
+                                    ? "bg-green-500"
+                                    : service.status === "Closed"
+                                      ? "bg-rose-500"
+                                      : service.status === "Waitlist"
+                                        ? "bg-[#e69b00]"
+                                        : service.status === "Contact Provider"
+                                          ? "bg-[#abf7b1]"
+                                          : "bg-slate-300"
+                                }`}
+                              >
+                                {service.status}
+                              </p>
                             </div>
 
-                            <div className="flex min-w-0 flex-1 flex-col">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="truncate text-[0.72rem] text-slate-900">{providerName}</p>
-                                  <h2 className="truncate text-[1.05rem] font-semibold tracking-tight text-slate-900">
-                                    {service.name}
-                                  </h2>
-                                </div>
-                                <p
-                                  className={`mt-1 h-4 shrink-0 rounded-xs text-xs px-1 ${
-                                    service.status === "Open"
-                                      ? "bg-green-500"
-                                      : service.status === "Closed"
-                                        ? "bg-rose-500"
-                                        : service.status === "Waitlist"
-                                          ? "bg-[#e69b00]"
-                                          : service.status === "Contact Provider"
-                                            ? "bg-[#abf7b1]"
-                                            : "bg-slate-300"
-                                  }`}>
-                                {service.status}
-                                </p>
-                              </div>
-                              
-                              <div className="mt-auto space-y-1 pt-3 text-[0.72rem] text-slate-500">
-                                <p className="font-medium text-slate-900">
-                                  {languages}
-                                </p>
-                                <p>
-                                  {location} · {formatRelativeUpdateDateShort(service.last_modified)}
-                                </p>
-                              </div>
+                            <div className="mt-auto space-y-1 pt-3 text-[0.72rem] text-slate-500">
+                              <p className="font-medium text-slate-900">
+                                {languages}
+                              </p>
+                              <p>
+                                {location} · {formatRelativeUpdateDateShort(service.last_modified)}
+                              </p>
                             </div>
                           </div>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            <div className="flex p-4 min-h-112 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] xl:sticky xl:top-4 xl:h-[calc(100vh-3.5rem)]">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] xl:h-full">
 
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (

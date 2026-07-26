@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   return (
     <div
       className={`fixed left-0 top-0 z-30 flex h-screen flex-col bg-white text-slate-900 transition-all duration-300 ease-in-out shadow-lg border-r border-slate-200 ${
-        isOpen ? "w-52" : "w-0"
+        isOpen ? "w-55" : "w-0"
       } overflow-hidden`}
     >
       {/* Logo Section */}
