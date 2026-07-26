@@ -6,6 +6,7 @@ import { Play, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { client } from "@/lib/sanity";
 
@@ -33,7 +34,6 @@ export default function ContactSection() {
             "More information",
             "Requesting Access",
           ]);
-          // Set initial values to the first item in each array, or keep current if not empty
           if (contactMethods.length > 0 && contactMethod === "Email") {
             setContactMethod(contactMethods[0]);
           }
@@ -140,7 +140,7 @@ export default function ContactSection() {
                     "rounded-full border px-4 py-1.5 text-sm transition-colors",
                     contactMethod === method
                       ? "border-bird-accent bg-bird-accent text-white"
-                      : "border-gray-200 bg-white text-black hover:border-bird-accent"
+                      : "border-gray-200 bg-white text-black hover:border-bird-accent",
                   )}
                 >
                   {method}
@@ -178,7 +178,7 @@ export default function ContactSection() {
           </div>
 
           <div className="space-y-2">
-            <Label>Preferred Method of Contact</Label>
+            <Label>Reason for Contact</Label>
             <div className="flex flex-wrap gap-2">
               {contactReasons.map((reason) => (
                 <button
@@ -189,7 +189,7 @@ export default function ContactSection() {
                     "rounded-full border px-4 py-1.5 text-sm transition-colors",
                     contactReason === reason
                       ? "border-bird-accent bg-bird-accent text-white"
-                      : "border-gray-200 bg-white text-black hover:border-bird-accent"
+                      : "border-gray-200 bg-white text-black hover:border-bird-accent",
                   )}
                 >
                   {reason}
@@ -204,6 +204,18 @@ export default function ContactSection() {
               <Upload className="h-5 w-5 text-bird-accent" />
               <p className="text-sm text-black">Drag and Drop or upload media</p>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="message">Message</Label>
+            <Textarea
+              id="message"
+              name="message"
+              rows={5}
+              placeholder="Write your message..."
+              required
+              className="resize-none rounded-lg border-gray-200"
+            />
           </div>
 
           {status === "success" && (
@@ -230,10 +242,10 @@ export default function ContactSection() {
             </Button>
             <Button
               type="submit"
-              disabled={status === "loading"}
+              disabled={status === "loading" || loadingSettings}
               className="rounded-full bg-bird-accent px-6 hover:bg-bird-accent-hover"
             >
-              Submit
+              {status === "loading" ? "Submitting…" : "Submit"}
               <Play className="ml-1 h-3 w-3 fill-current" />
             </Button>
           </div>

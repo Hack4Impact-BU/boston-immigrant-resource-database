@@ -2,15 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-import people from "/public/img/people.png";
-import groupPhoto from "/public/img/group_photo.png";
-import aboutRight1 from "/public/img/about-right-1.png";
-import aboutRight2 from "/public/img/about-right-2.png";
-import aboutRight3 from "/public/img/about-right-3.png";
+const HERO_IMAGES = [
+  { src: "/img/about-right-1.png", alt: "Community members holding multilingual belonging posters" },
+  { src: "/img/about-right-2.png", alt: "Outdoor community outreach event with banners" },
+  { src: "/img/about-right-3.png", alt: "Group posing with Boston belonging banner" },
+  { src: "/img/partners-photo.png", alt: "A woman and young girl smiling together" },
+] as const;
 
 export default function AboutBirdSection() {
   return (
-    <section className="overflow-hidden bg-gradient-to-r from-[#e8f5f0] to-[#e3f2fd]">
+    <section id="about" className="overflow-hidden bg-gradient-to-r from-[#e8f5f0] to-[#e3f2fd]">
       <div className="relative mx-auto max-w-6xl px-6 py-16 lg:px-10 lg:py-20">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-center">
           <div className="shrink-0 space-y-6 lg:max-w-md lg:pr-8">
@@ -34,17 +35,22 @@ export default function AboutBirdSection() {
             </Button>
           </div>
 
-          <div className="relative min-w-0 flex-1 overflow-hidden lg:ml-4">
-            <div className="flex w-max items-start gap-3">
-              <div className="flex shrink-0 flex-col gap-3 justify-center">
-                <Image src={people} alt="Community members holding posters" className="h-[180px] w-[280px] rounded-2xl object-cover" />
-                <Image src={groupPhoto} alt="Community volunteers smiling together" className="h-[180px] w-[280px] rounded-2xl object-cover" />
-              </div>
-              <div className="flex shrink-0 flex-col gap-3">
-                <Image src={aboutRight1} alt="Community members holding multilingual belonging posters" className="h-[180px] w-[280px] rounded-2xl object-cover" />
-                <Image src={aboutRight2} alt="Outdoor community outreach event with banners" className="h-[180px] w-[280px] rounded-2xl object-cover" />
-                <Image src={aboutRight3} alt="Group posing with Boston belonging banner" className="h-[180px] w-[280px] rounded-2xl object-cover" />
-              </div>
+          <div className="relative min-w-0 flex-1">
+            <div className="grid grid-cols-2 gap-3">
+              {HERO_IMAGES.map((image) => (
+                <div
+                  key={image.src}
+                  className="relative aspect-[4/3] overflow-hidden rounded-2xl"
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 280px"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>

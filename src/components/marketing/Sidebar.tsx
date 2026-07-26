@@ -1,7 +1,7 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
-import React from "react";
 import Link from "next/link";
 import { Users, Search, Plus, Mail } from "lucide-react";
 

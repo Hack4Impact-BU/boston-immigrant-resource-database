@@ -1,16 +1,24 @@
 import FaqAccordion from "./FaqAccordion";
 import { client } from "@/lib/sanity";
+import { FOR_PROVIDERS_FAQ } from "./data";
 
 async function getProviderFaqs() {
-  return client.fetch(`*[_type == "faqItem" && section == "providers"]{
-    _id,
-    trigger,
-    content
-  }`)
+  try {
+    const faqs = await client.fetch<
+      { _id: string; trigger: string; content: string }[]
+    >(`*[_type == "faqItem" && section == "providers"]{
+      _id,
+      trigger,
+      content
+    }`);
+    return faqs?.length ? faqs : [...FOR_PROVIDERS_FAQ];
+  } catch {
+    return [...FOR_PROVIDERS_FAQ];
+  }
 }
 
 export default async function ForProvidersSection() {
-  const faqs = await getProviderFaqs()
+  const faqs = await getProviderFaqs();
 
   return (
     <section className="bg-white py-16 md:py-20">
