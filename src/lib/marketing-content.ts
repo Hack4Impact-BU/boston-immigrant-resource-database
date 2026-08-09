@@ -36,6 +36,16 @@ export type HomePagePartnerLogo = {
   _id: string;
   alt: string;
   logo?: { asset: { _ref: string } };
+  url?: string | null;
+};
+
+export type HomePageAboutSection = {
+  heading: string;
+  subheading: string;
+  paragraph: string;
+  buttonText: string;
+  buttonLink: string;
+  images: Array<{ asset: { _ref: string } } | string | null>;
 };
 
 export type HomePageContent = {
@@ -45,7 +55,49 @@ export type HomePageContent = {
   partnersSection: HomePagePartnersSection | null;
   partnerLogos: HomePagePartnerLogo[] | null;
   imageBanner: string;
+  aboutSection: HomePageAboutSection | null;
 };
+
+const FALLBACK_ABOUT_SECTION: HomePageAboutSection = {
+  heading: "About BIRD",
+  subheading: "Boston Immigrant Resource Dashboard",
+  paragraph:
+    "To provide real-time, accessible information on essential resources for immigrants, refugees, and service providers—ensuring timely and effective support. To foster a “city of belonging” by creating a more connected and efficient support network for immigrants, refugees, and asylum seekers in Boston.",
+  buttonText: "Activate your Account",
+  buttonLink: "/register",
+  images: [],
+};
+
+export const getAboutSectionContent = unstable_cache(async (): Promise<HomePageAboutSection> => {
+  try {
+    const data = await client.fetch<{
+      heading?: string;
+      subheading?: string;
+      paragraph?: string;
+      buttonText?: string;
+      buttonLink?: string;
+      images?: Array<{ asset: { _ref: string } } | string | null> | null;
+    }>(`*[_type == "aboutSection"][0] {
+      heading,
+      subheading,
+      paragraph,
+      buttonText,
+      buttonLink,
+      "images": [image1, image2, image3, image4, image5]
+    }`);
+
+    return {
+      heading: data?.heading ?? FALLBACK_ABOUT_SECTION.heading,
+      subheading: data?.subheading ?? FALLBACK_ABOUT_SECTION.subheading,
+      paragraph: data?.paragraph ?? FALLBACK_ABOUT_SECTION.paragraph,
+      buttonText: data?.buttonText ?? FALLBACK_ABOUT_SECTION.buttonText,
+      buttonLink: data?.buttonLink ?? FALLBACK_ABOUT_SECTION.buttonLink,
+      images: data?.images ?? [],
+    };
+  } catch {
+    return FALLBACK_ABOUT_SECTION;
+  }
+});
 
 const FALLBACK_CONTENT: HomePageContent = {
   stats: [...STATS],
@@ -54,6 +106,7 @@ const FALLBACK_CONTENT: HomePageContent = {
   partnersSection: null,
   partnerLogos: [],
   imageBanner: "/img/about-right-2.png",
+  aboutSection: FALLBACK_ABOUT_SECTION,
 };
 
 export const getMarketingPageContent = unstable_cache(async (): Promise<HomePageContent> => {
@@ -65,6 +118,7 @@ export const getMarketingPageContent = unstable_cache(async (): Promise<HomePage
       partnersSection?: HomePagePartnersSection | null;
       partnerLogos?: HomePagePartnerLogo[] | null;
       imageBanner?: { image?: string | null } | null;
+      aboutSection?: HomePageAboutSection | null;
     }>(`{
       "stats": *[_type == "stat"] | order(_createdAt asc) {
         value,
@@ -93,10 +147,19 @@ export const getMarketingPageContent = unstable_cache(async (): Promise<HomePage
       "partnerLogos": *[_type == "partnerLogo"] | order(_createdAt asc) {
         _id,
         alt,
-        logo
+        logo,
+        "url": logo.asset->url
       },
       "imageBanner": *[_type == "imageBanner"][0] {
         "image": image.asset->url
+      },
+      "aboutSection": *[_type == "aboutSection"][0] {
+        heading,
+        subheading,
+        paragraph,
+        buttonText,
+        buttonLink,
+        "images": [image1, image2, image3, image4, image5]
       }
     }`);
 
@@ -107,6 +170,7 @@ export const getMarketingPageContent = unstable_cache(async (): Promise<HomePage
       partnersSection: data?.partnersSection ?? null,
       partnerLogos: data?.partnerLogos ?? [],
       imageBanner: data?.imageBanner?.image ?? "/img/about-right-2.png",
+      aboutSection: data?.aboutSection ?? FALLBACK_ABOUT_SECTION,
     };
   } catch {
     return FALLBACK_CONTENT;
