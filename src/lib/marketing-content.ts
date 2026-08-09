@@ -52,7 +52,7 @@ const FALLBACK_CONTENT: HomePageContent = {
   faqs: [...GENERAL_FAQ],
   testimonials: [...TESTIMONIALS].slice(0, 3),
   partnersSection: null,
-  partnerLogos: null,
+  partnerLogos: [],
   imageBanner: "/img/about-right-2.png",
 };
 
@@ -105,7 +105,7 @@ export const getMarketingPageContent = unstable_cache(async (): Promise<HomePage
       faqs: data?.faqs?.length ? data.faqs : [...GENERAL_FAQ],
       testimonials: data?.testimonials?.length ? data.testimonials : [...TESTIMONIALS].slice(0, 3),
       partnersSection: data?.partnersSection ?? null,
-      partnerLogos: data?.partnerLogos?.length ? data.partnerLogos : null,
+      partnerLogos: data?.partnerLogos ?? [],
       imageBanner: data?.imageBanner?.image ?? "/img/about-right-2.png",
     };
   } catch {
