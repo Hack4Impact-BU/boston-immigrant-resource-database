@@ -18,7 +18,7 @@ export default function Home() {
       <main>
         <AboutBirdSection />
         <WhyBirdMattersSection />
-        <ImageBanner />
+        {/* <ImageBanner /> */}
         <OurPartnersSection />
         <SponsorLogos />
         {/* <TestimonialsSection /> */}
