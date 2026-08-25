@@ -1,4 +1,4 @@
-# UniteBoston - Boston Immigrant Resource Database (BIRD)
+# UniteBoston - Boston Immigrant Resource Dashboard (BIRD)
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

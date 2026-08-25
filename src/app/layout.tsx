@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Boston Immigrant Resource Database",
+  title: "Boston Immigrant Resource Dashboard",
   description: "",
   icons: {
     icon: '/icon.png',
