@@ -20,7 +20,7 @@ export default async function FaqSection() {
             <FaqAccordion items={faqs} defaultOpen="0" />
           </div>
 
-          <div className="relative min-h-[320px] overflow-hidden rounded-2xl lg:min-h-[400px]">
+          <div className="relative overflow-hidden rounded-2xl aspect-[800/1258]">
             <Image
               src="/img/city-of-boston-you-belong-here.jpeg"
               alt="City of Boston - You Belong Here"
