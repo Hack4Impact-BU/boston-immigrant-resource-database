@@ -22,8 +22,8 @@ export default async function FaqSection() {
 
           <div className="relative min-h-[320px] overflow-hidden rounded-2xl lg:min-h-[400px]">
             <Image
-              src="/img/about-right-1.png"
-              alt="Community members shaking hands"
+              src="/img/city-of-boston-you-belong-here.jpeg"
+              alt="City of Boston - You Belong Here"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
