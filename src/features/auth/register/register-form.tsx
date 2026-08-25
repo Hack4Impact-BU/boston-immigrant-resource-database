@@ -58,13 +58,15 @@ export function RegisterForm() {
     } catch (error) {
       try {
         await signOut();
-      } catch {
+      } catch (e) {
         // The Clerk user was deleted server-side; ignore stale client session cleanup failures.
+        console.error(e);
       }
 
       setNeedsEmailVerification(false);
       setPendingUserInput(undefined);
-      setErrorMessage(getErrorMessage(error, "Registration could not be completed."));
+      console.error(error);
+      setErrorMessage(getErrorMessage(error, "Registration could not be completed. Save failed."));
     } finally {
       setIsSavingUser(false);
     }
@@ -120,7 +122,8 @@ export function RegisterForm() {
 
       await finishRegistration(userInput, result.clerkUserId);
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Registration could not be completed."));
+      console.error(error);
+      setErrorMessage(getErrorMessage(error, "Registration could not be completed. Submission failed."));
     } finally {
       endBusyAction();
     }
@@ -148,6 +151,7 @@ export function RegisterForm() {
       setNeedsEmailVerification(false);
       await finishRegistration(pendingUserInput, result.clerkUserId);
     } catch (error) {
+      console.error(error);
       setErrorMessage(getErrorMessage(error, "Registration could not be completed."));
     } finally {
       endBusyAction();

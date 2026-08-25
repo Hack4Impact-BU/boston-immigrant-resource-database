@@ -66,13 +66,14 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
       phoneNumber: requireNonEmptyString(input.phoneNumber, "phoneNumber"),
       email: requireNonEmptyString(input.email, "email"),
     });
-  } catch {
+  } catch (e) {
     try {
       await client.users.deleteUser(clerkUserId);
     } catch {
       throw new Error("Registration failed, but the Clerk account could not be deleted.");
     }
 
-    throw new Error("Registration could not be completed. Please try again.");
+    console.error(e);
+    throw new Error("Registration could not be completed. User could not be created. Please try again.");
   }
 }
