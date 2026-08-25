@@ -15,10 +15,10 @@ export default function ContactPage() {
     organization: '',
     firstName: '',
     lastName: '',
-    preferredMethod: 'email',
+    preferredMethod: 'Email',
     email: '',
     phone: '',
-    purposeMethod: 'more-information',
+    purposeMethod: 'More Information',
     message: '',
   })
 
@@ -65,10 +65,10 @@ export default function ContactPage() {
         organization: '',
         firstName: '',
         lastName: '',
-        preferredMethod: 'email',
+        preferredMethod: 'Email',
         email: '',
         phone: '',
-        purposeMethod: 'more-information',
+        purposeMethod: 'More Information',
         message: '',
       })
     } catch (error) {
@@ -82,10 +82,10 @@ export default function ContactPage() {
       organization: '',
       firstName: '',
       lastName: '',
-      preferredMethod: 'email',
+      preferredMethod: 'Email',
       email: '',
       phone: '',
-      purposeMethod: 'more-information',
+      purposeMethod: 'More Information',
       message: '',
     })
     setStatus('idle')
@@ -160,7 +160,7 @@ export default function ContactPage() {
                       type="radio"
                       name="preferredMethod"
                       value="Email"
-                      checked={formData.preferredMethod === 'email'}
+                      checked={formData.preferredMethod === 'Email'}
                       onChange={(e) => handleRadioChange('preferredMethod', e.target.value)}
                       className="h-4 w-4 cursor-pointer"
                     />
@@ -171,7 +171,7 @@ export default function ContactPage() {
                       type="radio"
                       name="preferredMethod"
                       value="Phone"
-                      checked={formData.preferredMethod === 'phone'}
+                      checked={formData.preferredMethod === 'Phone'}
                       onChange={(e) => handleRadioChange('preferredMethod', e.target.value)}
                       className="h-4 w-4 cursor-pointer"
                     />
@@ -225,8 +225,8 @@ export default function ContactPage() {
                 <input
                   type="radio"
                   name="purposeMethod"
-                  value="more-information"
-                  checked={formData.purposeMethod === 'more-information'}
+                  value="More Information"
+                  checked={formData.purposeMethod === 'More Information'}
                   onChange={(e) => handleRadioChange('purposeMethod', e.target.value)}
                   className="h-4 w-4 cursor-pointer"
                 />
@@ -236,8 +236,8 @@ export default function ContactPage() {
                 <input
                   type="radio"
                   name="purposeMethod"
-                  value="requesting-access"
-                  checked={formData.purposeMethod === 'requesting-access'}
+                  value="Requesting Access"
+                  checked={formData.purposeMethod === 'Requesting Access'}
                   onChange={(e) => handleRadioChange('purposeMethod', e.target.value)}
                   className="h-4 w-4 cursor-pointer"
                 />
@@ -247,8 +247,8 @@ export default function ContactPage() {
                 <input
                   type="radio"
                   name="purposeMethod"
-                  value="technical-support"
-                  checked={formData.purposeMethod === 'technical-support'}
+                  value="Technical Support"
+                  checked={formData.purposeMethod === 'Technical Support'}
                   onChange={(e) => handleRadioChange('purposeMethod', e.target.value)}
                   className="h-4 w-4 cursor-pointer"
                 />
