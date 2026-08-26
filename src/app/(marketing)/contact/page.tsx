@@ -93,7 +93,7 @@ export default function ContactPage() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar isOpen={sidebarOpen} activePage="Contact us" />
+      <Sidebar isOpen={sidebarOpen} activePage="Contact Us" />
       <main className="flex-1 bg-white px-8 py-12 ml-52">
         <div className="mx-auto max-w-2xl">
         <h1 className="mb-8 text-3xl font-semibold text-[#4c8cc9]">

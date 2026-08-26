@@ -35,7 +35,7 @@ const WORKFLOWS: NavItem[] = [
 
 const HELPCENTER: NavItem[] = [
   { label: "Additional Resources", href: "#", icon: MessageCircleQuestion },
-  { label: "Contact us", href: "#", icon: Mail },
+  // { label: "Contact Us", href: "#", icon: Mail },
 ];
 
 function NavLink({
