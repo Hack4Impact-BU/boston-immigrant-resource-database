@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
 
   const helpcenterItems: MenuItem[] = [
     { name: "Additional Resources", href: "/resources", icon: <Plus size={20} /> },
-    { name: "Contact Us", href: "/contact", icon: <Mail size={20} /> },
+    // { name: "Contact Us", href: "/contact", icon: <Mail size={20} /> },
   ];
 
   return (
