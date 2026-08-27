@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 
@@ -63,9 +64,24 @@ export default async function HomeFooter() {
             </div>
           </div>
 
-          <p className="text-xs leading-5 text-white/55 md:max-w-xs md:text-right">
-            &copy; {new Date().getFullYear()} Unite Boston. All rights reserved.
-          </p>
+          <div className="flex flex-col items-start gap-4 md:items-end">
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs text-white/55">Scan to visit BIRD</p>
+              <div className="rounded-lg bg-white p-2">
+                <Image
+                  src="/img/bird-website-qr-code.png"
+                  alt="QR code linking to the BIRD website"
+                  width={112}
+                  height={112}
+                  className="h-28 w-28"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs leading-5 text-white/55 md:max-w-xs md:text-right">
+              &copy; {new Date().getFullYear()} Unite Boston. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
