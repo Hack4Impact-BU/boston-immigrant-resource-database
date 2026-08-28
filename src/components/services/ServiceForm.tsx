@@ -90,7 +90,7 @@ export function ServiceForm({ serviceTypes, initialValues, submitLabel, onSubmit
         <Textarea
           id="description"
           name="description"
-          rows={4}
+          rows={8}
           defaultValue={initialValues?.description}
           className="text-sm"
         />
