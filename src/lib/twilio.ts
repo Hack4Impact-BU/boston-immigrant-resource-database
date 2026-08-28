@@ -13,7 +13,7 @@ const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 const UPDATABLE_FIELDS: Array<{
-	key: keyof ServiceUpdateInput;
+	key: Exclude<keyof ServiceUpdateInput, "serviceTypeIds">;
 	label: string;
 	aliases: string[];
 }> = [
