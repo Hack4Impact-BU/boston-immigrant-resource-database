@@ -33,6 +33,7 @@ type UserFieldSet = {
 	email: string;
 	access?: UserAccessStatus | UserAccessStatus[];
 	Access?: UserAccessStatus | UserAccessStatus[];
+	providerId?: string;
 };
 
 export type CreateContactUsRequestInput = {
@@ -252,4 +253,55 @@ export async function getUserOrganizationName(clerkUserId: string): Promise<stri
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * Looks up the Providers-table record ID linked to this Clerk account, if any has
+ * been set yet. Returns null if unset, misconfigured, or the User record can't be found.
+ *
+ * There is no automatic email/domain matching here by design: a person registering an
+ * account is not guaranteed to share the exact contact email already on file for their
+ * organization's existing Provider listing, so the link is only ever set explicitly
+ * (see linkUserToProvider) rather than inferred.
+ */
+export async function getUserProviderId(clerkUserId: string): Promise<string | null> {
+	if (!hasAirtableConfig()) {
+		return null;
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const providerId = records[0]?.get("providerId");
+
+		return typeof providerId === "string" && providerId.trim() ? providerId.trim() : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Persists which Provider record this Clerk account manages. Throws if the User
+ * record can't be found, since a silent no-op here would be confusing to debug later.
+ */
+export async function linkUserToProvider(clerkUserId: string, providerId: string): Promise<void> {
+	const records = await getUserTable()
+		.select({
+			filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+			maxRecords: 1,
+		})
+		.all();
+
+	const userRecord = records[0];
+
+	if (!userRecord) {
+		throw new Error("Could not find a User record for this account.");
+	}
+
+	await getUserTable().update(userRecord.id, { providerId }, { typecast: true });
 }

@@ -35,6 +35,18 @@ export type ProviderUpdateInput = Partial<{
   status: string;
 }>;
 
+export type ProviderCreateInput = {
+  name: string;
+  email: string;
+  website?: string;
+  primary_phone_number?: string;
+};
+
+export interface ServiceType {
+  id: string;
+  name: string;
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -43,6 +55,7 @@ export interface Service {
   status: string;
   link?: string;
   service_types: string;
+  service_type_ids: string[];
   provider_email: string;
   provider_record_ID: string;
   last_modified?: string;
@@ -53,7 +66,17 @@ export type ServiceUpdateInput = Partial<{
   description: string;
   status: string;
   link: string;
+  serviceTypeIds: string[];
 }>;
+
+export type ServiceCreateInput = {
+  name: string;
+  providerId: string;
+  description?: string;
+  status: string;
+  link?: string;
+  serviceTypeIds?: string[];
+};
 
 export type ServiceWithProviderContact = Service & {
   provider_name: string;
@@ -173,12 +196,14 @@ function toProviderUpdateFields(input: ProviderUpdateInput): Record<string, stri
 
 function toService(r: AirtableRecord<FieldSet>): Service {
   const providerRecordId = normalizeLinkedRecordId(r.get("Providers")) || normalizeLinkedRecordId(r.get("Provider RECORD ID"));
+  const serviceTypeIds = normalizeLinkedRecordIds(r.get("Service Types"));
 
   return {
     id: r.id,
     provider: providerRecordId,
     provider_email: r.get("Provider Email") as string,
-    service_types: normalizeLinkedRecordIds(r.get("Service Types")).join(", "),
+    service_types: serviceTypeIds.join(", "),
+    service_type_ids: serviceTypeIds,
     name: r.get("Name") as string,
     description: r.get("Description") as string | undefined,
     status: r.get("Status") as string,
@@ -188,13 +213,14 @@ function toService(r: AirtableRecord<FieldSet>): Service {
   };
 }
 
-function toServiceUpdateFields(input: ServiceUpdateInput): Record<string, string> {
-  const fields: Record<string, string> = {};
+function toServiceUpdateFields(input: ServiceUpdateInput): Record<string, string | string[]> {
+  const fields: Record<string, string | string[]> = {};
 
   if (typeof input.name === "string") fields.Name = input.name;
   if (typeof input.description === "string") fields.Description = input.description;
   if (typeof input.status === "string") fields.Status = input.status;
   if (typeof input.link === "string") fields.Link = input.link;
+  if (Array.isArray(input.serviceTypeIds)) fields["Service Types"] = input.serviceTypeIds;
 
   return fields;
 }
@@ -366,4 +392,56 @@ export async function getServiceById(id: string): Promise<Service | null> {
   } catch {
     return null;
   }
+}
+
+export async function getAllServiceTypes(): Promise<ServiceType[]> {
+  const records = await base("Service Types").select({ view: "Grid view" }).all();
+
+  return records
+    .map((record) => ({ id: record.id, name: getDisplayFieldValue(record, ["Name"]) }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function toServiceCreateFields(input: ServiceCreateInput): Record<string, string | string[]> {
+  const fields: Record<string, string | string[]> = {
+    Name: input.name,
+    Status: input.status,
+    Provider: [input.providerId],
+  };
+
+  if (typeof input.description === "string" && input.description) fields.Description = input.description;
+  if (typeof input.link === "string" && input.link) fields.Link = input.link;
+  if (Array.isArray(input.serviceTypeIds) && input.serviceTypeIds.length > 0) {
+    fields["Service Types"] = input.serviceTypeIds;
+  }
+
+  return fields;
+}
+
+export async function createService(input: ServiceCreateInput): Promise<{ id: string }> {
+  if (!process.env.AIRTABLE_API_KEY) {
+    throw new Error("AIRTABLE_API_KEY is not set.");
+  }
+
+  const record = await base("Services").create(toServiceCreateFields(input), { typecast: true });
+
+  return { id: record.id };
+}
+
+export async function createProvider(input: ProviderCreateInput): Promise<{ id: string }> {
+  if (!process.env.AIRTABLE_API_KEY) {
+    throw new Error("AIRTABLE_API_KEY is not set.");
+  }
+
+  const fields: Record<string, string> = {
+    Name: input.name,
+    Email: input.email,
+  };
+
+  if (input.website) fields.Website = input.website;
+  if (input.primary_phone_number) fields["Primary Phone Number"] = input.primary_phone_number;
+
+  const record = await base("Providers").create(fields, { typecast: true });
+
+  return { id: record.id };
 }
