@@ -16,7 +16,7 @@ export interface Provider {
   status?: string;
   website: string;
   google_maps_link: string;
-  service_types?: string;
+  service_types: string;
   description: string;
   language_support: string[];
   services: string;
@@ -167,8 +167,13 @@ function getDisplayNameById(records: ReadonlyArray<AirtableRecord<FieldSet>>) {
   );
 }
 
-function toProvider(r: AirtableRecord<FieldSet>, languageNameById: Map<string, string>): Provider {
+function toProvider(
+  r: AirtableRecord<FieldSet>,
+  languageNameById: Map<string, string>,
+  serviceTypeNameById: Map<string, string>
+): Provider {
   const languageSupportIds = normalizeLinkedRecordIds(r.get("Language Support"));
+  const serviceTypeIds = normalizeLinkedRecordIds(r.get("Service Types"));
 
   return {
     id: r.id,
@@ -182,6 +187,7 @@ function toProvider(r: AirtableRecord<FieldSet>, languageNameById: Map<string, s
     description: r.get("Description") as string,
     services: r.get("Services") as string,
     language_support: languageSupportIds.map((languageId) => languageNameById.get(languageId) || languageId),
+    service_types: serviceTypeIds.map((serviceTypeId) => serviceTypeNameById.get(serviceTypeId) || serviceTypeId).join(", "),
     logo: getAttachmentUrl(r.get("Logo")),
     status: r.get("Status") as string | undefined,
   };
@@ -235,16 +241,18 @@ function toServiceUpdateFields(input: ServiceUpdateInput): Record<string, string
 }
 
 export async function getAllProviders(): Promise<Provider[]> {
-  const [providerRecords, languageRecords] = await Promise.all([
+  const [providerRecords, languageRecords, serviceTypes] = await Promise.all([
     base("Providers").select({ view: "Grid view" }).all(),
     base("Languages").select({ view: "Grid view" }).all(),
+    getAllServiceTypes(),
   ]);
 
   const languageNameById = new Map(
     languageRecords.map((record) => [record.id, getDisplayFieldValue(record, ["Name", "Language", "Title"])])
   );
+  const serviceTypeNameById = new Map(serviceTypes.map((serviceType) => [serviceType.id, serviceType.name]));
 
-  return providerRecords.map((record) => toProvider(record, languageNameById));
+  return providerRecords.map((record) => toProvider(record, languageNameById, serviceTypeNameById));
 }
 
 export async function getProvidersWithPhoneNumbers(): Promise<Provider[]> {
@@ -255,16 +263,18 @@ export async function getProvidersWithPhoneNumbers(): Promise<Provider[]> {
 
 export async function getProviderById(id: string): Promise<Provider | null> {
   try {
-    const [providerRecord, languageRecords] = await Promise.all([
+    const [providerRecord, languageRecords, serviceTypes] = await Promise.all([
       base("Providers").find(id),
       base("Languages").select({ view: "Grid view" }).all(),
+      getAllServiceTypes(),
     ]);
 
     const languageNameById = new Map(
       languageRecords.map((record) => [record.id, getDisplayFieldValue(record, ["Name", "Language", "Title"])])
     );
+    const serviceTypeNameById = new Map(serviceTypes.map((serviceType) => [serviceType.id, serviceType.name]));
 
-    return toProvider(providerRecord, languageNameById);
+    return toProvider(providerRecord, languageNameById, serviceTypeNameById);
   } catch {
     return null;
   }

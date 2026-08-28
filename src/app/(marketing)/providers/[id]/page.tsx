@@ -64,6 +64,19 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
               <p className="mt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
             ) : null}
 
+            {provider.service_types ? (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {provider.service_types.split(", ").map((serviceType) => (
+                  <span
+                    key={serviceType}
+                    className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                  >
+                    {serviceType}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
             <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-5">
               {provider.address ? (
                 <div className="flex items-start gap-2.5 text-sm text-slate-600">
