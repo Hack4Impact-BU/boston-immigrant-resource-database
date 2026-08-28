@@ -19,7 +19,7 @@ export default async function ManageServicesPage() {
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
-      <Sidebar isOpen={true} activePage="Manage Services" />
+      <Sidebar isOpen={true} activePage="Manage My Services" />
 
       <main className="ml-55 flex-1 px-6 py-8">
         <div className="mx-auto max-w-3xl">

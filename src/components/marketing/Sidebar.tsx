@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     { name: "Providers", href: "/providers", icon: <Building2 size={20} /> },
     { name: "Search Services", href: "/map", icon: <Search size={20} /> },
     ...(user
-      ? [{ name: "Manage Services", href: "/services/manage", icon: <Briefcase size={20} /> }]
+      ? [{ name: "Manage My Services", href: "/services/manage", icon: <Briefcase size={20} /> }]
       : []),
   ];
 

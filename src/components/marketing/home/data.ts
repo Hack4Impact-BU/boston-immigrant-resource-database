@@ -1,23 +1,23 @@
 export const STATS = [
   {
-    value: "2,500+",
-    label: "Social Workers Served",
+    value: "30+",
+    label: "Providers",
     icon: "users",
   },
   {
-    value: "5 +",
-    label: "Years of Experiences",
-    icon: "globe",
-  },
-  {
-    value: "150 +",
-    label: "Services Locations",
-    icon: "community",
-  },
-  {
-    value: "500 +",
-    label: "Resources Available",
+    value: "40+",
+    label: "Services",
     icon: "resources",
+  },
+  {
+    value: "500+",
+    label: "Immigrants Served",
+    icon: "users",
+  },
+  {
+    value: "1000+",
+    label: "Community Connections",
+    icon: "globe",
   },
 ] as const;
 
