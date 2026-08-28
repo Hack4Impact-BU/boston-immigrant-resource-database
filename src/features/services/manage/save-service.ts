@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 import { requireNonEmptyString } from "@/features/auth/auth-helpers";
-import { createService, getServiceById, updateService } from "@/app/api/airtable";
+import { createService, deleteService, getServiceById, updateService, type Service } from "@/app/api/airtable";
 import { getUserProviderId } from "@/lib/airtable";
 
 export type SaveServiceFormInput = {
@@ -31,6 +31,27 @@ async function requireCurrentProviderId(): Promise<{ userId: string; providerId:
   return { userId, providerId };
 }
 
+// Never trust that a serviceId submitted from the client belongs to the current
+// user's organization just because they were on that service's page in the UI.
+// Server Actions are reachable directly via POST, not just through this app, so
+// ownership has to be re-checked here on every call, not assumed from the route.
+async function requireOwnedService(serviceId: string, providerId: string): Promise<Service> {
+  const existingService = await getServiceById(serviceId);
+
+  if (!existingService) {
+    throw new Error("This service could not be found.");
+  }
+
+  const belongsToCurrentProvider =
+    existingService.provider === providerId || existingService.provider_record_ID === providerId;
+
+  if (!belongsToCurrentProvider) {
+    throw new Error("You don't have permission to modify this service.");
+  }
+
+  return existingService;
+}
+
 export async function createServiceAction(input: SaveServiceFormInput): Promise<{ id: string }> {
   const { providerId } = await requireCurrentProviderId();
 
@@ -52,21 +73,7 @@ export async function createServiceAction(input: SaveServiceFormInput): Promise<
 export async function updateServiceAction(serviceId: string, input: SaveServiceFormInput): Promise<void> {
   const { providerId } = await requireCurrentProviderId();
 
-  const existingService = await getServiceById(serviceId);
-
-  if (!existingService) {
-    throw new Error("This service could not be found.");
-  }
-
-  // Ownership check: never trust that a serviceId submitted from the client belongs
-  // to the current user's organization just because they were on the edit page for
-  // it. Server Actions are reachable directly via POST, not just through this UI.
-  const belongsToCurrentProvider =
-    existingService.provider === providerId || existingService.provider_record_ID === providerId;
-
-  if (!belongsToCurrentProvider) {
-    throw new Error("You don't have permission to edit this service.");
-  }
+  await requireOwnedService(serviceId, providerId);
 
   await updateService(serviceId, {
     name: requireNonEmptyString(input.name, "name"),
@@ -75,6 +82,17 @@ export async function updateServiceAction(serviceId: string, input: SaveServiceF
     link: input.link?.trim() || "",
     serviceTypeIds: input.serviceTypeIds,
   });
+
+  revalidatePath("/services/manage");
+  revalidatePath("/map");
+}
+
+export async function deleteServiceAction(serviceId: string): Promise<void> {
+  const { providerId } = await requireCurrentProviderId();
+
+  await requireOwnedService(serviceId, providerId);
+
+  await deleteService(serviceId);
 
   revalidatePath("/services/manage");
   revalidatePath("/map");

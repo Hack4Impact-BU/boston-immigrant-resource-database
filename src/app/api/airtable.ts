@@ -428,6 +428,14 @@ export async function createService(input: ServiceCreateInput): Promise<{ id: st
   return { id: record.id };
 }
 
+export async function deleteService(id: string): Promise<void> {
+  if (!process.env.AIRTABLE_API_KEY) {
+    throw new Error("AIRTABLE_API_KEY is not set.");
+  }
+
+  await base("Services").destroy(id);
+}
+
 export async function createProvider(input: ProviderCreateInput): Promise<{ id: string }> {
   if (!process.env.AIRTABLE_API_KEY) {
     throw new Error("AIRTABLE_API_KEY is not set.");

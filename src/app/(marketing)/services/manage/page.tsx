@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import Sidebar from "@/components/marketing/Sidebar";
 import { getProviderContext, getServicesForCurrentProvider } from "@/features/services/manage/provider-context";
 import { ProviderPicker } from "@/components/services/ProviderPicker";
+import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 
 const STATUS_STYLES: Record<string, string> = {
   Open: "bg-green-100 text-green-800",
@@ -68,12 +69,15 @@ export default async function ManageServicesPage() {
                         ) : null}
                       </div>
 
-                      <Link
-                        href={`/services/manage/${service.id}/edit`}
-                        className="shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Edit
-                      </Link>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Link
+                          href={`/services/manage/${service.id}/edit`}
+                          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Edit
+                        </Link>
+                        <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
+                      </div>
                     </div>
                   ))
                 )}
