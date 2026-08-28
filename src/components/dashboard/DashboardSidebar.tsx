@@ -29,8 +29,8 @@ const WORKFLOWS: NavItem[] = [
     icon: Users,
     match: (p) => p.startsWith("/forum"),
   },
-  { label: "Search Resources", href: "#", icon: Search },
-  { label: "Saved Resources", href: "/saved", icon: Layers },
+  { label: "Search Services", href: "#", icon: Search },
+  { label: "Saved Services", href: "/saved", icon: Layers },
 ];
 
 const HELPCENTER: NavItem[] = [
