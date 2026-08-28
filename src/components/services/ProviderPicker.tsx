@@ -6,18 +6,25 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage, getRequiredFormString } from "@/features/auth/auth-helpers";
 import { createAndLinkProvider, linkExistingProvider } from "@/features/services/manage/save-provider-link";
-import type { Provider } from "@/app/api/airtable";
+import { ServiceTypesPicker } from "@/components/services/ServiceTypesPicker";
+import { LanguageSupportPicker } from "@/components/services/LanguageSupportPicker";
+import type { Language, Provider, ServiceType } from "@/app/api/airtable";
 
 type ProviderPickerProps = {
   allProviders: Provider[];
+  serviceTypes: ServiceType[];
+  languages: Language[];
 };
 
-export function ProviderPicker({ allProviders }: ProviderPickerProps) {
+export function ProviderPicker({ allProviders, serviceTypes, languages }: ProviderPickerProps) {
   const router = useRouter();
   const [mode, setMode] = useState<"pick" | "create">("pick");
   const [search, setSearch] = useState("");
+  const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<string[]>([]);
+  const [selectedLanguageIds, setSelectedLanguageIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -62,6 +69,10 @@ export function ProviderPicker({ allProviders }: ProviderPickerProps) {
         email: getRequiredFormString(formData, "email"),
         website: (formData.get("website") as string | null)?.trim() || undefined,
         primaryPhoneNumber: (formData.get("primaryPhoneNumber") as string | null)?.trim() || undefined,
+        description: (formData.get("description") as string | null)?.trim() || undefined,
+        address: (formData.get("address") as string | null)?.trim() || undefined,
+        serviceTypeIds: selectedServiceTypeIds,
+        languageIds: selectedLanguageIds,
       });
       router.refresh();
     } catch (error) {
@@ -73,7 +84,7 @@ export function ProviderPicker({ allProviders }: ProviderPickerProps) {
   }
 
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h1 className="text-xl font-semibold tracking-tight text-slate-900">Link your organization</h1>
       <p className="mt-1.5 text-sm text-slate-600">
         Before you can add or edit services, tell us which organization you represent.
@@ -161,6 +172,38 @@ export function ProviderPicker({ allProviders }: ProviderPickerProps) {
               Phone Number (optional)
             </Label>
             <Input id="primaryPhoneNumber" name="primaryPhoneNumber" type="tel" className="h-9 text-sm" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="description" className="text-xs font-medium text-slate-500">
+              Description (optional)
+            </Label>
+            <Textarea id="description" name="description" rows={4} className="text-sm" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="address" className="text-xs font-medium text-slate-500">
+              Address (optional)
+            </Label>
+            <Input id="address" name="address" className="h-9 text-sm" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-slate-500">Service Types (optional)</Label>
+            <ServiceTypesPicker
+              serviceTypes={serviceTypes}
+              selectedIds={selectedServiceTypeIds}
+              onChange={setSelectedServiceTypeIds}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-slate-500">Language Support (optional)</Label>
+            <LanguageSupportPicker
+              languages={languages}
+              selectedIds={selectedLanguageIds}
+              onChange={setSelectedLanguageIds}
+            />
           </div>
 
           <Button type="submit" disabled={isSubmitting} className="w-full">

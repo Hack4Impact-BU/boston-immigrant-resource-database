@@ -11,6 +11,10 @@ export type CreateAndLinkProviderInput = {
   email: string;
   website?: string;
   primaryPhoneNumber?: string;
+  description?: string;
+  address?: string;
+  serviceTypeIds?: string[];
+  languageIds?: string[];
 };
 
 async function requireSignedInUserId(): Promise<string> {
@@ -52,6 +56,10 @@ export async function createAndLinkProvider(input: CreateAndLinkProviderInput): 
     email: requireNonEmptyString(input.email, "email"),
     website: input.website?.trim() || undefined,
     primary_phone_number: input.primaryPhoneNumber?.trim() || undefined,
+    description: input.description?.trim() || undefined,
+    address: input.address?.trim() || undefined,
+    serviceTypeIds: input.serviceTypeIds,
+    languageIds: input.languageIds,
   });
 
   await linkUserToProvider(userId, id);

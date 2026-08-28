@@ -14,7 +14,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function ManageServicesPage() {
-  const { linkedProvider, allProviders } = await getProviderContext();
+  const { linkedProvider, allProviders, serviceTypes, languages } = await getProviderContext();
   const services = await getServicesForCurrentProvider(linkedProvider?.id ?? null);
 
   return (
@@ -24,7 +24,7 @@ export default async function ManageServicesPage() {
       <main className="ml-55 flex-1 px-6 py-8">
         <div className="mx-auto max-w-3xl">
           {!linkedProvider ? (
-            <ProviderPicker allProviders={allProviders} />
+            <ProviderPicker allProviders={allProviders} serviceTypes={serviceTypes} languages={languages} />
           ) : (
             <>
               <div className="flex items-center justify-between">

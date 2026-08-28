@@ -40,9 +40,18 @@ export type ProviderCreateInput = {
   email: string;
   website?: string;
   primary_phone_number?: string;
+  description?: string;
+  address?: string;
+  serviceTypeIds?: string[];
+  languageIds?: string[];
 };
 
 export interface ServiceType {
+  id: string;
+  name: string;
+}
+
+export interface Language {
   id: string;
   name: string;
 }
@@ -402,6 +411,14 @@ export async function getAllServiceTypes(): Promise<ServiceType[]> {
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
+export async function getAllLanguages(): Promise<Language[]> {
+  const records = await base("Languages").select({ view: "Grid view" }).all();
+
+  return records
+    .map((record) => ({ id: record.id, name: getDisplayFieldValue(record, ["Name"]) }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 function toServiceCreateFields(input: ServiceCreateInput): Record<string, string | string[]> {
   const fields: Record<string, string | string[]> = {
     Name: input.name,
@@ -441,13 +458,17 @@ export async function createProvider(input: ProviderCreateInput): Promise<{ id: 
     throw new Error("AIRTABLE_API_KEY is not set.");
   }
 
-  const fields: Record<string, string> = {
+  const fields: Record<string, string | string[]> = {
     Name: input.name,
     Email: input.email,
   };
 
   if (input.website) fields.Website = input.website;
   if (input.primary_phone_number) fields["Primary Phone Number"] = input.primary_phone_number;
+  if (input.description) fields.Description = input.description;
+  if (input.address) fields.Address = input.address;
+  if (input.serviceTypeIds && input.serviceTypeIds.length > 0) fields["Service Types"] = input.serviceTypeIds;
+  if (input.languageIds && input.languageIds.length > 0) fields["Language Support"] = input.languageIds;
 
   const record = await base("Providers").create(fields, { typecast: true });
 
