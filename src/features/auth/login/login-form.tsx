@@ -40,6 +40,7 @@ export function LoginForm() {
         password: getRequiredFormString(formData, "password"),
       });
     } catch (error) {
+      console.error("Sign-in (password step) failed:", error);
       setErrorMessage(getSignInErrorMessage(error, "Sign in could not be completed."));
     }
   }
@@ -53,6 +54,7 @@ export function LoginForm() {
     try {
       await verifyClientTrustCode(getRequiredFormString(formData, "code"));
     } catch (error) {
+      console.error("Client Trust verification failed:", error);
       setErrorMessage(getSignInErrorMessage(error, "Verification could not be completed."));
     }
   }
