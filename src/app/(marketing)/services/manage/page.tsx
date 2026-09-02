@@ -10,7 +10,7 @@ const STATUS_STYLES: Record<string, string> = {
   Open: "bg-green-100 text-green-800",
   Waitlist: "bg-amber-100 text-amber-800",
   "Contact Provider": "bg-emerald-100 text-emerald-800",
-  Closed: "bg-rose-100 text-rose-800",
+  Full: "bg-rose-100 text-rose-800",
 };
 
 export default async function ManageServicesPage() {

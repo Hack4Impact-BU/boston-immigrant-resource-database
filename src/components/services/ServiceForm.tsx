@@ -12,7 +12,7 @@ import { ServiceTypesPicker } from "@/components/services/ServiceTypesPicker";
 import type { ServiceType } from "@/app/api/airtable";
 import type { SaveServiceFormInput } from "@/features/services/manage/save-service";
 
-const STATUS_OPTIONS = ["Open", "Waitlist", "Contact Provider", "Closed"] as const;
+const STATUS_OPTIONS = ["Open", "Waitlist", "Contact Provider", "Full"] as const;
 
 type ServiceFormInitialValues = {
   name: string;

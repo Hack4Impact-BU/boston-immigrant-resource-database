@@ -51,7 +51,7 @@ export default function faq() {
                 1. Open
                 2. Waiting List
                 3. Contact Provider
-                4. Closed`
+                4. Full`
         },
         {
             trigger: "What types of services are included?",

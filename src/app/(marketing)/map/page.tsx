@@ -278,7 +278,7 @@ export default function MapPage() {
   }, [providers]);
 
   const statusOptions = useMemo(() => {
-    return ["All Statuses", "Open", "Contact Provider", "Waitlist", "Closed"];
+    return ["All Statuses", "Open", "Contact Provider", "Waitlist", "Full"];
   }, []);
 
   const serviceTypeOptions = useMemo(() => {
@@ -747,7 +747,7 @@ export default function MapPage() {
                                 className={`mt-1 h-4 shrink-0 rounded-xs px-1 text-xs ${
                                   service.status === "Open"
                                     ? "bg-green-500"
-                                    : service.status === "Closed"
+                                    : service.status === "Full"
                                       ? "bg-rose-500"
                                       : service.status === "Waitlist"
                                         ? "bg-[#e69b00]"
