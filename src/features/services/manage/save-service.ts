@@ -25,14 +25,14 @@ async function requireCurrentProviderId(): Promise<{ userId: string; providerId:
   const providerId = await getUserProviderId(userId);
 
   if (!providerId) {
-    throw new Error("Your account isn't linked to an organization yet.");
+    throw new Error("Your account isn't linked to an Provider yet.");
   }
 
   return { userId, providerId };
 }
 
 // Never trust that a serviceId submitted from the client belongs to the current
-// user's organization just because they were on that service's page in the UI.
+// user's Provider just because they were on that service's page in the UI.
 // Server Actions are reachable directly via POST, not just through this app, so
 // ownership has to be re-checked here on every call, not assumed from the route.
 async function requireOwnedService(serviceId: string, providerId: string): Promise<Service> {
