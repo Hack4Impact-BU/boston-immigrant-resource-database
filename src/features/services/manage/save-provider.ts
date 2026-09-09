@@ -35,7 +35,7 @@ export async function updateProviderAction(providerId: string, input: SaveProvid
   const linkedProviderId = await getUserProviderId(userId);
 
   if (!linkedProviderId || linkedProviderId !== providerId) {
-    throw new Error("You don't have permission to edit this organization.");
+    throw new Error("You don't have permission to edit this Provider.");
   }
 
   await updateProvider(providerId, {

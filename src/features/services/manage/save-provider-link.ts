@@ -29,7 +29,7 @@ async function requireSignedInUserId(): Promise<string> {
 
 /**
  * Links the current account to an existing Provider record the person picked from
- * the directory (the "my organization is already listed" path).
+ * the directory (the "my Provider is already listed" path).
  */
 export async function linkExistingProvider(providerId: string): Promise<void> {
   const userId = await requireSignedInUserId();
@@ -38,14 +38,14 @@ export async function linkExistingProvider(providerId: string): Promise<void> {
   const provider = await getProviderById(trimmedProviderId);
 
   if (!provider) {
-    throw new Error("That organization could not be found. Please pick it from the list again.");
+    throw new Error("That Provider could not be found. Please pick it from the list again.");
   }
 
   await linkUserToProvider(userId, trimmedProviderId);
 }
 
 /**
- * Creates a brand-new Provider record for an organization that isn't in the
+ * Creates a brand-new Provider record for a Provider that isn't in the
  * directory yet, and links the current account to it in the same step.
  */
 export async function createAndLinkProvider(input: CreateAndLinkProviderInput): Promise<{ id: string }> {

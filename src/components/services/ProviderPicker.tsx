@@ -49,7 +49,7 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
       router.refresh();
     } catch (error) {
       console.error(error);
-      setErrorMessage(getErrorMessage(error, "Could not link that organization. Please try again."));
+      setErrorMessage(getErrorMessage(error, "Could not link that Provider. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +77,7 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
       router.refresh();
     } catch (error) {
       console.error(error);
-      setErrorMessage(getErrorMessage(error, "Could not create your organization. Please try again."));
+      setErrorMessage(getErrorMessage(error, "Could not create your Provider. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,9 +85,9 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
 
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="text-xl font-semibold tracking-tight text-slate-900">Link your organization</h1>
+      <h1 className="text-xl font-semibold tracking-tight text-slate-900">Link your Provider</h1>
       <p className="mt-1.5 text-sm text-slate-600">
-        Before you can add or edit services, tell us which organization you represent.
+        Before you can add or edit services, tell us which Provider you represent.
       </p>
 
       {errorMessage && (
@@ -102,7 +102,7 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
             mode === "pick" ? "border-b-2 border-sky-600 text-sky-700" : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          My organization is listed
+          My Provider is listed
         </button>
         <button
           type="button"
@@ -111,7 +111,7 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
             mode === "create" ? "border-b-2 border-sky-600 text-sky-700" : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          It's a new organization
+          It's a new Provider
         </button>
       </div>
 
@@ -121,13 +121,13 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search organizations..."
+            placeholder="Search Providers..."
             className="h-9 text-sm"
           />
 
           <div className="max-h-72 overflow-y-auto rounded-md border border-slate-200">
             {filteredProviders.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-slate-400">No organizations match your search.</p>
+              <p className="px-3 py-6 text-center text-sm text-slate-400">No Providers match your search.</p>
             ) : (
               filteredProviders.map((provider) => (
                 <button
@@ -148,14 +148,14 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
         <form onSubmit={handleCreate} className="mt-4 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-medium text-slate-500">
-              Organization Name
+              Provider Name
             </Label>
             <Input id="name" name="name" required className="h-9 text-sm" />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-xs font-medium text-slate-500">
-              Organization Email
+              Provider Email
             </Label>
             <Input id="email" name="email" type="email" required className="h-9 text-sm" />
           </div>
@@ -207,7 +207,7 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
           </div>
 
           <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Creating..." : "Create organization"}
+            {isSubmitting ? "Creating..." : "Create Provider"}
           </Button>
         </form>
       )}
