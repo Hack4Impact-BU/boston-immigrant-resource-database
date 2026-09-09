@@ -17,8 +17,10 @@ export interface Provider {
   website: string;
   google_maps_link: string;
   service_types: string;
+  service_type_ids: string[];
   description: string;
   language_support: string[];
+  language_ids: string[];
   services: string;
   logo: string;
 }
@@ -33,6 +35,8 @@ export type ProviderUpdateInput = Partial<{
   description: string;
   services: string;
   status: string;
+  serviceTypeIds: string[];
+  languageIds: string[];
 }>;
 
 export type ProviderCreateInput = {
@@ -187,14 +191,16 @@ function toProvider(
     description: r.get("Description") as string,
     services: r.get("Services") as string,
     language_support: languageSupportIds.map((languageId) => languageNameById.get(languageId) || languageId),
+    language_ids: languageSupportIds,
     service_types: serviceTypeIds.map((serviceTypeId) => serviceTypeNameById.get(serviceTypeId) || serviceTypeId).join(", "),
+    service_type_ids: serviceTypeIds,
     logo: getAttachmentUrl(r.get("Logo")),
     status: r.get("Status") as string | undefined,
   };
 }
 
-function toProviderUpdateFields(input: ProviderUpdateInput): Record<string, string> {
-  const fields: Record<string, string> = {};
+function toProviderUpdateFields(input: ProviderUpdateInput): Record<string, string | string[]> {
+  const fields: Record<string, string | string[]> = {};
 
   if (typeof input.name === "string") fields.Name = input.name;
   if (typeof input.email === "string") fields.Email = input.email;
@@ -205,6 +211,8 @@ function toProviderUpdateFields(input: ProviderUpdateInput): Record<string, stri
   if (typeof input.description === "string") fields.Description = input.description;
   if (typeof input.services === "string") fields.Services = input.services;
   if (typeof input.status === "string") fields.Status = input.status;
+  if (Array.isArray(input.serviceTypeIds)) fields["Service Types"] = input.serviceTypeIds;
+  if (Array.isArray(input.languageIds)) fields["Language Support"] = input.languageIds;
 
   return fields;
 }

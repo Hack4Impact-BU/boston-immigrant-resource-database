@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Globe, Mail, MapPin, Phone } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { Globe, Mail, MapPin, Pencil, Phone } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
+import { getUserProviderId } from "@/lib/airtable";
 
 export const dynamic = "force-dynamic";
 
@@ -26,10 +28,15 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
     notFound();
   }
 
-  const allServices = await getAllServices();
+  const [allServices, ownerUserId] = await Promise.all([
+    getAllServices(),
+    auth().then(({ userId }) => userId),
+  ]);
   const providerServices = allServices.filter(
     (service) => service.provider === provider.id || service.provider_record_ID === provider.id
   );
+  const linkedProviderId = ownerUserId ? await getUserProviderId(ownerUserId) : null;
+  const isOwnProvider = linkedProviderId === provider.id;
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
@@ -37,9 +44,21 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
 
       <main className="ml-55 flex-1 px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <Link href="/providers" className="text-xs font-medium text-slate-500 hover:text-slate-700">
-            ← All providers
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/providers" className="text-xs font-medium text-slate-500 hover:text-slate-700">
+              ← All Providers
+            </Link>
+
+            {isOwnProvider ? (
+              <Link
+                href={`/providers/${provider.id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <Pencil size={13} />
+                Edit Profile
+              </Link>
+            ) : null}
+          </div>
 
           <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-start gap-4">
