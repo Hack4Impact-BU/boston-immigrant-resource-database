@@ -3,6 +3,7 @@ import Airtable from "airtable";
 const AIRTABLE_CONTACT_US_TABLE_NAME = "Contact Us Requests";
 const AIRTABLE_CLIENT_REFERRALS_TABLE_NAME = "Client Referrals";
 const AIRTABLE_USER_TABLE_NAME = "User";
+const AIRTABLE_OLD_SOFTR_USERS_TABLE_NAME = "Old Softr Users";
 
 type ContactUsRequestFieldSet = {
 	Organization: string;
@@ -34,6 +35,13 @@ type UserFieldSet = {
 	access?: UserAccessStatus | UserAccessStatus[];
 	Access?: UserAccessStatus | UserAccessStatus[];
 	providerId?: string;
+};
+
+type OldSoftrUserStatus = "Not Migrated" | "New User Created";
+
+type OldSoftrUserFieldSet = {
+	Email: string;
+	Status?: OldSoftrUserStatus | OldSoftrUserStatus[];
 };
 
 export type CreateContactUsRequestInput = {
@@ -118,6 +126,10 @@ function getClientReferralsTable() {
 
 function getUserTable() {
 	return getAirtableBase()(AIRTABLE_USER_TABLE_NAME) as Airtable.Table<UserFieldSet>;
+}
+
+function getOldSoftrUsersTable() {
+	return getAirtableBase()(AIRTABLE_OLD_SOFTR_USERS_TABLE_NAME) as Airtable.Table<OldSoftrUserFieldSet>;
 }
 
 function escapeAirtableFormulaValue(value: string) {
@@ -304,4 +316,81 @@ export async function linkUserToProvider(clerkUserId: string, providerId: string
 	}
 
 	await getUserTable().update(userRecord.id, { providerId }, { typecast: true });
+}
+
+export async function getUserEmail(clerkUserId: string): Promise<string | null> {
+	if (!hasAirtableConfig()) {
+		return null;
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const email = records[0]?.get("email");
+
+		return typeof email === "string" && email.trim() ? email.trim() : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * True if this email belongs to a provider who already had an account on the old
+ * Softr-built site — regardless of their migration Status, since either value
+ * ("Not Migrated" or "New User Created") means they already completed the
+ * application/MOU process once and shouldn't be asked to redo it.
+ */
+export async function isOldSoftrUser(email: string): Promise<boolean> {
+	if (!hasAirtableConfig() || !email.trim()) {
+		return false;
+	}
+
+	try {
+		const records = await getOldSoftrUsersTable()
+			.select({
+				filterByFormula: `LOWER({Email}) = '${escapeAirtableFormulaValue(email.trim().toLowerCase())}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		return records.length > 0;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Flips a matching Old Softr Users record to "New User Created" once that person
+ * actually registers on the new site. Silently does nothing if there's no match or
+ * Airtable isn't configured — this is a bookkeeping side effect of registration, not
+ * something that should ever block or fail the registration itself.
+ */
+export async function markOldSoftrUserAsMigrated(email: string): Promise<void> {
+	if (!hasAirtableConfig() || !email.trim()) {
+		return;
+	}
+
+	try {
+		const records = await getOldSoftrUsersTable()
+			.select({
+				filterByFormula: `LOWER({Email}) = '${escapeAirtableFormulaValue(email.trim().toLowerCase())}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const matchingRecord = records[0];
+
+		if (!matchingRecord) {
+			return;
+		}
+
+		await getOldSoftrUsersTable().update(matchingRecord.id, { Status: "New User Created" }, { typecast: true });
+	} catch {
+		// Bookkeeping only — never let a failure here surface as a registration error.
+	}
 }

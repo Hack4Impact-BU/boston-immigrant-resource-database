@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 
 import { AccessStatusSignOutButton } from "./access-status-sign-out-button";
+import { getUserEmail, isOldSoftrUser } from "@/lib/airtable";
 
 const APPLICATION_FORM_URL =
 	"https://docs.google.com/forms/d/e/1FAIpQLSdqYSqnLboSSSz7Px92sejXMp3TZmjASkgLXii5e-lmlcRkkw/viewform";
@@ -22,6 +24,10 @@ export default async function AccessStatusPage({ searchParams }: AccessStatusPag
 	const { access } = await searchParams;
 	const status = getAccessStatus(access);
 	const isRejected = status === "rejected";
+
+	const { userId } = await auth();
+	const email = userId ? await getUserEmail(userId) : null;
+	const skipApplicationForm = email ? await isOldSoftrUser(email) : false;
 
 	return (
 		<main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f7fb] px-6 py-12">
@@ -46,11 +52,13 @@ export default async function AccessStatusPage({ searchParams }: AccessStatusPag
 				<p className="mt-4 text-base leading-7 text-slate-700">
 					{isRejected
 						? "Your account access request was rejected."
-						: "Your account is pending approval. Please complete the application form and wait for manual review."}
+						: skipApplicationForm
+							? "Your account is pending manual review. Since you already filled out the MOU and have an existing BIRD account, no further action is needed."
+							: "Your account is pending approval. Please complete the application form and wait for manual review."}
 				</p>
 
 				<div className="mt-8 flex flex-col gap-4">
-					{!isRejected && (
+					{!isRejected && !skipApplicationForm && (
 						<a
 							href={APPLICATION_FORM_URL}
 							target="_blank"
