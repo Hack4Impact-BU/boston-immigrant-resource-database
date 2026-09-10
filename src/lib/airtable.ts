@@ -28,6 +28,8 @@ export type UserAccessStatus = "approved" | "pending" | "rejected" | "error" | "
 
 type UserFieldSet = {
 	clerkUserId: string;
+	firstName: string;
+	lastName: string;
 	organizationName: string;
 	website: string;
 	phoneNumber: string;
@@ -35,6 +37,7 @@ type UserFieldSet = {
 	access?: UserAccessStatus | UserAccessStatus[];
 	Access?: UserAccessStatus | UserAccessStatus[];
 	providerId?: string;
+	userRole?: string;
 };
 
 type OldSoftrUserStatus = "Not Migrated" | "New User Created";
@@ -73,6 +76,8 @@ export type CreateClientReferralResult = {
 
 export type CreateUserInput = {
 	clerkUserId: string;
+	firstName: string;
+	lastName: string;
 	organizationName: string;
 	website: string;
 	phoneNumber: string;
@@ -213,6 +218,8 @@ export async function createUser(input: CreateUserInput): Promise<CreateUserResu
 	const record = await getUserTable().create(
 		{
 			clerkUserId: input.clerkUserId,
+			firstName: input.firstName,
+			lastName: input.lastName,
 			organizationName: input.organizationName,
 			website: input.website,
 			phoneNumber: input.phoneNumber,

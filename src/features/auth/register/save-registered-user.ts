@@ -8,6 +8,8 @@ import { createUser, markOldSoftrUserAsMigrated } from "@/lib/airtable";
 
 export type SaveRegisteredUserInput = {
   clerkUserId?: string | null;
+  firstName: string;
+  lastName: string;
   organizationName: string;
   website: string;
   phoneNumber: string;
@@ -61,6 +63,8 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
 
     await createUser({
       clerkUserId,
+      firstName: requireNonEmptyString(input.firstName, "firstName"),
+      lastName: requireNonEmptyString(input.lastName, "lastName"),
       organizationName: requireNonEmptyString(input.organizationName, "organizationName"),
       website: requireNonEmptyString(input.website, "website"),
       phoneNumber: requireNonEmptyString(input.phoneNumber, "phoneNumber"),

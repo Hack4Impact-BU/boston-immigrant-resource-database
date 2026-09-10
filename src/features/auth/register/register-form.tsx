@@ -85,6 +85,8 @@ export function RegisterForm() {
 
     const formData = new FormData(event.currentTarget);
     const userInput = {
+      firstName: getRequiredFormString(formData, "firstName"),
+      lastName: getRequiredFormString(formData, "lastName"),
       organizationName: getRequiredFormString(formData, "organizationName"),
       website: getRequiredFormString(formData, "website"),
       phoneNumber: getRequiredFormString(formData, "primaryPhoneNumber"),
@@ -209,6 +211,34 @@ export function RegisterForm() {
           {errorMessage}
         </p>
       )}
+
+      <div className="space-y-1.5">
+        <Label htmlFor="firstName" className="text-xs font-medium text-slate-500">
+          First Name
+        </Label>
+        <Input
+          id="firstName"
+          name="firstName"
+          type="text"
+          placeholder="First Name"
+          required
+          className="h-8 rounded-[0.22rem] border-slate-300 px-2.5 text-[0.72rem] shadow-none placeholder:text-slate-400"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="lastName" className="text-xs font-medium text-slate-500">
+          Last Name
+        </Label>
+        <Input
+          id="lastName"
+          name="lastName"
+          type="text"
+          placeholder="Last Name"
+          required
+          className="h-8 rounded-[0.22rem] border-slate-300 px-2.5 text-[0.72rem] shadow-none placeholder:text-slate-400"
+        />
+      </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="organizationName" className="text-xs font-medium text-slate-500">
