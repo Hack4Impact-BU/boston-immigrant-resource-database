@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 
 import { requireNonEmptyString } from "@/features/auth/auth-helpers";
-import { createUser, markOldSoftrUserAsMigrated } from "@/lib/airtable";
+import { createUser, getOldSoftrUserRole, markOldSoftrUserAsMigrated } from "@/lib/airtable";
 
 export type SaveRegisteredUserInput = {
   clerkUserId?: string | null;
@@ -61,6 +61,8 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
       },
     });
 
+    const oldSoftrUserRole = await getOldSoftrUserRole(input.email);
+
     await createUser({
       clerkUserId,
       firstName: requireNonEmptyString(input.firstName, "firstName"),
@@ -69,6 +71,7 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
       website: requireNonEmptyString(input.website, "website"),
       phoneNumber: requireNonEmptyString(input.phoneNumber, "phoneNumber"),
       email: requireNonEmptyString(input.email, "email"),
+      userRole: oldSoftrUserRole,
     });
 
     await markOldSoftrUserAsMigrated(input.email);

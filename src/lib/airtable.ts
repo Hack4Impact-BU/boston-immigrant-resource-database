@@ -45,6 +45,7 @@ type OldSoftrUserStatus = "Not Migrated" | "New User Created";
 type OldSoftrUserFieldSet = {
 	Email: string;
 	Status?: OldSoftrUserStatus | OldSoftrUserStatus[];
+	userRole?: string | string[];
 };
 
 export type CreateContactUsRequestInput = {
@@ -82,6 +83,7 @@ export type CreateUserInput = {
 	website: string;
 	phoneNumber: string;
 	email: string;
+	userRole?: string | null;
 };
 
 export type CreateUserResult = {
@@ -215,19 +217,22 @@ export async function createClientReferral(
 }
 
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
-	const record = await getUserTable().create(
-		{
-			clerkUserId: input.clerkUserId,
-			firstName: input.firstName,
-			lastName: input.lastName,
-			organizationName: input.organizationName,
-			website: input.website,
-			phoneNumber: input.phoneNumber,
-			email: input.email,
-			access: "pending",
-		},
-		{ typecast: true },
-	);
+	const fields: Partial<UserFieldSet> = {
+		clerkUserId: input.clerkUserId,
+		firstName: input.firstName,
+		lastName: input.lastName,
+		organizationName: input.organizationName,
+		website: input.website,
+		phoneNumber: input.phoneNumber,
+		email: input.email,
+		access: "pending",
+	};
+
+	if (input.userRole) {
+		fields.userRole = input.userRole;
+	}
+
+	const record = await getUserTable().create(fields, { typecast: true });
 
 	return { id: record.id };
 }
@@ -368,6 +373,33 @@ export async function isOldSoftrUser(email: string): Promise<boolean> {
 		return records.length > 0;
 	} catch {
 		return false;
+	}
+}
+
+/**
+ * Returns the role this person committed to on their old Softr-site MOU, if any —
+ * so a returning provider's role carries over automatically at sign-up instead of
+ * needing to be set manually after the fact. Returns null for brand-new users (no
+ * match) or if the matching record's role was never filled in.
+ */
+export async function getOldSoftrUserRole(email: string): Promise<string | null> {
+	if (!hasAirtableConfig() || !email.trim()) {
+		return null;
+	}
+
+	try {
+		const records = await getOldSoftrUsersTable()
+			.select({
+				filterByFormula: `LOWER({Email}) = '${escapeAirtableFormulaValue(email.trim().toLowerCase())}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const role = records[0]?.get("userRole");
+
+		return typeof role === "string" && role.trim() ? role.trim() : null;
+	} catch {
+		return null;
 	}
 }
 
