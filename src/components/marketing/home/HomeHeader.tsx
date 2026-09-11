@@ -19,6 +19,10 @@ export default function HomeHeader() {
         <BirdLogo />
 
         <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
+          <Link href="/#contact" className="no-underline hover:text-bird-accent">
+            Contact Us
+          </Link>
+          |
           <Link href="/register" className="no-underline hover:text-bird-accent">
             Create Account
           </Link>
