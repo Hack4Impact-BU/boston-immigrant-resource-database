@@ -364,19 +364,42 @@ export default function MapPage() {
     let cancelled = false;
 
     async function resolveCoordinates() {
-      const entries = await Promise.all(
-        providers.slice(0, 40).map(async (provider) => {
-          const fromLink = parseCoordinatesFromGoogleMapsLink(provider.google_maps_link);
-          const coordinates = fromLink ?? (await geocodeAddress(`${provider.address}, Boston, MA`));
-          return [provider.id, coordinates] as const;
-        })
-      );
+      for (const provider of providers.slice(0, 40)) {
+        if (cancelled) {
+          return;
+        }
 
-      if (cancelled) {
-        return;
+        const fromLink = parseCoordinatesFromGoogleMapsLink(provider.google_maps_link);
+
+        if (fromLink) {
+          setProviderCoordinates((prev) => ({ ...prev, [provider.id]: fromLink }));
+          continue;
+        }
+
+        const normalizedAddress = `${provider.address}, Boston, MA`.trim();
+        const isCached = geocodeCache.has(normalizedAddress);
+
+        const coordinates = await geocodeAddress(normalizedAddress);
+
+        if (cancelled) {
+          return;
+        }
+
+        setProviderCoordinates((prev) => ({ ...prev, [provider.id]: coordinates }));
+
+        // Nominatim's usage policy caps requests at roughly 1/second. Firing
+        // these in parallel (the previous Promise.all approach) got some
+        // requests silently rate-limited, and which ones failed varied by
+        // timing on every page load — exactly the "sometimes all, sometimes
+        // partial, sometimes none" symptom. Only genuine network calls need
+        // the delay; a cache hit or a locally-parsed link costs Nominatim
+        // nothing and shouldn't be throttled. Updating state per-provider
+        // (rather than once at the end) also means pins appear progressively
+        // as each one resolves, instead of a blank map for the whole batch.
+        if (!isCached && !cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 1100));
+        }
       }
-
-      setProviderCoordinates(Object.fromEntries(entries));
     }
 
     resolveCoordinates();
