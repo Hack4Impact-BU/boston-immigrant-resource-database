@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Upload } from "lucide-react";
+import { Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,7 @@ export default function ContactSection() {
   const [contactMethods, setContactMethods] = useState<string[]>(["Email", "Phone"]);
   const [contactReasons, setContactReasons] = useState<string[]>([
     "More information",
-    "Requesting Access",
-    "Technical Support"
+    "Requesting Access"
   ]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -164,14 +163,6 @@ export default function ContactSection() {
                   {reason}
                 </button>
               ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Link &amp; Media</Label>
-            <div className="flex min-h-30 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-[#fafafa] p-6 text-center">
-              <Upload className="h-5 w-5 text-bird-accent" />
-              <p className="text-sm text-black">Drag and Drop or upload media</p>
             </div>
           </div>
 

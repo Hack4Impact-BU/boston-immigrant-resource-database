@@ -243,17 +243,6 @@ export default function ContactPage() {
                 />
                 <span className="text-slate-700">Requesting Access</span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2 rounded border border-[#a8d0e6] px-3 py-2 text-sm">
-                <input
-                  type="radio"
-                  name="purposeMethod"
-                  value="Technical Support"
-                  checked={formData.purposeMethod === 'Technical Support'}
-                  onChange={(e) => handleRadioChange('purposeMethod', e.target.value)}
-                  className="h-4 w-4 cursor-pointer"
-                />
-                <span className="text-slate-700">Technical Support</span>
-              </label>
             </div>
           </div>
 
