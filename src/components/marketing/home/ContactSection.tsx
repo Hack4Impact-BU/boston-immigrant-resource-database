@@ -23,7 +23,8 @@ export default function ContactSection() {
     event.preventDefault();
     setStatus("loading");
 
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
 
     try {
       const response = await fetch("/api/contact", {
@@ -43,7 +44,7 @@ export default function ContactSection() {
 
       if (!response.ok) throw new Error("Failed to submit");
       setStatus("success");
-      event.currentTarget.reset();
+      formElement.reset();
     } catch {
       setStatus("error");
     }
