@@ -1,5 +1,7 @@
 import Airtable, { FieldSet, Record as AirtableRecord } from "airtable";
 
+import { geocodeAddressWithGoogle } from "@/lib/googleGeocoding";
+
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID ?? "";
 
 const base = new Airtable({
@@ -23,6 +25,8 @@ export interface Provider {
   language_ids: string[];
   services: string;
   logo: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export type ProviderUpdateInput = Partial<{
@@ -178,6 +182,10 @@ function toProvider(
 ): Provider {
   const languageSupportIds = normalizeLinkedRecordIds(r.get("Language Support"));
   const serviceTypeIds = normalizeLinkedRecordIds(r.get("Service Types"));
+  const rawLatitude = r.get("Latitude");
+  const rawLongitude = r.get("Longitude");
+  const latitude = typeof rawLatitude === "string" ? Number.parseFloat(rawLatitude) : null;
+  const longitude = typeof rawLongitude === "string" ? Number.parseFloat(rawLongitude) : null;
 
   return {
     id: r.id,
@@ -194,6 +202,8 @@ function toProvider(
     language_ids: languageSupportIds,
     service_types: serviceTypeIds.map((serviceTypeId) => serviceTypeNameById.get(serviceTypeId) || serviceTypeId).join(", "),
     service_type_ids: serviceTypeIds,
+    latitude: latitude !== null && Number.isFinite(latitude) ? latitude : null,
+    longitude: longitude !== null && Number.isFinite(longitude) ? longitude : null,
     logo: getAttachmentUrl(r.get("Logo")),
     status: r.get("Status") as string | undefined,
   };
@@ -310,6 +320,15 @@ export async function updateProvider(providerId: string, input: ProviderUpdateIn
   }
 
   const fields = toProviderUpdateFields(input);
+
+  if (typeof input.address === "string" && input.address.trim()) {
+    const coordinates = await geocodeAddressWithGoogle(input.address);
+
+    if (coordinates) {
+      fields.Latitude = String(coordinates.lat);
+      fields.Longitude = String(coordinates.lng);
+    }
+  }
 
   if (Object.keys(fields).length === 0) {
     return;
@@ -471,6 +490,14 @@ export async function deleteService(id: string): Promise<void> {
   await base("Services").destroy(id);
 }
 
+export async function updateProviderCoordinates(providerId: string, lat: number, lng: number): Promise<void> {
+  if (!process.env.AIRTABLE_API_KEY) {
+    throw new Error("AIRTABLE_API_KEY is not set.");
+  }
+
+  await base("Providers").update(providerId, { Latitude: String(lat), Longitude: String(lng) }, { typecast: true });
+}
+
 export async function createProvider(input: ProviderCreateInput): Promise<{ id: string }> {
   if (!process.env.AIRTABLE_API_KEY) {
     throw new Error("AIRTABLE_API_KEY is not set.");
@@ -487,6 +514,15 @@ export async function createProvider(input: ProviderCreateInput): Promise<{ id: 
   if (input.address) fields.Address = input.address;
   if (input.serviceTypeIds && input.serviceTypeIds.length > 0) fields["Service Types"] = input.serviceTypeIds;
   if (input.languageIds && input.languageIds.length > 0) fields["Language Support"] = input.languageIds;
+
+  if (input.address) {
+    const coordinates = await geocodeAddressWithGoogle(input.address);
+
+    if (coordinates) {
+      fields.Latitude = String(coordinates.lat);
+      fields.Longitude = String(coordinates.lng);
+    }
+  }
 
   const record = await base("Providers").create(fields, { typecast: true });
 

@@ -20,6 +20,8 @@ type Provider = {
   language_support: string[];
   services: string;
   logo: string;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type Service = {
@@ -94,71 +96,36 @@ function formatRelativeUpdateDateShort(value?: string) {
   return `${elapsedDays} days ago`;
 }
 
-const geocodeCache = new Map<string, Coordinates | null>();
-const geocodeAbortControllers = new Map<string, AbortController>();
-
 function normalizeText(value: string | undefined) {
   return (value ?? "").toLowerCase().trim();
 }
 
-function parseCoordinatesFromGoogleMapsLink(link: string) {
-  const atMatch = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) {
-    return { lat: Number(atMatch[1]), lng: Number(atMatch[2]) } satisfies Coordinates;
-  }
-
-  const queryMatch = link.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (queryMatch) {
-    return { lat: Number(queryMatch[1]), lng: Number(queryMatch[2]) } satisfies Coordinates;
-  }
-
-  return null;
-}
-
-async function geocodeAddress(address: string) {
-  const normalizedAddress = address.trim();
-  if (!normalizedAddress) {
-    return null;
-  }
-
-  const cached = geocodeCache.get(normalizedAddress);
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  const controller = new AbortController();
-  geocodeAbortControllers.set(normalizedAddress, controller);
-
+/**
+ * Fallback for providers that don't have a stored Latitude/Longitude yet
+ * (pre-dating the switch to storing coordinates permanently at
+ * create/edit time). Calls the server-side geocode-provider route, which
+ * uses Google's Geocoding API and writes the result back to Airtable —
+ * so this fallback only ever runs once per provider, ever. No client-side
+ * cache is needed here since the server-side write-back is what actually
+ * makes repeat calls unnecessary.
+ */
+async function fetchFallbackCoordinates(providerId: string): Promise<Coordinates | null> {
   try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(normalizedAddress)}`,
-      { signal: controller.signal }
-    );
+    const response = await fetch("/api/geocode-provider", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ providerId }),
+    });
 
     if (!response.ok) {
-      geocodeCache.set(normalizedAddress, null);
       return null;
     }
 
-    const results = (await response.json()) as Array<{ lat: string; lon: string }>;
-    const coordinates = results[0]
-      ? {
-          lat: Number.parseFloat(results[0].lat),
-          lng: Number.parseFloat(results[0].lon),
-        }
-      : null;
+    const data = (await response.json()) as { lat: number | null; lng: number | null };
 
-    geocodeCache.set(normalizedAddress, coordinates);
-    return coordinates;
-  } catch (error) {
-    if ((error as DOMException | undefined)?.name === "AbortError") {
-      return null;
-    }
-
-    geocodeCache.set(normalizedAddress, null);
+    return data.lat !== null && data.lng !== null ? { lat: data.lat, lng: data.lng } : null;
+  } catch {
     return null;
-  } finally {
-    geocodeAbortControllers.delete(normalizedAddress);
   }
 }
 
@@ -363,51 +330,44 @@ export default function MapPage() {
   useEffect(() => {
     let cancelled = false;
 
-    async function resolveCoordinates() {
-      for (const provider of providers.slice(0, 40)) {
-        if (cancelled) {
-          return;
-        }
+    // Providers with a stored Latitude/Longitude (set automatically at
+    // create/edit time going forward) resolve instantly, synchronously, no
+    // network call at all — this is the common case for any provider that's
+    // been created or resaved since the switch to Google-powered geocoding.
+    const storedEntries = providers
+      .filter((provider) => provider.latitude !== null && provider.longitude !== null)
+      .map((provider) => [provider.id, { lat: provider.latitude as number, lng: provider.longitude as number }] as const);
 
-        const fromLink = parseCoordinatesFromGoogleMapsLink(provider.google_maps_link);
-
-        if (fromLink) {
-          setProviderCoordinates((prev) => ({ ...prev, [provider.id]: fromLink }));
-          continue;
-        }
-
-        const normalizedAddress = `${provider.address}, Boston, MA`.trim();
-        const isCached = geocodeCache.has(normalizedAddress);
-
-        const coordinates = await geocodeAddress(normalizedAddress);
-
-        if (cancelled) {
-          return;
-        }
-
-        setProviderCoordinates((prev) => ({ ...prev, [provider.id]: coordinates }));
-
-        // Nominatim's usage policy caps requests at roughly 1/second. Firing
-        // these in parallel (the previous Promise.all approach) got some
-        // requests silently rate-limited, and which ones failed varied by
-        // timing on every page load — exactly the "sometimes all, sometimes
-        // partial, sometimes none" symptom. Only genuine network calls need
-        // the delay; a cache hit or a locally-parsed link costs Nominatim
-        // nothing and shouldn't be throttled. Updating state per-provider
-        // (rather than once at the end) also means pins appear progressively
-        // as each one resolves, instead of a blank map for the whole batch.
-        if (!isCached && !cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, 1100));
-        }
-      }
+    if (storedEntries.length > 0) {
+      setProviderCoordinates((prev) => ({ ...prev, ...Object.fromEntries(storedEntries) }));
     }
 
-    resolveCoordinates();
+    // Only providers without stored coordinates yet (pre-dating this change)
+    // need the fallback. Google's rate limits are generous enough that these
+    // don't need Nominatim-style throttling, and since each one gets written
+    // back permanently, this list only ever shrinks over time.
+    const providersNeedingFallback = providers
+      .slice(0, 40)
+      .filter((provider) => provider.latitude === null || provider.longitude === null);
+
+    async function resolveFallbackCoordinates() {
+      await Promise.all(
+        providersNeedingFallback.map(async (provider) => {
+          const coordinates = await fetchFallbackCoordinates(provider.id);
+
+          if (cancelled) {
+            return;
+          }
+
+          setProviderCoordinates((prev) => ({ ...prev, [provider.id]: coordinates }));
+        })
+      );
+    }
+
+    resolveFallbackCoordinates();
 
     return () => {
       cancelled = true;
-      geocodeAbortControllers.forEach((controller) => controller.abort());
-      geocodeAbortControllers.clear();
     };
   }, [providers]);
 
