@@ -123,7 +123,7 @@ export default function DashboardSidebar() {
 
         {!collapsed ? (
           <p className="mt-auto px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-            Helpcenter
+            Help Center
           </p>
         ) : (
           <div className="mt-auto" />

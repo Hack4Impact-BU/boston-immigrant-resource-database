@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Users, Search, Plus, Mail, Briefcase, Building2 } from "lucide-react";
+import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare } from "lucide-react";
 import BirdLogo from "./home/BirdLogo";
 
 type SidebarProps = {
@@ -61,6 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   ];
 
   const helpcenterItems: MenuItem[] = [
+    { name: "Support / Feedback", href: "/feedback", icon: <MessageSquare size={20} /> },
     { name: "Additional Resources", href: "/resources", icon: <Plus size={20} /> },
     // { name: "Contact Us", href: "/contact", icon: <Mail size={20} /> },
   ];
@@ -107,13 +108,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
         </ul>
       </nav>
 
-      {/* Spacer - pushes Helpcenter to bottom */}
+      {/* Spacer - pushes Help Center to bottom */}
       <div className="flex-1"></div>
 
-      {/* Helpcenter Section */}
+      {/* Help Center Section */}
       <nav className="px-3 py-4 border-t border-slate-200">
         <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
-          Helpcenter
+          Help Center
         </h3>
         <ul className="space-y-2">
           {helpcenterItems.map((item) => {

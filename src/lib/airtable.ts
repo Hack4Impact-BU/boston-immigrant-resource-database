@@ -4,6 +4,7 @@ const AIRTABLE_CONTACT_US_TABLE_NAME = "Contact Us Requests";
 const AIRTABLE_CLIENT_REFERRALS_TABLE_NAME = "Client Referrals";
 const AIRTABLE_USER_TABLE_NAME = "User";
 const AIRTABLE_OLD_SOFTR_USERS_TABLE_NAME = "Old Softr Users";
+const AIRTABLE_USER_FEEDBACK_TABLE_NAME = "User Support / Feedback";
 
 type ContactUsRequestFieldSet = {
 	Organization: string;
@@ -46,6 +47,16 @@ type OldSoftrUserFieldSet = {
 	Email: string;
 	Status?: OldSoftrUserStatus | OldSoftrUserStatus[];
 	userRole?: string | string[];
+};
+
+type UserFeedbackFieldSet = {
+	"Feedback Date": string;
+	Status: string;
+	"Submitted By": string;
+	Email: string;
+	"Email Entered": string;
+	"Feedback Type": string;
+	"Feedback Text": string;
 };
 
 export type CreateContactUsRequestInput = {
@@ -139,6 +150,10 @@ function getOldSoftrUsersTable() {
 	return getAirtableBase()(AIRTABLE_OLD_SOFTR_USERS_TABLE_NAME) as Airtable.Table<OldSoftrUserFieldSet>;
 }
 
+function getUserFeedbackTable() {
+	return getAirtableBase()(AIRTABLE_USER_FEEDBACK_TABLE_NAME) as Airtable.Table<UserFeedbackFieldSet>;
+}
+
 function escapeAirtableFormulaValue(value: string) {
 	return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
@@ -192,6 +207,35 @@ export async function createContactUsRequest(
 			Email: input.email,
 			Phone: input.phoneNumber,
 			Message: input.message,
+		},
+		{ typecast: true },
+	);
+
+	return { id: record.id };
+}
+
+export type CreateUserFeedbackInput = {
+	name: string;
+	email: string;
+	emailEntered: string;
+	feedbackType: string;
+	feedbackText: string;
+};
+
+export type CreateUserFeedbackResult = {
+	id: string;
+};
+
+export async function createUserFeedback(input: CreateUserFeedbackInput): Promise<CreateUserFeedbackResult> {
+	const record = await getUserFeedbackTable().create(
+		{
+			"Feedback Date": new Date().toISOString(),
+			Status: "Needs Review",
+			"Submitted By": input.name,
+			Email: input.email,
+			"Email Entered": input.emailEntered,
+			"Feedback Type": input.feedbackType,
+			"Feedback Text": input.feedbackText,
 		},
 		{ typecast: true },
 	);
@@ -346,6 +390,50 @@ export async function getUserEmail(clerkUserId: string): Promise<string | null> 
 		const email = records[0]?.get("email");
 
 		return typeof email === "string" && email.trim() ? email.trim() : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Fetches the name and email needed to attribute a feedback submission to the
+ * current account, in a single lookup rather than three separate ones.
+ */
+export async function getUserProfileForFeedback(
+	clerkUserId: string
+): Promise<{ name: string; email: string } | null> {
+	if (!hasAirtableConfig()) {
+		return null;
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const userRecord = records[0];
+
+		if (!userRecord) {
+			return null;
+		}
+
+		const firstName = userRecord.get("firstName");
+		const lastName = userRecord.get("lastName");
+		const email = userRecord.get("email");
+
+		if (typeof email !== "string" || !email.trim()) {
+			return null;
+		}
+
+		const name = [firstName, lastName]
+			.filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+			.join(" ")
+			.trim();
+
+		return { name: name || email.trim(), email: email.trim() };
 	} catch {
 		return null;
 	}
