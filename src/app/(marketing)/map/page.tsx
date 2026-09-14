@@ -101,6 +101,19 @@ function normalizeText(value: string | undefined) {
 }
 
 /**
+ * Strips a trailing US zip code (5-digit or ZIP+4) from an address string,
+ * leaving everything else — street, floor/suite, city, state — intact.
+ * Targets the zip by its distinctive trailing-digits pattern rather than
+ * splitting on comma count, since real addresses in this dataset vary from
+ * 2 to 4 comma-separated segments (a floor or suite adds one), and some
+ * addresses have no zip at all. A pattern match handles all of these
+ * correctly; slicing by segment count would not.
+ */
+function formatAddressWithoutZip(address: string | undefined) {
+  return (address ?? "").replace(/\s*,?\s*\d{5}(-\d{4})?\s*$/, "").trim();
+}
+
+/**
  * Fallback for providers that don't have a stored Latitude/Longitude yet
  * (pre-dating the switch to storing coordinates permanently at
  * create/edit time). Calls the server-side geocode-provider route, which
@@ -692,7 +705,7 @@ export default function MapPage() {
                       ? [activeLanguageFilter, ...languageList.filter((language) => language !== activeLanguageFilter)]
                       : languageList;
                     const languages = visibleLanguages.join(", ") || "Not listed";
-                    const location = provider?.address?.split(",")[0] || "Location unavailable";
+                    const location = formatAddressWithoutZip(provider?.address) || "Location unavailable";
                     const providerName = provider?.name || "Provider unavailable";
                     const isSelected = selectedServiceId === service.id;
                     const description = service.description || service.service_types || provider?.description || "No description available.";
@@ -747,7 +760,7 @@ export default function MapPage() {
                               <p className="font-medium text-slate-900">
                                 {languages}
                               </p>
-                              <p>
+                              <p className="truncate">
                                 {location} · {formatRelativeUpdateDateShort(service.last_modified)}
                               </p>
                             </div>
