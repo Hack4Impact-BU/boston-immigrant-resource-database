@@ -138,4 +138,16 @@ body {
   html {
     @apply font-sans;
   }
+
+  /* Tailwind v4 deliberately removed the pointer cursor default from
+     buttons (see https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor),
+     reverting to the browser's native cursor: default. Restoring it here,
+     globally, so every button — the shared shadcn Button component
+     included — reliably shows a hand cursor, matching links and matching
+     what people already expect from clickable UI. Disabled buttons are
+     explicitly excluded, since a non-interactive cursor there is correct. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
