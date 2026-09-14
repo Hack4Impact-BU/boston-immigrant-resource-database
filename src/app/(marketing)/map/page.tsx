@@ -517,7 +517,11 @@ export default function MapPage() {
     ? selectedService.description || "No description available."
     : null;
 
-  const selectedServiceLocation = selectedService?.providerDetails?.address?.split(",")[0] || "Location unavailable";
+  const selectedServiceLocation = selectedService?.providerDetails?.address || "Location unavailable";
+  const selectedServiceGoogleMapsUrl = selectedService?.providerDetails?.google_maps_link
+    || (selectedService?.providerDetails?.address
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedService.providerDetails.address)}`
+      : null);
   const selectedServiceLanguages = selectedService?.providerDetails?.language_support?.join(", ") || "Language support varies";
   const selectedServiceProvider = selectedService?.providerDetails?.name || "Provider unavailable";
   const isDescriptionView = panelView === "description" && Boolean(selectedService);
@@ -831,7 +835,7 @@ export default function MapPage() {
                       </div>
 
                       <section>
-                        <h3 className="text-lg font-semibold tracking-tight text-slate-900">Class details</h3>
+                        <h3 className="text-lg font-semibold tracking-tight text-slate-900">Service Details</h3>
                         <div className="mt-3 space-y-3 text-sm text-slate-700">
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
@@ -839,7 +843,21 @@ export default function MapPage() {
                           </div>
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
-                            <span><span className="font-bold">Location:</span> {selectedServiceLocation}</span>
+                            <span>
+                              <span className="font-bold">Location:</span>{" "}
+                              {selectedServiceGoogleMapsUrl ? (
+                                <a
+                                  href={selectedServiceGoogleMapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
+                                >
+                                  {selectedServiceLocation}
+                                </a>
+                              ) : (
+                                selectedServiceLocation
+                              )}
+                            </span>
                           </div>
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
@@ -863,17 +881,18 @@ export default function MapPage() {
                               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#4c8cc9] shadow-sm">
                                 <MapPinned size={22} />
                               </div>
-                              <p className="mt-3 font-medium text-slate-700">{selectedServiceLocation}</p>
-                              {selectedService.providerDetails?.google_maps_link ? (
+                              {selectedServiceGoogleMapsUrl ? (
                                 <a
-                                  href={selectedService.providerDetails.google_maps_link}
+                                  href={selectedServiceGoogleMapsUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="mt-4 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-100"
+                                  className="mt-3 inline-block font-medium text-slate-700 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
                                 >
-                                  Open in Google Maps
+                                  {selectedServiceLocation}
                                 </a>
-                              ) : null}
+                              ) : (
+                                <p className="mt-3 font-medium text-slate-700">{selectedServiceLocation}</p>
+                              )}
                             </div>
                           </div>
                         </div>
