@@ -150,7 +150,6 @@ export function RegisterForm() {
 
     try {
       const result = await verifyEmailCode(code);
-      setNeedsEmailVerification(false);
       await finishRegistration(pendingUserInput, result.clerkUserId);
     } catch (error) {
       console.error(error);
