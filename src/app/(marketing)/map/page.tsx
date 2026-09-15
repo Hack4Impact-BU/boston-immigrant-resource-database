@@ -685,17 +685,15 @@ export default function MapPage() {
                             {filter.options.map((option) => {
                               const isActive = filter.value.includes(option);
                               return (
-                                <button
+                                <label
                                   key={option}
-                                  type="button"
-                                  onClick={() => filter.onToggle(option)}
-                                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors cursor-pointer ${
+                                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                                     isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
                                   }`}
                                 >
                                   <Checkbox checked={isActive} onCheckedChange={() => filter.onToggle(option)} />
                                   <span className="truncate">{option}</span>
-                                </button>
+                                </label>
                               );
                             })}
                           </div>
