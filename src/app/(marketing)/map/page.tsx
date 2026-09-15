@@ -808,7 +808,7 @@ export default function MapPage() {
                     <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
                       <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
                         <div className="flex min-w-0 items-start gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
                             <img
                               src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
                               alt={selectedServiceProvider}

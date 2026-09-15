@@ -62,7 +62,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
 
           <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <div className="flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element -- provider logos are arbitrary external Airtable attachment URLs */}
                 <img
                   src={provider.logo || "/icons/Just_BIRD_logo_blue.png"}
