@@ -708,7 +708,7 @@ export default function MapPage() {
 
           <div className="relative z-0 grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
             <div className="min-h-0 rounded-[24px] bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-              <div className="h-full space-y-4 overflow-y-auto pr-1">
+              <div className="h-full space-y-2 overflow-y-auto pr-2">
                 {loading ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
                     <LoaderCircle className="h-4 w-4 animate-spin text-sky-600" />
@@ -745,11 +745,11 @@ export default function MapPage() {
                           setSelectedServiceId(service.id);
                           setPanelView("description");
                         }}
-                        className={`flex h-32 w-full border bg-white p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${
+                        className={`flex min-h-32 w-full border bg-white p-4 pb-3 text-left shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${
                           isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
                         }`}
                       >
-                        <div className="flex h-full w-full gap-2">
+                        <div className="flex w-full gap-2">
                           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
                             <img
                               src={provider?.logo || "/icons/Just_BIRD_logo_blue.png"}
@@ -783,13 +783,14 @@ export default function MapPage() {
                               </p>
                             </div>
 
-                            <div className="mt-auto space-y-1 pt-3 text-[0.72rem] text-slate-500">
+                            <div className="mt-3 space-y-1 text-[0.72rem] text-slate-500">
+                              <p className="truncate">
+                                {location}
+                              </p>
                               <p className="font-medium text-slate-900">
                                 {languages}
                               </p>
-                              <p className="truncate">
-                                {location} · {formatRelativeUpdateDateShort(service.last_modified)}
-                              </p>
+                              <p>{formatRelativeUpdateDateShort(service.last_modified)}</p>
                             </div>
                           </div>
                         </div>
