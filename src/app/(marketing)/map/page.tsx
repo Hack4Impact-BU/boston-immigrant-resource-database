@@ -806,28 +806,8 @@ export default function MapPage() {
                 {isDescriptionView && selectedService ? (
                   <div className="h-full shrink-0 overflow-y-auto overscroll-contain border-b border-slate-200 px-4 py-4 lg:px-6">
                     <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
-                      <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
-                            <img
-                              src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
-                              alt={selectedServiceProvider}
-                              className="h-full w-full object-contain p-1.5"
-                            />
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-700">{selectedServiceProvider}</p>
-                            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                              {selectedService.name}
-                            </h2>
-                            <p className="mt-2 text-sm text-slate-500">
-                              {formatRelativeUpdateDate(selectedService.last_modified)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                      <div className="border-b border-slate-200 pb-4">
+                        <div className="flex justify-end gap-2">
                           <a
                             href={`mailto:${selectedService.provider_email}`}
                             className="inline-flex items-center justify-center rounded-md bg-[#4c8cc9] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3d77b6]"
@@ -855,15 +835,31 @@ export default function MapPage() {
                             Back to map
                           </button>
                         </div>
+
+                        <div className="mt-4 flex min-w-0 items-start gap-3">
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
+                            <img
+                              src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
+                              alt={selectedServiceProvider}
+                              className="h-full w-full object-contain p-1.5"
+                            />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-700">{selectedServiceProvider}</p>
+                            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+                              {selectedService.name}
+                            </h2>
+                            <p className="mt-2 text-xs text-slate-500">
+                              {formatRelativeUpdateDate(selectedService.last_modified)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
                       <section>
                         <h3 className="text-lg font-semibold tracking-tight text-slate-900">Service Details</h3>
                         <div className="mt-3 space-y-3 text-sm text-slate-700">
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 text-slate-400">◦</span>
-                            <span><span className="font-bold">Languages:</span> {selectedServiceLanguages}</span>
-                          </div>
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
                             <span>
@@ -881,6 +877,10 @@ export default function MapPage() {
                                 selectedServiceLocation
                               )}
                             </span>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <span className="mt-0.5 text-slate-400">◦</span>
+                            <span><span className="font-bold">Languages:</span> {selectedServiceLanguages}</span>
                           </div>
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
