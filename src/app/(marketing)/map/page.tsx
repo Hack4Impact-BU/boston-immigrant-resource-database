@@ -5,6 +5,7 @@ import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 type Provider = {
   id: string;
@@ -174,6 +175,7 @@ export default function MapPage() {
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | null>(null);
+  const [filterSearchText, setFilterSearchText] = useState<Record<string, string>>({});
   const [providers, setProviders] = useState<Provider[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,6 +341,10 @@ export default function MapPage() {
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown);
     };
+  }, [openFilterMenu]);
+
+  useEffect(() => {
+    setFilterSearchText({});
   }, [openFilterMenu]);
 
   useEffect(() => {
@@ -647,6 +653,10 @@ export default function MapPage() {
                       : selectedCount === 1
                         ? filter.value[0]
                         : `${filter.label} (${selectedCount})`;
+                  const searchText = filterSearchText[filter.key] ?? "";
+                  const visibleOptions = searchText.trim()
+                    ? filter.options.filter((option) => option.toLowerCase().includes(searchText.trim().toLowerCase()))
+                    : filter.options;
 
                   return (
                     <div key={filter.key} className="relative z-50" data-filter-menu-root>
@@ -667,6 +677,18 @@ export default function MapPage() {
 
                       {isOpen ? (
                         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+                          <div className="border-b border-slate-100 p-2">
+                            <Input
+                              type="text"
+                              autoFocus
+                              value={searchText}
+                              onChange={(event) =>
+                                setFilterSearchText((current) => ({ ...current, [filter.key]: event.target.value }))
+                              }
+                              placeholder={`Search ${filter.label.toLowerCase()}...`}
+                              className="h-8 text-xs"
+                            />
+                          </div>
                           {selectedCount > 0 ? (
                             <button
                               type="button"
@@ -682,20 +704,24 @@ export default function MapPage() {
                             </button>
                           ) : null}
                           <div className="max-h-72 overflow-y-auto p-2">
-                            {filter.options.map((option) => {
-                              const isActive = filter.value.includes(option);
-                              return (
-                                <label
-                                  key={option}
-                                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                                    isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
-                                  }`}
-                                >
-                                  <Checkbox checked={isActive} onCheckedChange={() => filter.onToggle(option)} />
-                                  <span className="truncate">{option}</span>
-                                </label>
-                              );
-                            })}
+                            {visibleOptions.length === 0 ? (
+                              <p className="px-3 py-2 text-sm text-slate-400">No matches.</p>
+                            ) : (
+                              visibleOptions.map((option) => {
+                                const isActive = filter.value.includes(option);
+                                return (
+                                  <label
+                                    key={option}
+                                    className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                                      isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    <Checkbox checked={isActive} onCheckedChange={() => filter.onToggle(option)} />
+                                    <span className="truncate">{option}</span>
+                                  </label>
+                                );
+                              })
+                            )}
                           </div>
                         </div>
                       ) : null}
