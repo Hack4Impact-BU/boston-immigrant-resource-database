@@ -885,7 +885,21 @@ export default function MapPage() {
                           </div>
                           <div className="flex items-start gap-3">
                             <span className="mt-0.5 text-slate-400">◦</span>
-                            <span><span className="font-bold">Service Types:</span> {selectedService.service_types}</span>
+                            <div className="min-w-0">
+                              <span className="font-bold">Service Types:</span>
+                              {selectedService.service_types ? (
+                                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                  {selectedService.service_types.split(", ").map((serviceType) => (
+                                    <span
+                                      key={serviceType}
+                                      className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                                    >
+                                      {serviceType}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       </section>

@@ -166,7 +166,16 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                     <p className="mt-1 text-xs leading-5 text-slate-600">{service.description}</p>
                   ) : null}
                   {service.service_types ? (
-                    <p className="mt-1.5 text-xs text-slate-400">{service.service_types}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {service.service_types.split(", ").map((serviceType) => (
+                        <span
+                          key={serviceType}
+                          className="rounded-full bg-sky-50 px-2 py-0.5 text-[0.65rem] font-medium text-sky-700"
+                        >
+                          {serviceType}
+                        </span>
+                      ))}
+                    </div>
                   ) : null}
                 </div>
               ))
