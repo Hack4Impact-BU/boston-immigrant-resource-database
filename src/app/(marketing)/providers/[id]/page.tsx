@@ -61,7 +61,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
           </div>
 
           <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
               <div className="flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element -- provider logos are arbitrary external Airtable attachment URLs */}
                 <img
@@ -71,72 +71,73 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 />
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-semibold tracking-tight text-slate-900">{provider.name}</h1>
-                {provider.language_support.length > 0 ? (
-                  <p className="mt-1 text-xs text-slate-500">{provider.language_support.join(" · ")}</p>
-                ) : null}
 
-                {provider.service_types ? (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {provider.service_types.split(", ").map((serviceType) => (
-                      <span
-                        key={serviceType}
-                        className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
-                      >
-                        {serviceType}
+                <div className="mt-3 space-y-2">
+                  {provider.address ? (
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                      {provider.google_maps_link ? (
+                        <a href={provider.google_maps_link} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
+                          {provider.address}
+                        </a>
+                      ) : (
+                        <span>{provider.address}</span>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {(provider.primary_phone_number || provider.secondary_phone_number) ? (
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <Phone size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                      <span>
+                        {[provider.primary_phone_number, provider.secondary_phone_number].filter(Boolean).join(" · ")}
                       </span>
-                    ))}
-                  </div>
-                ) : null}
+                    </div>
+                  ) : null}
+
+                  {provider.email ? (
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <Mail size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                      <a href={`mailto:${provider.email}`} className="hover:text-sky-700 hover:underline">
+                        {provider.email}
+                      </a>
+                    </div>
+                  ) : null}
+
+                  {provider.website ? (
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <Globe size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                      <a href={provider.website} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
+                        {provider.website}
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            {provider.description ? (
-              <p className="mt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
+            {provider.language_support.length > 0 ? (
+              <p className="mt-5 text-xs text-slate-500">{provider.language_support.join(" · ")}</p>
             ) : null}
 
-            <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-5">
-              {provider.address ? (
-                <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                  <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                  {provider.google_maps_link ? (
-                    <a href={provider.google_maps_link} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
-                      {provider.address}
-                    </a>
-                  ) : (
-                    <span>{provider.address}</span>
-                  )}
-                </div>
-              ) : null}
-
-              {(provider.primary_phone_number || provider.secondary_phone_number) ? (
-                <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                  <Phone size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                  <span>
-                    {[provider.primary_phone_number, provider.secondary_phone_number].filter(Boolean).join(" · ")}
+            {provider.service_types ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {provider.service_types.split(", ").map((serviceType) => (
+                  <span
+                    key={serviceType}
+                    className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                  >
+                    {serviceType}
                   </span>
-                </div>
-              ) : null}
+                ))}
+              </div>
+            ) : null}
 
-              {provider.email ? (
-                <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                  <Mail size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                  <a href={`mailto:${provider.email}`} className="hover:text-sky-700 hover:underline">
-                    {provider.email}
-                  </a>
-                </div>
-              ) : null}
-
-              {provider.website ? (
-                <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                  <Globe size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                  <a href={provider.website} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
-                    {provider.website}
-                  </a>
-                </div>
-              ) : null}
-            </div>
+            {provider.description ? (
+              <p className="mt-5 border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
+            ) : null}
           </div>
 
           <h2 className="mt-8 text-lg font-semibold tracking-tight text-slate-900">
