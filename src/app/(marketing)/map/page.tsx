@@ -676,7 +676,11 @@ export default function MapPage() {
                       </button>
 
                       {isOpen ? (
-                        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+                        <div
+                          className={`absolute top-[calc(100%+0.5rem)] z-50 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] ${
+                            filter.key === "serviceType" || filter.key === "status" ? "right-0" : "left-0"
+                          }`}
+                        >
                           <div className="border-b border-slate-100 p-2">
                             <Input
                               type="text"
