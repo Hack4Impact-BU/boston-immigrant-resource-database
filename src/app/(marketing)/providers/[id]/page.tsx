@@ -162,9 +162,6 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                       {service.status}
                     </span>
                   </div>
-                  {service.description ? (
-                    <p className="mt-1 text-xs leading-5 text-slate-600">{service.description}</p>
-                  ) : null}
                   {service.service_types ? (
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {service.service_types.split(", ").map((serviceType) => (
@@ -176,6 +173,9 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                         </span>
                       ))}
                     </div>
+                  ) : null}
+                  {service.description ? (
+                    <p className="mt-1.5 text-xs leading-5 text-slate-600">{service.description}</p>
                   ) : null}
                 </div>
               ))
