@@ -437,10 +437,10 @@ export default function MapPage() {
         marker.bindPopup(`
           <div style="max-width:220px;font-family:Arial, sans-serif;">
             <div style="font-size:12px;color:#475569;margin-bottom:6px;">${providerName}</div>
-            <div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${service.name}</div>
-            <div style="font-size:12px;color:#334155;margin-bottom:6px;white-space:pre-line;">${serviceSummary}</div>
-            <div style="font-size:11px;color:#64748b;">${location}</div>
-            <div style="font-size:11px;color:#64748b;">${languages}</div>
+            <div style="font-weight:700;color:#0f172a;margin-bottom:6px;">${service.name}</div>
+            <div style="font-size:11px;color:#64748b;margin-bottom:2px;">${location}</div>
+            <div style="font-size:11px;color:#0f172a;margin-bottom:6px;">${languages}</div>
+            <div style="font-size:12px;color:#334155;white-space:pre-line;">${serviceSummary}</div>
           </div>
         `);
 
