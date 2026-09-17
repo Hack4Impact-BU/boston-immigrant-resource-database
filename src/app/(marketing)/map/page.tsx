@@ -436,9 +436,9 @@ export default function MapPage() {
 
         marker.bindPopup(`
           <div style="max-width:220px;font-family:Arial, sans-serif;">
-            <div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${service.name}</div>
             <div style="font-size:12px;color:#475569;margin-bottom:6px;">${providerName}</div>
-            <div style="font-size:12px;color:#334155;margin-bottom:6px;">${serviceSummary}</div>
+            <div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${service.name}</div>
+            <div style="font-size:12px;color:#334155;margin-bottom:6px;white-space:pre-line;">${serviceSummary}</div>
             <div style="font-size:11px;color:#64748b;">${location}</div>
             <div style="font-size:11px;color:#64748b;">${languages}</div>
           </div>
@@ -937,7 +937,7 @@ export default function MapPage() {
                       <section className="border-t border-slate-200 pt-4">
                         <h3 className="text-lg font-semibold tracking-tight text-slate-900">About the Service</h3>
                         <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                          <p className="text-sm leading-7 text-slate-700">{selectedServiceDescription}</p>
+                          <p className="whitespace-pre-line text-sm leading-7 text-slate-700">{selectedServiceDescription}</p>
                         </div>
                       </section>
 

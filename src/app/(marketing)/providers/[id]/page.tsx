@@ -136,7 +136,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             ) : null}
 
             {provider.description ? (
-              <p className="mt-5 border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
+              <p className="mt-5 whitespace-pre-line border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
             ) : null}
           </div>
 
@@ -175,7 +175,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                     </div>
                   ) : null}
                   {service.description ? (
-                    <p className="mt-1.5 text-xs leading-5 text-slate-600">{service.description}</p>
+                    <p className="mt-1.5 whitespace-pre-line text-xs leading-5 text-slate-600">{service.description}</p>
                   ) : null}
                 </div>
               ))

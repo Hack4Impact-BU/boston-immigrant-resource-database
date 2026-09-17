@@ -46,7 +46,7 @@ export default async function ProvidersPage() {
                 </div>
 
                 {provider.description ? (
-                  <p className="mt-3 line-clamp-4 text-xs leading-5 text-slate-600">{provider.description}</p>
+                  <p className="mt-3 line-clamp-4 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
                 ) : null}
 
                 {provider.language_support.length > 0 ? (
