@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { requireNonEmptyString } from "@/features/auth/auth-helpers";
 import { createProvider, getProviderById } from "@/app/api/airtable";
-import { linkUserToProvider } from "@/lib/airtable";
+import { getUserRole, linkUserToProvider } from "@/lib/airtable";
 
 export type CreateAndLinkProviderInput = {
   name: string;
@@ -17,11 +17,21 @@ export type CreateAndLinkProviderInput = {
   languageIds?: string[];
 };
 
+// Viewer accounts represent users/organizations that don't offer Services
+// themselves — linking or creating a Provider is fundamentally "becoming a
+// Provider", which doesn't apply to that role. Deliberately an allowlist: a
+// missing/unset role is blocked the same as Viewer, not assumed safe.
 async function requireSignedInUserId(): Promise<string> {
   const { userId } = await auth();
 
   if (!userId) {
     throw new Error("You must be signed in to do this.");
+  }
+
+  const role = await getUserRole(userId);
+
+  if (role !== "Provider" && role !== "Admin") {
+    throw new Error("Your account doesn't have permission to register as a Provider.");
   }
 
   return userId;

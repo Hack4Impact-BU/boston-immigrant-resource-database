@@ -14,7 +14,26 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function ManageServicesPage() {
-  const { linkedProvider, allProviders, serviceTypes, languages } = await getProviderContext();
+  const { userRole, linkedProvider, allProviders, serviceTypes, languages } = await getProviderContext();
+
+  if (userRole !== "Provider" && userRole !== "Admin") {
+    return (
+      <div className="flex min-h-screen items-stretch bg-slate-100">
+        <Sidebar isOpen={true} activePage="Manage My Services" />
+
+        <main className="ml-55 flex-1 px-6 py-8">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <h1 className="text-lg font-semibold text-slate-900">Not available for Viewer accounts</h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Viewer accounts are for organizations searching for Services, not offering them, so there&apos;s nothing
+              to manage here.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const services = await getServicesForCurrentProvider(linkedProvider?.id ?? null);
 
   return (

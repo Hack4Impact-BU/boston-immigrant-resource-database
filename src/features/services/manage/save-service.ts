@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireNonEmptyString } from "@/features/auth/auth-helpers";
 import { createService, deleteService, getServiceById, updateService, type Service } from "@/app/api/airtable";
-import { getUserProviderId } from "@/lib/airtable";
+import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
 export type SaveServiceFormInput = {
   name: string;
@@ -15,35 +15,73 @@ export type SaveServiceFormInput = {
   serviceTypeIds: string[];
 };
 
-async function requireCurrentProviderId(): Promise<{ userId: string; providerId: string }> {
+type AuthContext = {
+  userId: string;
+  role: string | null;
+  providerId: string | null;
+};
+
+/**
+ * A missing/unset role is treated the same as "Provider" (the original, only
+ * behavior this app had before roles existed) rather than as "Viewer" — so
+ * accounts created before this feature existed keep working exactly as they
+ * did, without needing a backfill. New users/accounts that should have a 
+ * "Viewer" role based on the MOU filled out will need the BIRD Admin to 
+ * manually update the userRole directly in the database.
+ */
+async function getAuthContext(): Promise<AuthContext> {
   const { userId } = await auth();
 
   if (!userId) {
     throw new Error("You must be signed in to do this.");
   }
 
-  const providerId = await getUserProviderId(userId);
+  const [role, providerId] = await Promise.all([getUserRole(userId), getUserProviderId(userId)]);
 
-  if (!providerId) {
+  return { userId, role, providerId };
+}
+
+/**
+ * Deliberately an allowlist, not a blocklist: only an explicit "Provider" or
+ * "Admin" role may write. A missing/unset role is treated the same as
+ * Viewer — blocked — rather than assumed safe, since defaulting to permissive
+ * here would silently grant write access to any account a role was never set
+ * for, including by mistake.
+ */
+function assertCanWrite(context: AuthContext): void {
+  if (context.role !== "Provider" && context.role !== "Admin") {
+    throw new Error("Your account doesn't have permission to make changes.");
+  }
+}
+
+async function requireCurrentProviderId(context: AuthContext): Promise<string> {
+  if (!context.providerId) {
     throw new Error("Your account isn't linked to an Provider yet.");
   }
 
-  return { userId, providerId };
+  return context.providerId;
 }
 
 // Never trust that a serviceId submitted from the client belongs to the current
 // user's Provider just because they were on that service's page in the UI.
 // Server Actions are reachable directly via POST, not just through this app, so
 // ownership has to be re-checked here on every call, not assumed from the route.
-async function requireOwnedService(serviceId: string, providerId: string): Promise<Service> {
+async function requireOwnedService(serviceId: string, context: AuthContext): Promise<Service> {
   const existingService = await getServiceById(serviceId);
 
   if (!existingService) {
     throw new Error("This service could not be found.");
   }
 
+  // Admins can edit any Provider's services, matching the "as if a Provider
+  // for all organizations" role definition — no ownership check applies.
+  if (context.role === "Admin") {
+    return existingService;
+  }
+
   const belongsToCurrentProvider =
-    existingService.provider === providerId || existingService.provider_record_ID === providerId;
+    context.providerId != null &&
+    (existingService.provider === context.providerId || existingService.provider_record_ID === context.providerId);
 
   if (!belongsToCurrentProvider) {
     throw new Error("You don't have permission to modify this service.");
@@ -53,7 +91,9 @@ async function requireOwnedService(serviceId: string, providerId: string): Promi
 }
 
 export async function createServiceAction(input: SaveServiceFormInput): Promise<{ id: string }> {
-  const { providerId } = await requireCurrentProviderId();
+  const context = await getAuthContext();
+  assertCanWrite(context);
+  const providerId = await requireCurrentProviderId(context);
 
   const result = await createService({
     providerId,
@@ -71,9 +111,10 @@ export async function createServiceAction(input: SaveServiceFormInput): Promise<
 }
 
 export async function updateServiceAction(serviceId: string, input: SaveServiceFormInput): Promise<void> {
-  const { providerId } = await requireCurrentProviderId();
+  const context = await getAuthContext();
+  assertCanWrite(context);
 
-  await requireOwnedService(serviceId, providerId);
+  await requireOwnedService(serviceId, context);
 
   await updateService(serviceId, {
     name: requireNonEmptyString(input.name, "name"),
@@ -88,9 +129,10 @@ export async function updateServiceAction(serviceId: string, input: SaveServiceF
 }
 
 export async function deleteServiceAction(serviceId: string): Promise<void> {
-  const { providerId } = await requireCurrentProviderId();
+  const context = await getAuthContext();
+  assertCanWrite(context);
 
-  await requireOwnedService(serviceId, providerId);
+  await requireOwnedService(serviceId, context);
 
   await deleteService(serviceId);
 

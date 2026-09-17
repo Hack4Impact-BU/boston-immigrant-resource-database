@@ -323,6 +323,27 @@ export async function getUserOrganizationName(clerkUserId: string): Promise<stri
 	}
 }
 
+export async function getUserRole(clerkUserId: string): Promise<string | null> {
+	if (!hasAirtableConfig()) {
+		return null;
+	}
+
+	try {
+		const records = await getUserTable()
+			.select({
+				filterByFormula: `{clerkUserId} = '${escapeAirtableFormulaValue(clerkUserId)}'`,
+				maxRecords: 1,
+			})
+			.all();
+
+		const role = records[0]?.get("userRole");
+
+		return typeof role === "string" && role.trim() ? role.trim() : null;
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Looks up the Providers-table record ID linked to this Clerk account, if any has
  * been set yet. Returns null if unset, misconfigured, or the User record can't be found.

@@ -3,10 +3,11 @@ import "server-only";
 import { auth } from "@clerk/nextjs/server";
 
 import { getAllLanguages, getAllProviders, getAllServiceTypes, getAllServices, type Language, type Provider, type Service, type ServiceType } from "@/app/api/airtable";
-import { getUserProviderId } from "@/lib/airtable";
+import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
 export type ProviderContext = {
   clerkUserId: string;
+  userRole: string | null;
   linkedProvider: Provider | null;
   allProviders: Provider[];
   serviceTypes: ServiceType[];
@@ -26,7 +27,8 @@ export async function getProviderContext(): Promise<ProviderContext> {
     throw new Error("You must be signed in to manage services.");
   }
 
-  const [linkedProviderId, allProviders, serviceTypes, languages] = await Promise.all([
+  const [userRole, linkedProviderId, allProviders, serviceTypes, languages] = await Promise.all([
+    getUserRole(userId),
     getUserProviderId(userId),
     getAllProviders(),
     getAllServiceTypes(),
@@ -39,6 +41,7 @@ export async function getProviderContext(): Promise<ProviderContext> {
 
   return {
     clerkUserId: userId,
+    userRole,
     linkedProvider,
     allProviders,
     serviceTypes,

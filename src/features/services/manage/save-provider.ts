@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireNonEmptyString } from "@/features/auth/auth-helpers";
 import { updateProvider } from "@/app/api/airtable";
-import { getUserProviderId } from "@/lib/airtable";
+import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
 export type SaveProviderFormInput = {
   name: string;
@@ -20,10 +20,11 @@ export type SaveProviderFormInput = {
 };
 
 /**
- * Updates a Provider's own profile. Unlike Services, a Provider's "owner" isn't a
- * field to look up on the record itself — it's simply whichever account has this
- * exact providerId set on their User record. So the ownership check here is a
- * direct equality check against the signed-in user's own link, not a fetch-then-compare.
+ * Updates a Provider's profile. Ownership is normally a direct equality check
+ * against the signed-in user's own linked providerId — but Admins are allowed
+ * to edit any Provider ("as if a Provider for all organizations"), and Viewers
+ * are blocked from writing at all, regardless of whether they happen to be
+ * linked to a Provider.
  */
 export async function updateProviderAction(providerId: string, input: SaveProviderFormInput): Promise<void> {
   const { userId } = await auth();
@@ -32,9 +33,18 @@ export async function updateProviderAction(providerId: string, input: SaveProvid
     throw new Error("You must be signed in to do this.");
   }
 
-  const linkedProviderId = await getUserProviderId(userId);
+  const [role, linkedProviderId] = await Promise.all([getUserRole(userId), getUserProviderId(userId)]);
 
-  if (!linkedProviderId || linkedProviderId !== providerId) {
+  // Deliberately an allowlist: only an explicit "Provider" or "Admin" role may
+  // write. A missing/unset role is blocked, same as Viewer, rather than
+  // assumed safe.
+  if (role !== "Provider" && role !== "Admin") {
+    throw new Error("Your account doesn't have permission to make changes.");
+  }
+
+  const isAdmin = role === "Admin";
+
+  if (!isAdmin && (!linkedProviderId || linkedProviderId !== providerId)) {
     throw new Error("You don't have permission to edit this Provider.");
   }
 

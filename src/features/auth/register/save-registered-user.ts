@@ -62,6 +62,11 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
     });
 
     const oldSoftrUserRole = await getOldSoftrUserRole(input.email);
+    // Anyone going through this registration flow is registering an
+    // organization to offer Services — a Provider, by definition — unless
+    // they're a recognized returning Old Softr User whose actual committed
+    // role (Provider or Viewer) is already on file.
+    const userRole = oldSoftrUserRole ?? "Provider";
 
     await createUser({
       clerkUserId,
@@ -71,7 +76,7 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
       website: requireNonEmptyString(input.website, "website"),
       phoneNumber: requireNonEmptyString(input.phoneNumber, "phoneNumber"),
       email: requireNonEmptyString(input.email, "email"),
-      userRole: oldSoftrUserRole,
+      userRole,
     });
 
     await markOldSoftrUserAsMigrated(input.email);

@@ -20,6 +20,7 @@ interface MenuItem {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) => {
   const { user } = useUser();
   const [displayName, setDisplayName] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,14 +33,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
           return;
         }
 
-        const data = (await response.json()) as { organizationName?: string | null };
+        const data = (await response.json()) as { organizationName?: string | null; userRole?: string | null };
 
         if (!cancelled) {
           setDisplayName(data.organizationName?.trim() || "");
+          setUserRole(data.userRole ?? null);
         }
       } catch {
         if (!cancelled) {
           setDisplayName("");
+          setUserRole(null);
         }
       }
     }
@@ -55,7 +58,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
     { name: "Providers", href: "/providers", icon: <Building2 size={20} /> },
     { name: "Search Services", href: "/map", icon: <Search size={20} /> },
-    ...(user
+    // Viewer accounts represent organizations that don't offer Services
+    // themselves, so there's nothing for them to manage here.
+    ...(user && userRole !== "Viewer"
       ? [{ name: "Manage My Services", href: "/services/manage", icon: <Briefcase size={20} /> }]
       : []),
   ];

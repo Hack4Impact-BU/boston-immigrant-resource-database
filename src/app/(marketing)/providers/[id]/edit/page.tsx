@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import Sidebar from "@/components/marketing/Sidebar";
 import { ProviderEditForm } from "@/components/services/ProviderEditForm";
 import { getAllLanguages, getAllServiceTypes, getProviderById } from "@/app/api/airtable";
-import { getUserProviderId } from "@/lib/airtable";
+import { getUserProviderId, getUserRole } from "@/lib/airtable";
 import { updateProviderAction } from "@/features/services/manage/save-provider";
 
 type EditProviderPageProps = {
@@ -22,12 +22,19 @@ export default async function EditProviderPage({ params }: EditProviderPageProps
     notFound();
   }
 
-  const linkedProviderId = await getUserProviderId(userId);
+  const [linkedProviderId, role] = await Promise.all([getUserProviderId(userId), getUserRole(userId)]);
 
   // Ownership check at the page level, for a clean 404 instead of a flash of a form
   // the visitor can't actually save. The Server Action re-checks this independently
   // and is the real enforcement boundary, since it's reachable directly via POST.
-  if (!linkedProviderId || linkedProviderId !== id) {
+  // Admins can edit any Provider, matching the Server Action's own bypass — but
+  // only Provider/Admin roles may write at all in the first place. Being linked
+  // to this Provider isn't sufficient on its own: a Viewer whose account still
+  // has an old provider link (role and link are separate fields) must not get in.
+  const canWrite = role === "Provider" || role === "Admin";
+  const canEdit = canWrite && (role === "Admin" || linkedProviderId === id);
+
+  if (!canEdit) {
     notFound();
   }
 

@@ -5,7 +5,7 @@ import { Globe, Mail, MapPin, Pencil, Phone } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
-import { getUserProviderId } from "@/lib/airtable";
+import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +35,17 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
   const providerServices = allServices.filter(
     (service) => service.provider === provider.id || service.provider_record_ID === provider.id
   );
-  const linkedProviderId = ownerUserId ? await getUserProviderId(ownerUserId) : null;
-  const isOwnProvider = linkedProviderId === provider.id;
+  const [linkedProviderId, viewerRole] = ownerUserId
+    ? await Promise.all([getUserProviderId(ownerUserId), getUserRole(ownerUserId)])
+    : [null, null];
+  // Admins can edit any Provider's profile ("as if a Provider for all
+  // organizations"), not just their own linked one — but only when their
+  // role actually permits writing at all. Being linked to this Provider
+  // isn't enough on its own: a Viewer who still has an old provider link
+  // sitting on their account (role and link are separate fields — changing
+  // one doesn't clear the other) must not see this button either.
+  const canWrite = viewerRole === "Provider" || viewerRole === "Admin";
+  const canEditThisProvider = canWrite && (linkedProviderId === provider.id || viewerRole === "Admin");
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
@@ -49,7 +58,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
               ← All Providers
             </Link>
 
-            {isOwnProvider ? (
+            {canEditThisProvider ? (
               <Link
                 href={`/providers/${provider.id}/edit`}
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
