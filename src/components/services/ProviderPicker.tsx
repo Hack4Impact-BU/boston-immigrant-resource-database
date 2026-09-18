@@ -1,16 +1,12 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { getErrorMessage, getRequiredFormString } from "@/features/auth/auth-helpers";
+import { getErrorMessage } from "@/features/auth/auth-helpers";
 import { createAndLinkProvider, linkExistingProvider } from "@/features/services/manage/save-provider-link";
-import { ServiceTypesPicker } from "@/components/services/ServiceTypesPicker";
-import { LanguageSupportPicker } from "@/components/services/LanguageSupportPicker";
+import { NewProviderForm, type NewProviderFormInput } from "@/components/services/NewProviderForm";
 import type { Language, Provider, ServiceType } from "@/app/api/airtable";
 
 type ProviderPickerProps = {
@@ -23,8 +19,6 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
   const router = useRouter();
   const [mode, setMode] = useState<"pick" | "create">("pick");
   const [search, setSearch] = useState("");
-  const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<string[]>([]);
-  const [selectedLanguageIds, setSelectedLanguageIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -55,32 +49,9 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
     }
   }
 
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setErrorMessage(undefined);
-
-    const formData = new FormData(event.currentTarget);
-
-    try {
-      await createAndLinkProvider({
-        name: getRequiredFormString(formData, "name"),
-        email: getRequiredFormString(formData, "email"),
-        website: (formData.get("website") as string | null)?.trim() || undefined,
-        primaryPhoneNumber: (formData.get("primaryPhoneNumber") as string | null)?.trim() || undefined,
-        description: (formData.get("description") as string | null)?.trim() || undefined,
-        address: (formData.get("address") as string | null)?.trim() || undefined,
-        serviceTypeIds: selectedServiceTypeIds,
-        languageIds: selectedLanguageIds,
-      });
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage(getErrorMessage(error, "Could not create your Provider. Please try again."));
-    } finally {
-      setIsSubmitting(false);
-    }
+  async function handleCreate(input: NewProviderFormInput) {
+    await createAndLinkProvider(input);
+    router.refresh();
   }
 
   return (
@@ -145,71 +116,15 @@ export function ProviderPicker({ allProviders, serviceTypes, languages }: Provid
           </div>
         </div>
       ) : (
-        <form onSubmit={handleCreate} className="mt-4 space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-xs font-medium text-slate-500">
-              Provider Name
-            </Label>
-            <Input id="name" name="name" required className="h-9 text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-xs font-medium text-slate-500">
-              Provider Email
-            </Label>
-            <Input id="email" name="email" type="email" required className="h-9 text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="website" className="text-xs font-medium text-slate-500">
-              Website (optional)
-            </Label>
-            <Input id="website" name="website" className="h-9 text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="primaryPhoneNumber" className="text-xs font-medium text-slate-500">
-              Phone Number (optional)
-            </Label>
-            <Input id="primaryPhoneNumber" name="primaryPhoneNumber" type="tel" className="h-9 text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-xs font-medium text-slate-500">
-              Description (optional)
-            </Label>
-            <Textarea id="description" name="description" rows={4} className="text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="address" className="text-xs font-medium text-slate-500">
-              Address (optional)
-            </Label>
-            <Input id="address" name="address" className="h-9 text-sm" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-slate-500">Service Types (optional)</Label>
-            <ServiceTypesPicker
-              serviceTypes={serviceTypes}
-              selectedIds={selectedServiceTypeIds}
-              onChange={setSelectedServiceTypeIds}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-slate-500">Language Support (optional)</Label>
-            <LanguageSupportPicker
-              languages={languages}
-              selectedIds={selectedLanguageIds}
-              onChange={setSelectedLanguageIds}
-            />
-          </div>
-
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Creating..." : "Create Provider"}
-          </Button>
-        </form>
+        <div className="mt-4">
+          <NewProviderForm
+            serviceTypes={serviceTypes}
+            languages={languages}
+            submitLabel="Create Provider"
+            submittingLabel="Creating..."
+            onSubmit={handleCreate}
+          />
+        </div>
       )}
     </div>
   );

@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 
 import Sidebar from "@/components/marketing/Sidebar";
 import { getAllProviders } from "@/app/api/airtable";
+import { getUserRole } from "@/lib/airtable";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProvidersPage() {
-  const providers = await getAllProviders();
+  const { userId } = await auth();
+  const [providers, userRole] = await Promise.all([getAllProviders(), userId ? getUserRole(userId) : null]);
   const sortedProviders = [...providers].sort((left, right) => left.name.localeCompare(right.name));
 
   return (
@@ -15,10 +18,22 @@ export default async function ProvidersPage() {
 
       <main className="ml-55 flex-1 px-6 py-8">
         <div className="mx-auto max-w-5xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Providers</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            {sortedProviders.length} organization{sortedProviders.length === 1 ? "" : "s"} in the BIRD directory
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Providers</h1>
+              <p className="mt-1 text-sm text-slate-600">
+                {sortedProviders.length} organization{sortedProviders.length === 1 ? "" : "s"} in the BIRD directory
+              </p>
+            </div>
+            {userRole === "Admin" ? (
+              <Link
+                href="/providers/new"
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Add Provider
+              </Link>
+            ) : null}
+          </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sortedProviders.map((provider) => (

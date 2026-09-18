@@ -76,3 +76,38 @@ export async function createAndLinkProvider(input: CreateAndLinkProviderInput): 
 
   return { id };
 }
+
+/**
+ * Creates a brand-new, standalone Provider record with no account linked to it —
+ * for an Admin adding an organization to the directory before that organization
+ * has registered its own account. Deliberately does NOT call linkUserToProvider:
+ * unlike createAndLinkProvider (used when a person is registering their own
+ * organization), linking this to the Admin's own account would be wrong, since
+ * the Admin isn't the organization behind this listing. The actual organization
+ * links themselves to it later via the existing "my Provider is already listed"
+ * flow once they register.
+ */
+export async function createProviderAsAdmin(input: CreateAndLinkProviderInput): Promise<{ id: string }> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be signed in to do this.");
+  }
+
+  const role = await getUserRole(userId);
+
+  if (role !== "Admin") {
+    throw new Error("Only Admins can add a Provider this way.");
+  }
+
+  return createProvider({
+    name: requireNonEmptyString(input.name, "name"),
+    email: requireNonEmptyString(input.email, "email"),
+    website: input.website?.trim() || undefined,
+    primary_phone_number: input.primaryPhoneNumber?.trim() || undefined,
+    description: input.description?.trim() || undefined,
+    address: input.address?.trim() || undefined,
+    serviceTypeIds: input.serviceTypeIds,
+    languageIds: input.languageIds,
+  });
+}
