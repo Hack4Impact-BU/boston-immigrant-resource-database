@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { Globe, Mail, MapPin, Pencil, Phone } from "lucide-react";
+import { Globe, Mail, MapPin, Pencil, Phone, Plus } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
@@ -68,9 +68,9 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             {canEditThisProvider ? (
               <Link
                 href={`/providers/${provider.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700"
               >
-                <Pencil size={13} />
+                <Pencil size={16} />
                 Edit Profile
               </Link>
             ) : null}
@@ -205,8 +205,9 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             {canEditThisProvider ? (
               <Link
                 href={`/services/manage/new?providerId=${provider.id}`}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700"
               >
+                <Plus size={16} />
                 Add Service
               </Link>
             ) : null}

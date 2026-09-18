@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { Plus } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
 import { getAllProviders } from "@/app/api/airtable";
@@ -28,8 +29,9 @@ export default async function ProvidersPage() {
             {userRole === "Admin" ? (
               <Link
                 href="/providers/new"
-                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700"
               >
+                <Plus size={16} />
                 Add Provider
               </Link>
             ) : null}
