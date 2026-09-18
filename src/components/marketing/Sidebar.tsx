@@ -67,9 +67,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     ...(userRole === "Provider"
       ? [{ name: "Manage My Provider", href: "/providers/manage", icon: <Building2 size={20} /> }]
       : []),
-    // Viewer accounts represent organizations that don't offer Services
-    // themselves, so there's nothing for them to manage here.
-    ...(user && userRole !== "Viewer"
+    // Admins manage any Provider's Services directly from that Provider's own
+    // page now, so this "my own Provider only" shortcut doesn't apply to them
+    // either — same reasoning as Manage My Provider above.
+    ...(userRole === "Provider"
       ? [{ name: "Manage My Services", href: "/services/manage", icon: <Briefcase size={20} /> }]
       : []),
   ];
