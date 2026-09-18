@@ -484,6 +484,19 @@ export default function MapPage() {
     || (selectedService?.providerDetails?.address
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedService.providerDetails.address)}`
       : null);
+  const selectedServiceCoordinates = selectedService ? providerCoordinates[getProviderRecordId(selectedService)] : undefined;
+  // A small, fixed-size box centered on the pin — OpenStreetMap's embed only
+  // takes a bounding box, not a zoom level, so this controls how zoomed-in
+  // the embedded view appears. ~0.006 degrees is roughly a close, walkable
+  // neighborhood view.
+  const selectedServiceMapEmbedUrl = selectedServiceCoordinates
+    ? (() => {
+        const { lat, lng } = selectedServiceCoordinates;
+        const delta = 0.006;
+        const bbox = [lng - delta, lat - delta, lng + delta, lat + delta].join(",");
+        return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+      })()
+    : null;
   const selectedServiceLanguages = selectedService?.providerDetails?.language_support?.join(", ") || "Language support varies";
   const selectedServiceProvider = selectedService?.providerDetails?.name || "Provider unavailable";
   const isDescriptionView = panelView === "description" && Boolean(selectedService);
@@ -899,25 +912,66 @@ export default function MapPage() {
                       <section className="border-t border-slate-200 pt-4">
                         <h3 className="text-lg font-semibold tracking-tight text-slate-900">Location Details</h3>
                         <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-                          <div className="flex min-h-80 items-center justify-center rounded-xl border border-slate-200 bg-[linear-gradient(135deg,#eef4ea_0%,#f7f3ee_42%,#e9eef4_100%)] px-6 text-center text-sm text-slate-600">
-                            <div className="max-w-sm">
-                              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#4c8cc9] shadow-sm">
-                                <MapPinned size={22} />
+                          {selectedServiceMapEmbedUrl ? (
+                            <div>
+                              <div className="overflow-hidden rounded-xl border border-slate-200">
+                                <iframe
+                                  key={selectedServiceMapEmbedUrl}
+                                  src={selectedServiceMapEmbedUrl}
+                                  title={`Map showing the location of ${selectedServiceProvider}`}
+                                  className="h-80 w-full"
+                                  style={{ border: 0 }}
+                                  loading="lazy"
+                                />
                               </div>
-                              {selectedServiceGoogleMapsUrl ? (
-                                <a
-                                  href={selectedServiceGoogleMapsUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="mt-3 inline-block font-medium text-slate-700 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
-                                >
-                                  {selectedServiceLocation}
-                                </a>
-                              ) : (
-                                <p className="mt-3 font-medium text-slate-700">{selectedServiceLocation}</p>
-                              )}
+                              <div className="mt-2 flex items-center justify-between px-1 text-xs text-slate-500">
+                                <span>
+                                  ©{" "}
+                                  <a
+                                    href="https://www.openstreetmap.org/copyright"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="underline hover:text-sky-700"
+                                  >
+                                    OpenStreetMap
+                                  </a>{" "}
+                                  contributors
+                                </span>
+                                {selectedServiceGoogleMapsUrl ? (
+                                  <a
+                                    href={selectedServiceGoogleMapsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-medium text-slate-700 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
+                                  >
+                                    {selectedServiceLocation}
+                                  </a>
+                                ) : (
+                                  <span className="font-medium text-slate-700">{selectedServiceLocation}</span>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="flex min-h-80 items-center justify-center rounded-xl border border-slate-200 bg-[linear-gradient(135deg,#eef4ea_0%,#f7f3ee_42%,#e9eef4_100%)] px-6 text-center text-sm text-slate-600">
+                              <div className="max-w-sm">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#4c8cc9] shadow-sm">
+                                  <MapPinned size={22} />
+                                </div>
+                                {selectedServiceGoogleMapsUrl ? (
+                                  <a
+                                    href={selectedServiceGoogleMapsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-3 inline-block font-medium text-slate-700 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
+                                  >
+                                    {selectedServiceLocation}
+                                  </a>
+                                ) : (
+                                  <p className="mt-3 font-medium text-slate-700">{selectedServiceLocation}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </section>                
                     </div>
