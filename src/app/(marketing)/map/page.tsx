@@ -105,18 +105,7 @@ function matchesSearch(service: ServiceWithProvider, query: string) {
     return true;
   }
 
-  const provider = service.providerDetails;
-  const haystack = [
-    service.name,
-    service.description,
-    service.service_types,
-    service.provider,
-    provider?.name,
-    provider?.description,
-    provider?.address,
-    provider?.services,
-    provider?.language_support?.join(" "),
-  ]
+  const haystack = [service.name, service.description, service.service_types, service.providerDetails?.name]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
