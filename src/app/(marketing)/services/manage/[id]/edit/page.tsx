@@ -37,8 +37,8 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
   // it at all (or a different one entirely), so look it up directly rather
   // than assuming.
   const serviceProvider = belongsToCurrentProvider ? linkedProvider : await getProviderById(service.provider_record_ID);
-  const backHref = belongsToCurrentProvider ? "/services/manage" : `/providers/${service.provider_record_ID}`;
-  const backLabel = belongsToCurrentProvider ? "Back to my services" : `Back to ${serviceProvider?.name ?? "provider"}`;
+  const backHref = isAdmin ? `/providers/${service.provider_record_ID}` : "/services/manage";
+  const backLabel = isAdmin ? `Back to ${serviceProvider?.name ?? "provider"}` : "Back to my services";
 
   async function handleUpdate(input: Parameters<typeof updateServiceAction>[1]) {
     "use server";
@@ -47,7 +47,7 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
-      <Sidebar isOpen={true} activePage={belongsToCurrentProvider ? "Manage My Services" : "Providers"} />
+      <Sidebar isOpen={true} activePage={isAdmin ? "Providers" : "Manage My Services"} />
 
       <main className="ml-55 flex-1 px-6 py-8">
         <div className="mx-auto max-w-lg">
