@@ -7,6 +7,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getUserProviderId, getUserRole } from "@/lib/airtable";
+import { formatRelativeUpdateDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -186,6 +187,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                         {service.status}
                       </span>
                     </div>
+                    <p className="mt-1 text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
                     {service.service_types ? (
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {service.service_types.split(", ").map((serviceType) => (

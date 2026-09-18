@@ -6,6 +6,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { formatRelativeUpdateDate, formatRelativeUpdateDateShort } from "@/lib/dates";
 
 type Provider = {
   id: string;
@@ -50,52 +51,6 @@ type ServiceWithProvider = Service & {
 
 function getProviderRecordId(service: Service) {
   return service.provider_record_ID || service.provider;
-}
-
-function formatRelativeUpdateDate(value?: string) {
-  if (!value) {
-    return "Updated recently";
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Updated recently";
-  }
-
-  const elapsedDays = Math.floor((Date.now() - parsedDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (elapsedDays <= 0) {
-    return "Updated today";
-  }
-
-  if (elapsedDays === 1) {
-    return "Updated 1 day ago";
-  }
-
-  return `Updated ${elapsedDays} days ago`;
-}
-
-function formatRelativeUpdateDateShort(value?: string) {
-  if (!value) {
-    return "Recent";
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Recent";
-  }
-
-  const elapsedDays = Math.floor((Date.now() - parsedDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (elapsedDays <= 0) {
-    return "Today";
-  }
-
-  if (elapsedDays === 1) {
-    return "1 day ago";
-  }
-
-  return `${elapsedDays} days ago`;
 }
 
 function normalizeText(value: string | undefined) {

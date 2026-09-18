@@ -5,6 +5,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { getProviderContext, getServicesForCurrentProvider } from "@/features/services/manage/provider-context";
 import { ProviderPicker } from "@/components/services/ProviderPicker";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
+import { formatRelativeUpdateDate } from "@/lib/dates";
 
 const STATUS_STYLES: Record<string, string> = {
   Open: "bg-green-100 text-green-800",
@@ -84,6 +85,7 @@ export default async function ManageServicesPage() {
                             {service.status}
                           </span>
                         </div>
+                        <p className="mt-1 text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
                         {service.service_types ? (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {service.service_types.split(", ").map((serviceType) => (
