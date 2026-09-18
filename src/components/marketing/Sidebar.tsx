@@ -54,10 +54,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     };
   }, []);
 
-  const workflowItems: MenuItem[] = [
+  const browseItems: MenuItem[] = [
     { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
     { name: "Providers", href: "/providers", icon: <Building2 size={20} /> },
     { name: "Search Services", href: "/map", icon: <Search size={20} /> },
+  ];
+
+  const manageItems: MenuItem[] = [
+    // Only Provider-role accounts manage a Provider profile — Admins already
+    // have a path to edit any Provider directly from its own page, and
+    // Viewers don't offer Services at all.
+    ...(userRole === "Provider"
+      ? [{ name: "Manage My Provider", href: "/providers/manage", icon: <Building2 size={20} /> }]
+      : []),
     // Viewer accounts represent organizations that don't offer Services
     // themselves, so there's nothing for them to manage here.
     ...(user && userRole !== "Viewer"
@@ -90,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
           Workflows
         </h3>
         <ul className="space-y-2">
-          {workflowItems.map((item) => {
+          {browseItems.map((item) => {
             const isActive = activePage === item.name;
             return (
               <li key={item.name}>
@@ -111,6 +120,34 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
             );
           })}
         </ul>
+
+        {manageItems.length > 0 ? (
+          <>
+            <div className="my-3 border-t border-slate-200" />
+            <ul className="space-y-2">
+              {manageItems.map((item) => {
+                const isActive = activePage === item.name;
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium no-underline ${
+                        isActive
+                          ? "bg-[#5B8FD4] text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className={`shrink-0 ${isActive ? "text-white" : "text-slate-500"}`}>
+                        {item.icon}
+                      </span>
+                      <span className="whitespace-nowrap text-sm">{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : null}
       </nav>
 
       {/* Spacer - pushes Help Center to bottom */}

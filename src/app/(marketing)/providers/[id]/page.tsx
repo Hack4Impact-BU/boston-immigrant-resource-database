@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Globe, Mail, MapPin, Pencil, Phone } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
+import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
@@ -160,31 +161,50 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
               </div>
             ) : (
               providerServices.map((service) => (
-                <div key={service.id} className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900">{service.name}</h3>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                        STATUS_STYLES[service.status] ?? "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {service.status}
-                    </span>
-                  </div>
-                  {service.service_types ? (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {service.service_types.split(", ").map((serviceType) => (
-                        <span
-                          key={serviceType}
-                          className="rounded-full bg-sky-50 px-2 py-0.5 text-[0.65rem] font-medium text-sky-700"
-                        >
-                          {serviceType}
-                        </span>
-                      ))}
+                <div
+                  key={service.id}
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-slate-900">{service.name}</h3>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          STATUS_STYLES[service.status] ?? "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {service.status}
+                      </span>
                     </div>
-                  ) : null}
-                  {service.description ? (
-                    <p className="mt-1.5 whitespace-pre-line text-xs leading-5 text-slate-600">{service.description}</p>
+                    {service.service_types ? (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {service.service_types.split(", ").map((serviceType) => (
+                          <span
+                            key={serviceType}
+                            className="rounded-full bg-sky-50 px-2 py-0.5 text-[0.65rem] font-medium text-sky-700"
+                          >
+                            {serviceType}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {service.description ? (
+                      <p className="mt-1.5 whitespace-pre-line text-xs leading-5 text-slate-600">
+                        {service.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {canEditThisProvider ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Link
+                        href={`/services/manage/${service.id}/edit`}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
+                    </div>
                   ) : null}
                 </div>
               ))

@@ -106,6 +106,7 @@ export async function createServiceAction(input: SaveServiceFormInput): Promise<
 
   revalidatePath("/services/manage");
   revalidatePath("/map");
+  revalidatePath(`/providers/${providerId}`);
 
   return result;
 }
@@ -114,7 +115,7 @@ export async function updateServiceAction(serviceId: string, input: SaveServiceF
   const context = await getAuthContext();
   assertCanWrite(context);
 
-  await requireOwnedService(serviceId, context);
+  const existingService = await requireOwnedService(serviceId, context);
 
   await updateService(serviceId, {
     name: requireNonEmptyString(input.name, "name"),
@@ -126,16 +127,18 @@ export async function updateServiceAction(serviceId: string, input: SaveServiceF
 
   revalidatePath("/services/manage");
   revalidatePath("/map");
+  revalidatePath(`/providers/${existingService.provider_record_ID}`);
 }
 
 export async function deleteServiceAction(serviceId: string): Promise<void> {
   const context = await getAuthContext();
   assertCanWrite(context);
 
-  await requireOwnedService(serviceId, context);
+  const existingService = await requireOwnedService(serviceId, context);
 
   await deleteService(serviceId);
 
   revalidatePath("/services/manage");
   revalidatePath("/map");
+  revalidatePath(`/providers/${existingService.provider_record_ID}`);
 }
