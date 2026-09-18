@@ -54,12 +54,18 @@ function assertCanWrite(context: AuthContext): void {
   }
 }
 
-async function requireCurrentProviderId(context: AuthContext): Promise<string> {
-  if (!context.providerId) {
-    throw new Error("Your account isn't linked to an Provider yet.");
+// Unlike requireCurrentProviderId (used for the original "Manage My Services"
+// flow, where the provider is implicit), this action can now also be reached
+// from an arbitrary Provider's own page — so the providerId is explicit, and
+// this checks whether the caller may actually create a service for it.
+function assertCanCreateForProvider(context: AuthContext, providerId: string): void {
+  if (context.role === "Admin") {
+    return;
   }
 
-  return context.providerId;
+  if (context.providerId !== providerId) {
+    throw new Error("You don't have permission to create a service for this provider.");
+  }
 }
 
 // Never trust that a serviceId submitted from the client belongs to the current
@@ -90,10 +96,10 @@ async function requireOwnedService(serviceId: string, context: AuthContext): Pro
   return existingService;
 }
 
-export async function createServiceAction(input: SaveServiceFormInput): Promise<{ id: string }> {
+export async function createServiceAction(providerId: string, input: SaveServiceFormInput): Promise<{ id: string }> {
   const context = await getAuthContext();
   assertCanWrite(context);
-  const providerId = await requireCurrentProviderId(context);
+  assertCanCreateForProvider(context, providerId);
 
   const result = await createService({
     providerId,

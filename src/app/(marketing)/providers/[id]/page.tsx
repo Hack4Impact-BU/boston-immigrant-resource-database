@@ -150,9 +150,19 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             ) : null}
           </div>
 
-          <h2 className="mt-8 text-lg font-semibold tracking-tight text-slate-900">
-            Services ({providerServices.length})
-          </h2>
+          <div className="mt-8 flex items-center justify-between">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              Services ({providerServices.length})
+            </h2>
+            {canEditThisProvider ? (
+              <Link
+                href={`/services/manage/new?providerId=${provider.id}`}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Add Service
+              </Link>
+            ) : null}
+          </div>
 
           <div className="mt-3 space-y-3">
             {providerServices.length === 0 ? (
