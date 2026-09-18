@@ -7,6 +7,7 @@ import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { formatRelativeUpdateDate, formatRelativeUpdateDateShort } from "@/lib/dates";
+import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
 type Provider = {
   id: string;
@@ -490,12 +491,7 @@ export default function MapPage() {
   // the embedded view appears. ~0.006 degrees is roughly a close, walkable
   // neighborhood view.
   const selectedServiceMapEmbedUrl = selectedServiceCoordinates
-    ? (() => {
-        const { lat, lng } = selectedServiceCoordinates;
-        const delta = 0.006;
-        const bbox = [lng - delta, lat - delta, lng + delta, lat + delta].join(",");
-        return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
-      })()
+    ? buildOpenStreetMapEmbedUrl(selectedServiceCoordinates.lat, selectedServiceCoordinates.lng)
     : null;
   const selectedServiceLanguages = selectedService?.providerDetails?.language_support?.join(", ") || "Language support varies";
   const selectedServiceProvider = selectedService?.providerDetails?.name || "Provider unavailable";

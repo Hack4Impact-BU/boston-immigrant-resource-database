@@ -8,6 +8,7 @@ import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getUserProviderId, getUserRole } from "@/lib/airtable";
 import { formatRelativeUpdateDate } from "@/lib/dates";
+import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,10 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
   // one doesn't clear the other) must not see this button either.
   const canWrite = viewerRole === "Provider" || viewerRole === "Admin";
   const canEditThisProvider = canWrite && (linkedProviderId === provider.id || viewerRole === "Admin");
+  const providerMapEmbedUrl =
+    provider.latitude != null && provider.longitude != null
+      ? buildOpenStreetMapEmbedUrl(provider.latitude, provider.longitude)
+      : null;
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
@@ -150,6 +155,48 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
               <p className="mt-5 whitespace-pre-line border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
             ) : null}
           </div>
+
+          {providerMapEmbedUrl ? (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900">Location</h2>
+              <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
+                <iframe
+                  src={providerMapEmbedUrl}
+                  title={`Map showing the location of ${provider.name}`}
+                  className="h-72 w-full"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <span>
+                  ©{" "}
+                  <a
+                    href="https://www.openstreetmap.org/copyright"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline hover:text-sky-700"
+                  >
+                    OpenStreetMap
+                  </a>{" "}
+                  contributors
+                </span>
+                {provider.address ? (
+                  <a
+                    href={
+                      provider.google_maps_link ||
+                      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(provider.address)}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-slate-700 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
+                  >
+                    {provider.address}
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-8 flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">
