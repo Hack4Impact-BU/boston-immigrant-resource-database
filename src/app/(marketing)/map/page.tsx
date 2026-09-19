@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
@@ -821,16 +822,38 @@ export default function MapPage() {
                         </div>
 
                         <div className="mt-4 flex min-w-0 items-start gap-3">
-                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
-                            <img
-                              src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
-                              alt={selectedServiceProvider}
-                              className="h-full w-full object-contain p-1.5"
-                            />
-                          </div>
+                          {selectedService.providerDetails?.id ? (
+                            <Link
+                              href={`/providers/${selectedService.providerDetails.id}`}
+                              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white transition-opacity hover:opacity-80"
+                            >
+                              <img
+                                src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
+                                alt={selectedServiceProvider}
+                                className="h-full w-full object-contain p-1.5"
+                              />
+                            </Link>
+                          ) : (
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
+                              <img
+                                src={selectedService.providerDetails?.logo || "/icons/Just_BIRD_logo_white.png"}
+                                alt={selectedServiceProvider}
+                                className="h-full w-full object-contain p-1.5"
+                              />
+                            </div>
+                          )}
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-700">{selectedServiceProvider}</p>
+                            {selectedService.providerDetails?.id ? (
+                              <Link
+                                href={`/providers/${selectedService.providerDetails.id}`}
+                                className="block truncate text-sm font-medium text-slate-700 hover:text-sky-700 hover:underline"
+                              >
+                                {selectedServiceProvider}
+                              </Link>
+                            ) : (
+                              <p className="truncate text-sm font-medium text-slate-700">{selectedServiceProvider}</p>
+                            )}
                             <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                               {selectedService.name}
                             </h2>
