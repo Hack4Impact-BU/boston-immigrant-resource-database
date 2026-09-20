@@ -120,7 +120,17 @@ export default function MapPage() {
   const [languageFilter, setLanguageFilter] = useState<string[]>([]);
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | null>(null);
+  const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | "sort" | null>(null);
+  const [sortOption, setSortOption] = useState<
+    | "providerName-asc"
+    | "providerName-desc"
+    | "serviceName-asc"
+    | "serviceName-desc"
+    | "lastUpdated-asc"
+    | "lastUpdated-desc"
+    | "status-asc"
+    | "status-desc"
+  >("providerName-asc");
   const [filterSearchText, setFilterSearchText] = useState<Record<string, string>>({});
   const [providers, setProviders] = useState<Provider[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -258,6 +268,40 @@ export default function MapPage() {
       );
     });
   }, [languageFilter, providerFilter, search, serviceTypeFilter, servicesWithProviders, statusFilter]);
+
+  const sortedFilteredServices = useMemo(() => {
+    const sorted = [...filteredServices];
+    // Most-available-first ordering, not alphabetical — a plain alphabetical
+    // sort on these four values would be meaningless (it'd read "Contact
+    // Provider, Full, Open, Waitlist", telling the viewer nothing useful).
+    const statusPriority: Record<string, number> = { Open: 0, "Contact Provider": 1, Waitlist: 2, Full: 3 };
+    const getStatusPriority = (status: string) => statusPriority[status] ?? 99;
+
+    sorted.sort((left, right) => {
+      switch (sortOption) {
+        case "providerName-asc":
+          return (left.providerDetails?.name || "").localeCompare(right.providerDetails?.name || "");
+        case "providerName-desc":
+          return (right.providerDetails?.name || "").localeCompare(left.providerDetails?.name || "");
+        case "serviceName-asc":
+          return left.name.localeCompare(right.name);
+        case "serviceName-desc":
+          return right.name.localeCompare(left.name);
+        case "lastUpdated-asc":
+          return (new Date(left.last_modified || 0).getTime() || 0) - (new Date(right.last_modified || 0).getTime() || 0);
+        case "lastUpdated-desc":
+          return (new Date(right.last_modified || 0).getTime() || 0) - (new Date(left.last_modified || 0).getTime() || 0);
+        case "status-asc":
+          return getStatusPriority(left.status) - getStatusPriority(right.status);
+        case "status-desc":
+          return getStatusPriority(right.status) - getStatusPriority(left.status);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [filteredServices, sortOption]);
 
   const selectedService = useMemo(() => {
     return filteredServices.find((service) => service.id === selectedServiceId) ?? null;
@@ -691,7 +735,65 @@ export default function MapPage() {
           </div>
 
           <div className="relative z-0 grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
-            <div className="min-h-0 rounded-[24px] bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <div className="flex min-h-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+                <p className="text-sm text-slate-500">
+                  Showing {sortedFilteredServices.length} service{sortedFilteredServices.length === 1 ? "" : "s"}
+                </p>
+
+                <div className="relative z-50" data-filter-menu-root>
+                  {(() => {
+                    const sortOptions: { value: typeof sortOption; label: string }[] = [
+                      { value: "providerName-asc", label: "Provider Name (A → Z)" },
+                      { value: "providerName-desc", label: "Provider Name (Z → A)" },
+                      { value: "serviceName-asc", label: "Service Name (A → Z)" },
+                      { value: "serviceName-desc", label: "Service Name (Z → A)" },
+                      { value: "lastUpdated-desc", label: "Last Updated (Newest First)" },
+                      { value: "lastUpdated-asc", label: "Last Updated (Oldest First)" },
+                      { value: "status-asc", label: "Status (Most Available First)" },
+                      { value: "status-desc", label: "Status (Least Available First)" },
+                    ];
+                    const isOpen = openFilterMenu === "sort";
+                    const currentLabel = sortOptions.find((option) => option.value === sortOption)?.label ?? "Sort";
+
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setOpenFilterMenu(isOpen ? null : "sort")}
+                          className="inline-flex items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors cursor-pointer"
+                          aria-expanded={isOpen}
+                          aria-haspopup="listbox"
+                        >
+                          <span className="truncate">Sort: {currentLabel}</span>
+                          <ChevronDown size={14} className={isOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+                        </button>
+
+                        {isOpen ? (
+                          <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+                            {sortOptions.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  setSortOption(option.value);
+                                  setOpenFilterMenu(null);
+                                }}
+                                className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-sm transition-colors cursor-pointer ${
+                                  option.value === sortOption ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
               <div className="h-full space-y-2 overflow-y-auto pr-2">
                 {loading ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
@@ -702,12 +804,12 @@ export default function MapPage() {
                   <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
                     {error}
                   </div>
-                ) : filteredServices.length === 0 ? (
+                ) : sortedFilteredServices.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
                     No services matched your search.
                   </div>
                 ) : (
-                  filteredServices.map((service) => {
+                  sortedFilteredServices.map((service) => {
                     const provider = service.providerDetails;
                     const languageList = provider?.language_support || [];
                     const matchingFilteredLanguages = languageList.filter((language) => languageFilter.includes(language));
