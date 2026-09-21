@@ -63,7 +63,7 @@ const FALLBACK_ABOUT_SECTION: HomePageAboutSection = {
   subheading: "Boston Immigrant Resource Dashboard",
   paragraph:
     "To provide real-time, accessible information on essential resources for immigrants, refugees, and service providers—ensuring timely and effective support. To foster a “city of belonging” by creating a more connected and efficient support network for immigrants, refugees, and asylum seekers in Boston.",
-  buttonText: "Activate your Account",
+  buttonText: "Create Your Account",
   buttonLink: "/register",
   images: [],
 };

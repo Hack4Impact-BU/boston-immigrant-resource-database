@@ -25,7 +25,7 @@ export default {
       name: 'buttonText',
       title: 'Button Text',
       type: 'string',
-      initialValue: 'Activate your Account',
+      initialValue: 'Create Your Account',
     },
     {
       name: 'buttonLink',
