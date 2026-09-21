@@ -5,6 +5,7 @@ import ForProvidersSection from "@/components/marketing/home/ForProvidersSection
 import HomeFooter from "@/components/marketing/home/HomeFooter";
 import HomeHeader from "@/components/marketing/home/HomeHeader";
 import ImageBanner from "@/components/marketing/home/ImageBanner";
+import IntroVideoSection from "@/components/marketing/home/IntroVideoSection";
 import OurPartnersSection from "@/components/marketing/home/OurPartnersSection";
 import SponsorLogos from "@/components/marketing/home/SponsorLogos";
 import TestimonialsSection from "@/components/marketing/home/TestimonialsSection";
@@ -17,6 +18,7 @@ export default function Home() {
 
       <main>
         <AboutBirdSection />
+        <IntroVideoSection />
         <WhyBirdMattersSection />
         {/* <ImageBanner /> */}
         <OurPartnersSection />
