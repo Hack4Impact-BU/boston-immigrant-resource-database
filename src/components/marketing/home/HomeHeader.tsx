@@ -31,7 +31,7 @@ export default function HomeHeader() {
             <div className="flex flex-col leading-tight">
               <span className="font-semibold text-[#27317B]">Immigration GPT</span>
               <span className="max-w-[240px] whitespace-normal text-xs font-normal text-slate-500">
-                Free help finding resources and answers for immigrants and refugees
+                Free chatbot to help find resources and answers for immigrants and refugees
               </span>
             </div>
           </Link>

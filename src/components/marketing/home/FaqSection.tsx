@@ -16,8 +16,20 @@ export default async function FaqSection() {
         </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start">
-          <div className="rounded-2xl bg-[#F9FBFF] p-6">
-            <FaqAccordion items={faqs} defaultOpen="0" />
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl bg-[#F9FBFF] p-6">
+              <FaqAccordion items={faqs} defaultOpen="0" />
+            </div>
+
+            <div className="relative overflow-hidden rounded-2xl aspect-[1080/1350]">
+              <Image
+                src="/img/boston-ma-a-certified-welcoming-place.jpg"
+                alt="Boston, MA - A Certified Welcoming place for all of us to call home"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
           </div>
 
           <div className="relative overflow-hidden rounded-2xl aspect-[800/1258]">
