@@ -16,7 +16,7 @@ export default function HomeHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 lg:px-10">
-        <BirdLogo />
+        <BirdLogo className="h-14 w-auto" />
 
         <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
           <Link

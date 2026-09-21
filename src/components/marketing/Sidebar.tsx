@@ -139,9 +139,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
         </button>
 
         {/* Logo Section */}
-      <div className="p-1 flex items-center gap-2 border-b border-slate-200">
+      <div className="p-3 flex items-center gap-2 border-b border-slate-200">
         <div className="flex items-center justify-center shrink-0">
-          <BirdLogo/>
+          <BirdLogo className="h-14 w-auto" />
         </div>
       </div>
 
