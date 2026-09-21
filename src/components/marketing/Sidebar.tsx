@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare } from "lucide-react";
+import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare, Menu, X } from "lucide-react";
 import BirdLogo from "./home/BirdLogo";
 
 type SidebarProps = {
@@ -21,6 +21,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   const { user } = useUser();
   const [displayName, setDisplayName] = useState("");
   const [userRole, setUserRole] = useState<string | null>(null);
+  // Short-term mobile workaround: this is separate from the existing `isOpen`
+  // prop, which every page hard-codes to true and which this component still
+  // respects for its desktop width (w-55/w-0). On small screens the sidebar
+  // instead overlays the page as a slide-in drawer, toggled by the button
+  // below, regardless of what `isOpen` is set to.
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +60,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     };
   }, []);
 
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [activePage]);
+
   const browseItems: MenuItem[] = [
     { name: "Community Forum", href: "/forum", icon: <Users size={20} /> },
     { name: "Providers", href: "/providers", icon: <Building2 size={20} /> },
@@ -82,12 +92,53 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   ];
 
   return (
-    <div
-      className={`fixed left-0 top-0 z-30 flex h-screen flex-col bg-white text-slate-900 transition-all duration-300 ease-in-out shadow-lg border-r border-slate-200 ${
-        isOpen ? "w-55" : "w-0"
-      } overflow-hidden`}
-    >
-      {/* Logo Section */}
+    <>
+      {/* Mobile-only app header — a real header bar rather than a floating
+          button, so it doesn't overlap page content; every page's own
+          left-margin/top-padding is adjusted in globals.css to make room for
+          this, centrally, rather than editing each page individually. */}
+      <div
+        className={`fixed left-0 top-0 z-20 flex h-14 w-full items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 shadow-sm md:hidden ${
+          isMobileOpen ? "hidden" : ""
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsMobileOpen(true)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+        <BirdLogo className="h-8 w-auto" />
+      </div>
+
+      {/* Tap-outside-to-dismiss backdrop, mobile only */}
+      {isMobileOpen ? (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      ) : null}
+
+      <div
+        className={`fixed left-0 top-0 z-40 flex h-screen flex-col bg-white text-slate-900 transition-all duration-300 ease-in-out shadow-lg border-r border-slate-200 ${
+          isOpen ? "w-55" : "w-0"
+        } overflow-hidden ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsMobileOpen(false)}
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 md:hidden"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
+
+        {/* Logo Section */}
       <div className="p-1 flex items-center gap-2 border-b border-slate-200">
         <div className="flex items-center justify-center shrink-0">
           <BirdLogo/>
@@ -205,7 +256,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -612,7 +612,7 @@ export default function MapPage() {
       <Sidebar isOpen={true} activePage="Search Services" />
 
       <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-3 py-2 text-slate-800">
-        <section className="mx-auto flex h-[calc(100dvh-1rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)]">
+        <section className="mx-auto flex h-[calc(100dvh-1rem-4.5rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
             <div className="space-y-2">
               <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">

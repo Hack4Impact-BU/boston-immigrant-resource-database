@@ -151,3 +151,20 @@ body {
     cursor: pointer;
   }
 }
+
+/* Short-term mobile sidebar workaround: below md, the sidebar (see
+   Sidebar.tsx) slides off-screen and overlays the page when opened, rather
+   than pushing content aside — so the fixed left-margins used across many
+   pages to make room for the always-visible desktop sidebar need to
+   collapse to zero here. A fixed mobile header bar (hamburger + logo)
+   replaces it instead, so the same elements also need top padding to clear
+   that header rather than sitting underneath it. Centralized so it applies
+   everywhere without editing each page's own classes individually. */
+@media (max-width: 767px) {
+  .ml-55,
+  .ml-52,
+  .ml-\[260px\] {
+    margin-left: 0 !important;
+    padding-top: 4.5rem !important;
+  }
+}
