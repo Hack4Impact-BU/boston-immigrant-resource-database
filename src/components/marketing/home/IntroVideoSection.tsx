@@ -4,7 +4,6 @@ import Image from "next/image";
 // YOUTUBE_VIDEO_ID is just the id from a youtube.com/watch?v=<id> URL.
 const YOUTUBE_VIDEO_ID = "IqpaiFw6K8I";
 const SIDE_PHOTOS = [
-//TODO
   { src: "/img/you-belong-here-mayor-michelle-wu.jpg", alt: "You Belong Here - Michelle Wu" },
   { src: "/img/bird-provider-meet-and-greet.jpg", alt: "BIRD Provider Meet & Greet" },
 ] as const;
@@ -12,7 +11,7 @@ const SIDE_PHOTOS = [
 export default function IntroVideoSection() {
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10 lg:py-10">
+      <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10 lg:pt-14 lg:pb-10">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="relative aspect-video overflow-hidden rounded-2xl bg-slate-100">
             <iframe
