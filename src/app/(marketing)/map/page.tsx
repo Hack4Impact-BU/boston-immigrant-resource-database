@@ -120,6 +120,22 @@ export default function MapPage() {
   const [languageFilter, setLanguageFilter] = useState<string[]>([]);
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  const hasActiveSearchOrFilters =
+    search.trim().length > 0 ||
+    providerFilter.length > 0 ||
+    languageFilter.length > 0 ||
+    serviceTypeFilter.length > 0 ||
+    statusFilter.length > 0;
+
+  function handleClearAll() {
+    setSearch("");
+    setProviderFilter([]);
+    setLanguageFilter([]);
+    setServiceTypeFilter([]);
+    setStatusFilter([]);
+  }
+
   const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | "sort" | null>(null);
   const [sortOption, setSortOption] = useState<
     | "providerName-asc"
@@ -614,10 +630,19 @@ export default function MapPage() {
       <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-3 py-2 text-slate-800">
         <section className="mx-auto flex h-[calc(100dvh-1rem-4.5rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
-            <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
               <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">
                 Search Services
               </h1>
+              {hasActiveSearchOrFilters ? (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+                >
+                  Clear All
+                </button>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
