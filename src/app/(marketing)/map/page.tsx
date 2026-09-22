@@ -130,7 +130,7 @@ export default function MapPage() {
     | "lastUpdated-desc"
     | "status-asc"
     | "status-desc"
-  >("providerName-asc");
+  >("lastUpdated-desc");
   const [filterSearchText, setFilterSearchText] = useState<Record<string, string>>({});
   const [providers, setProviders] = useState<Provider[]>([]);
   const [services, setServices] = useState<Service[]>([]);
