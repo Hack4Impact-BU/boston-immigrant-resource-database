@@ -38,7 +38,7 @@ export default async function WhyBirdMattersSection() {
   const { stats } = await getMarketingPageContent();
 
   return (
-    <section className="bg-white py-10 md:py-14">
+    <section className="bg-white pt-5 pb-10 md:pt-7 md:pb-14">
       <div className="mx-auto max-w-6xl px-6 text-center lg:px-10">
         <p className="text-sm font-semibold uppercase tracking-wide text-bird-accent">
           Our Purpose
