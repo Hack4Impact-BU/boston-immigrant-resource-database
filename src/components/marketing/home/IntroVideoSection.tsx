@@ -12,7 +12,7 @@ const SIDE_PHOTOS = [
 export default function IntroVideoSection() {
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+      <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10 lg:py-10">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="relative aspect-video overflow-hidden rounded-2xl bg-slate-100">
             <iframe

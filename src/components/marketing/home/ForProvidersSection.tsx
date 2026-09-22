@@ -21,7 +21,7 @@ export default async function ForProvidersSection() {
   const faqs = await getProviderFaqs();
 
   return (
-    <section className="bg-white py-16 md:py-20">
+    <section className="bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <h2 className="text-center text-2xl font-bold text-bird-accent md:text-3xl">
           For Providers

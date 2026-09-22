@@ -35,7 +35,7 @@ export default async function AboutBirdSection() {
 
   return (
     <section id="about" className="overflow-hidden bg-gradient-to-r from-[#e8f5f0] to-[#e3f2fd]">
-      <div className="relative mx-auto max-w-6xl px-6 py-16 lg:px-10 lg:py-20">
+      <div className="relative mx-auto max-w-6xl px-6 py-10 lg:px-10 lg:py-14">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-center">
           <div className="shrink-0 space-y-6 lg:max-w-md lg:pr-8">
             <div>

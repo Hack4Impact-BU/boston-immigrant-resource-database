@@ -8,7 +8,7 @@ export default async function SponsorLogos() {
   const sanityLogos = partnerLogos ?? [];
 
   return (
-    <section id="services" className="border-y border-gray-100 bg-white py-14 sm:py-16">
+    <section id="services" className="border-y border-gray-100 bg-white py-8 sm:py-10">
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-20 xl:px-28">
         <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-10 md:gap-12">
           {sanityLogos.length > 0

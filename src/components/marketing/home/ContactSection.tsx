@@ -51,7 +51,7 @@ export default function ContactSection() {
   }
 
   return (
-    <section id="contact" className="bg-[#f5f7fa] py-16 md:py-20">
+    <section id="contact" className="bg-[#f5f7fa] py-10 md:py-14">
       <div className="mx-auto max-w-3xl px-6 lg:px-10">
         <h2 className="text-center text-2xl font-bold text-bird-accent md:text-3xl">
           Contact Us

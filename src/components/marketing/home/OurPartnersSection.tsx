@@ -21,7 +21,7 @@ export default async function OurPartnersSection() {
     : urlFor(imageSource).width(1080).url();
 
   return (
-    <section id="mission" className="bg-[#f5f7fa] py-20 md:py-28">
+    <section id="mission" className="bg-[#f5f7fa] py-12 md:py-16">
       <div className="mx-auto grid max-w-screen-2xl grid-cols-1 gap-6 px-6 md:gap-8 lg:grid-cols-2 lg:items-stretch lg:px-14">
         <div className="flex min-h-90 flex-col justify-between rounded-3xl bg-white p-10 shadow-sm md:min-h-100 md:p-12 lg:min-h-110">
           <div>
