@@ -48,6 +48,7 @@ export type ProviderCreateInput = {
   email: string;
   website?: string;
   primary_phone_number?: string;
+  secondary_phone_number?: string;
   description?: string;
   address?: string;
   serviceTypeIds?: string[];
@@ -510,6 +511,7 @@ export async function createProvider(input: ProviderCreateInput): Promise<{ id: 
 
   if (input.website) fields.Website = input.website;
   if (input.primary_phone_number) fields["Primary Phone Number"] = input.primary_phone_number;
+  if (input.secondary_phone_number) fields["Secondary Phone Number"] = input.secondary_phone_number;
   if (input.description) fields.Description = input.description;
   if (input.address) fields.Address = input.address;
   if (input.serviceTypeIds && input.serviceTypeIds.length > 0) fields["Service Types"] = input.serviceTypeIds;

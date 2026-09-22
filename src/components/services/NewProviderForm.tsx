@@ -14,10 +14,11 @@ import type { Language, ServiceType } from "@/app/api/airtable";
 export type NewProviderFormInput = {
   name: string;
   email: string;
-  website?: string;
-  primaryPhoneNumber?: string;
-  description?: string;
-  address?: string;
+  website: string;
+  primaryPhoneNumber: string;
+  secondaryPhoneNumber?: string;
+  description: string;
+  address: string;
   serviceTypeIds: string[];
   languageIds: string[];
 };
@@ -39,8 +40,19 @@ export function NewProviderForm({ serviceTypes, languages, submitLabel, submitti
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitting) return;
-    setIsSubmitting(true);
     setErrorMessage(undefined);
+
+    if (selectedServiceTypeIds.length === 0) {
+      setErrorMessage("Please select at least one service type.");
+      return;
+    }
+
+    if (selectedLanguageIds.length === 0) {
+      setErrorMessage("Please select at least one language.");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
 
@@ -48,10 +60,11 @@ export function NewProviderForm({ serviceTypes, languages, submitLabel, submitti
       await onSubmit({
         name: getRequiredFormString(formData, "name"),
         email: getRequiredFormString(formData, "email"),
-        website: (formData.get("website") as string | null)?.trim() || undefined,
-        primaryPhoneNumber: (formData.get("primaryPhoneNumber") as string | null)?.trim() || undefined,
-        description: (formData.get("description") as string | null)?.trim() || undefined,
-        address: (formData.get("address") as string | null)?.trim() || undefined,
+        website: getRequiredFormString(formData, "website"),
+        primaryPhoneNumber: getRequiredFormString(formData, "primaryPhoneNumber"),
+        secondaryPhoneNumber: (formData.get("secondaryPhoneNumber") as string | null)?.trim() || undefined,
+        description: getRequiredFormString(formData, "description"),
+        address: getRequiredFormString(formData, "address"),
         serviceTypeIds: selectedServiceTypeIds,
         languageIds: selectedLanguageIds,
       });
@@ -84,34 +97,41 @@ export function NewProviderForm({ serviceTypes, languages, submitLabel, submitti
 
       <div className="space-y-1.5">
         <Label htmlFor="website" className="text-xs font-medium text-slate-500">
-          Website (optional)
+          Website
         </Label>
-        <Input id="website" name="website" className="h-9 text-sm" />
+        <Input id="website" name="website" required className="h-9 text-sm" />
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="primaryPhoneNumber" className="text-xs font-medium text-slate-500">
-          Phone Number (optional)
+          Phone Number
         </Label>
-        <Input id="primaryPhoneNumber" name="primaryPhoneNumber" type="tel" className="h-9 text-sm" />
+        <Input id="primaryPhoneNumber" name="primaryPhoneNumber" type="tel" required className="h-9 text-sm" />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="description" className="text-xs font-medium text-slate-500">
-          Description (optional)
+        <Label htmlFor="secondaryPhoneNumber" className="text-xs font-medium text-slate-500">
+          Secondary Phone Number (optional)
         </Label>
-        <Textarea id="description" name="description" rows={4} className="text-sm" />
+        <Input id="secondaryPhoneNumber" name="secondaryPhoneNumber" type="tel" className="h-9 text-sm" />
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="address" className="text-xs font-medium text-slate-500">
-          Address (optional)
+          Address
         </Label>
-        <Input id="address" name="address" className="h-9 text-sm" />
+        <Input id="address" name="address" required className="h-9 text-sm" />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-slate-500">Service Types (optional)</Label>
+        <Label htmlFor="description" className="text-xs font-medium text-slate-500">
+          Description
+        </Label>
+        <Textarea id="description" name="description" rows={4} required className="text-sm" />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium text-slate-500">Service Types</Label>
         <ServiceTypesPicker
           serviceTypes={serviceTypes}
           selectedIds={selectedServiceTypeIds}
@@ -120,7 +140,7 @@ export function NewProviderForm({ serviceTypes, languages, submitLabel, submitti
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-slate-500">Language Support (optional)</Label>
+        <Label className="text-xs font-medium text-slate-500">Language Support</Label>
         <LanguageSupportPicker languages={languages} selectedIds={selectedLanguageIds} onChange={setSelectedLanguageIds} />
       </div>
 

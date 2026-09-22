@@ -9,13 +9,25 @@ import { getUserRole, linkUserToProvider } from "@/lib/airtable";
 export type CreateAndLinkProviderInput = {
   name: string;
   email: string;
-  website?: string;
-  primaryPhoneNumber?: string;
-  description?: string;
-  address?: string;
-  serviceTypeIds?: string[];
-  languageIds?: string[];
+  website: string;
+  primaryPhoneNumber: string;
+  secondaryPhoneNumber?: string;
+  description: string;
+  address: string;
+  serviceTypeIds: string[];
+  languageIds: string[];
 };
+
+// Server-side enforcement of the same fields the form marks as required —
+// client-side validation alone isn't a real guarantee, since a Server Action
+// is reachable directly, not only through the form's own UI.
+function requireNonEmptySelection(values: string[], fieldName: string): string[] {
+  if (values.length === 0) {
+    throw new Error(`Please select at least one ${fieldName}.`);
+  }
+
+  return values;
+}
 
 // Viewer accounts represent users/organizations that don't offer Services
 // themselves — linking or creating a Provider is fundamentally "becoming a
@@ -64,12 +76,13 @@ export async function createAndLinkProvider(input: CreateAndLinkProviderInput): 
   const { id } = await createProvider({
     name: requireNonEmptyString(input.name, "name"),
     email: requireNonEmptyString(input.email, "email"),
-    website: input.website?.trim() || undefined,
-    primary_phone_number: input.primaryPhoneNumber?.trim() || undefined,
-    description: input.description?.trim() || undefined,
-    address: input.address?.trim() || undefined,
-    serviceTypeIds: input.serviceTypeIds,
-    languageIds: input.languageIds,
+    website: requireNonEmptyString(input.website, "website"),
+    primary_phone_number: requireNonEmptyString(input.primaryPhoneNumber, "phone number"),
+    secondary_phone_number: input.secondaryPhoneNumber?.trim() || undefined,
+    description: requireNonEmptyString(input.description, "description"),
+    address: requireNonEmptyString(input.address, "address"),
+    serviceTypeIds: requireNonEmptySelection(input.serviceTypeIds, "service type"),
+    languageIds: requireNonEmptySelection(input.languageIds, "language"),
   });
 
   await linkUserToProvider(userId, id);
@@ -103,11 +116,12 @@ export async function createProviderAsAdmin(input: CreateAndLinkProviderInput): 
   return createProvider({
     name: requireNonEmptyString(input.name, "name"),
     email: requireNonEmptyString(input.email, "email"),
-    website: input.website?.trim() || undefined,
-    primary_phone_number: input.primaryPhoneNumber?.trim() || undefined,
-    description: input.description?.trim() || undefined,
-    address: input.address?.trim() || undefined,
-    serviceTypeIds: input.serviceTypeIds,
-    languageIds: input.languageIds,
+    website: requireNonEmptyString(input.website, "website"),
+    primary_phone_number: requireNonEmptyString(input.primaryPhoneNumber, "phone number"),
+    secondary_phone_number: input.secondaryPhoneNumber?.trim() || undefined,
+    description: requireNonEmptyString(input.description, "description"),
+    address: requireNonEmptyString(input.address, "address"),
+    serviceTypeIds: requireNonEmptySelection(input.serviceTypeIds, "service type"),
+    languageIds: requireNonEmptySelection(input.languageIds, "language"),
   });
 }
