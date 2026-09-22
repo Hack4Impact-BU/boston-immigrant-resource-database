@@ -5,6 +5,7 @@ import ForProvidersSection from "@/components/marketing/home/ForProvidersSection
 import HomeFooter from "@/components/marketing/home/HomeFooter";
 import HomeHeader from "@/components/marketing/home/HomeHeader";
 import ImageBanner from "@/components/marketing/home/ImageBanner";
+import ImmigrationGptBadge from "@/components/marketing/home/ImmigrationGptBadge";
 import IntroVideoSection from "@/components/marketing/home/IntroVideoSection";
 import OurPartnersSection from "@/components/marketing/home/OurPartnersSection";
 import SponsorLogos from "@/components/marketing/home/SponsorLogos";
@@ -15,6 +16,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <HomeHeader />
+
+      <div className="border-b border-gray-100 bg-white px-6 py-3 md:hidden">
+        <ImmigrationGptBadge />
+      </div>
 
       <main>
         <AboutBirdSection />
