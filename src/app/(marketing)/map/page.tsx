@@ -736,15 +736,16 @@ export default function MapPage() {
                             ) : (
                               visibleOptions.map((option) => {
                                 const isActive = filter.value.includes(option);
+                                const wrapsText = filter.key === "provider" || filter.key === "serviceType";
                                 return (
                                   <label
                                     key={option}
-                                    className={`flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                                      isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
-                                    }`}
+                                    className={`flex w-full min-w-0 cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                                      wrapsText ? "items-start" : "items-center"
+                                    } ${isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"}`}
                                   >
-                                    <Checkbox checked={isActive} onCheckedChange={() => filter.onToggle(option)} />
-                                    <span className="truncate">{option}</span>
+                                    <Checkbox checked={isActive} onCheckedChange={() => filter.onToggle(option)} className={wrapsText ? "mt-0.5 shrink-0" : "shrink-0"} />
+                                    <span className={wrapsText ? "min-w-0 break-words" : "min-w-0 truncate"}>{option}</span>
                                   </label>
                                 );
                               })
