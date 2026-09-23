@@ -700,8 +700,8 @@ export default function MapPage() {
 
                       {isOpen ? (
                         <div
-                          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:left-auto sm:right-auto sm:w-max sm:min-w-60 sm:max-w-[calc(100vw-2rem)] ${
-                            filter.key === "serviceType" || filter.key === "status" ? "sm:right-0" : "sm:left-0"
+                          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:w-max sm:min-w-60 sm:max-w-[calc(100vw-2rem)] ${
+                            filter.key === "serviceType" || filter.key === "status" ? "sm:left-auto sm:right-0" : "sm:left-0 sm:right-auto"
                           }`}
                         >
                           <div className="border-b border-slate-100 p-2">
