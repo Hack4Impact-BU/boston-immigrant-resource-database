@@ -646,7 +646,7 @@ export default function MapPage() {
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-3 shadow-sm xl:max-w-[560px]">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-4 sm:py-3 xl:max-w-[560px]">
                 <Search size={16} className="shrink-0 text-slate-400" />
                 <input
                   value={search}
@@ -682,11 +682,11 @@ export default function MapPage() {
                     : filter.options;
 
                   return (
-                    <div key={filter.key} className="relative z-50" data-filter-menu-root>
+                    <div key={filter.key} className="relative z-50 min-w-0" data-filter-menu-root>
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:gap-2 sm:px-4 sm:py-3 sm:text-sm ${
                           selectedCount === 0
                             ? "border-[#a8d0e6] bg-white text-slate-700"
                             : "border-sky-200 bg-[#f7fbff] text-sky-800"
@@ -695,7 +695,7 @@ export default function MapPage() {
                         aria-haspopup="listbox"
                       >
                         <span className="truncate">{buttonLabel}</span>
-                        <ChevronDown size={14} className={isOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+                        <ChevronDown size={14} className={isOpen ? "shrink-0 rotate-180 transition-transform" : "shrink-0 transition-transform"} />
                       </button>
 
                       {isOpen ? (
@@ -762,11 +762,11 @@ export default function MapPage() {
           <div className="relative z-0 grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
             <div className="flex min-h-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-                <p className="text-sm text-slate-500">
+                <p className="min-w-0 truncate text-sm text-slate-500">
                   Showing {sortedFilteredServices.length} service{sortedFilteredServices.length === 1 ? "" : "s"}
                 </p>
 
-                <div className="relative z-50" data-filter-menu-root>
+                <div className="relative z-50 min-w-0 shrink" data-filter-menu-root>
                   {(() => {
                     const sortOptions: { value: typeof sortOption; label: string }[] = [
                       { value: "providerName-asc", label: "Provider Name (A → Z)" },
@@ -786,12 +786,12 @@ export default function MapPage() {
                         <button
                           type="button"
                           onClick={() => setOpenFilterMenu(isOpen ? null : "sort")}
-                          className="inline-flex items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors cursor-pointer"
+                          className="flex w-full min-w-0 items-center gap-1.5 rounded-full border border-[#a8d0e6] bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors cursor-pointer sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                           aria-expanded={isOpen}
                           aria-haspopup="listbox"
                         >
-                          <span className="truncate">Sort: {currentLabel}</span>
-                          <ChevronDown size={14} className={isOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+                          <span className="min-w-0 truncate">Sort: {currentLabel}</span>
+                          <ChevronDown size={14} className={isOpen ? "shrink-0 rotate-180 transition-transform" : "shrink-0 transition-transform"} />
                         </button>
 
                         {isOpen ? (
