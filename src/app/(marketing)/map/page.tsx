@@ -682,7 +682,7 @@ export default function MapPage() {
                     : filter.options;
 
                   return (
-                    <div key={filter.key} className="relative z-50 min-w-0" data-filter-menu-root>
+                    <div key={filter.key} className="min-w-0 sm:relative sm:z-50" data-filter-menu-root>
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
@@ -700,8 +700,8 @@ export default function MapPage() {
 
                       {isOpen ? (
                         <div
-                          className={`absolute top-[calc(100%+0.5rem)] z-50 min-w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] ${
-                            filter.key === "serviceType" || filter.key === "status" ? "right-0" : "left-0"
+                          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:left-auto sm:right-auto sm:w-max sm:min-w-60 sm:max-w-[calc(100vw-2rem)] ${
+                            filter.key === "serviceType" || filter.key === "status" ? "sm:right-0" : "sm:left-0"
                           }`}
                         >
                           <div className="border-b border-slate-100 p-2">
@@ -739,7 +739,7 @@ export default function MapPage() {
                                 return (
                                   <label
                                     key={option}
-                                    className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                                    className={`flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                                       isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
                                     }`}
                                   >
