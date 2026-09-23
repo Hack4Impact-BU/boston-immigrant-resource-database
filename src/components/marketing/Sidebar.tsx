@@ -110,6 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
         >
           <Menu size={20} />
         </button>
+        <span className="truncate text-sm font-semibold text-slate-900">{activePage}</span>
         <BirdLogo className="h-8 w-auto" />
       </div>
 

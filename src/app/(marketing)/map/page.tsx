@@ -631,14 +631,14 @@ export default function MapPage() {
         <section className="mx-auto flex h-[calc(100dvh-1rem-4.5rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
             <div className="flex items-center justify-between gap-2">
-              <h1 className="text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem]">
+              <h1 className="hidden text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem] md:block">
                 Search Services
               </h1>
               {hasActiveSearchOrFilters ? (
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+                  className="ml-auto shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
                 >
                   Clear All
                 </button>
