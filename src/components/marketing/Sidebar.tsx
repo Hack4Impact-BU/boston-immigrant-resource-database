@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare, Menu, X } from "lucide-react";
+import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare, Menu, X, UserCog } from "lucide-react";
 import BirdLogo from "./home/BirdLogo";
 
 type SidebarProps = {
@@ -82,6 +82,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     // either — same reasoning as Manage My Provider above.
     ...(userRole === "Provider"
       ? [{ name: "Manage My Services", href: "/services/manage", icon: <Briefcase size={20} /> }]
+      : []),
+    // Admin-only: edits every account's role and access status directly.
+    ...(userRole === "Admin"
+      ? [{ name: "Manage Users", href: "/admin/users", icon: <UserCog size={20} /> }]
       : []),
   ];
 

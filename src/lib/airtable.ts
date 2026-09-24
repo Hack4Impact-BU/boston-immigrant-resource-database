@@ -101,6 +101,108 @@ export type CreateUserResult = {
 	id: string;
 };
 
+/**
+ * The full set of fields shown in the Admin "Manage Users" table, including the
+ * three the Admin can see but never edit there: clerkUserId, providerId, and
+ * createdTime (Airtable's own record-creation timestamp, not a custom field —
+ * every record has this regardless of table schema, via the API's createdTime).
+ */
+export type AdminUserRecord = {
+	id: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	organizationName: string;
+	website: string;
+	phoneNumber: string;
+	userRole: string;
+	access: UserAccessStatus;
+	clerkUserId: string;
+	providerId: string;
+	createdTime: string;
+};
+
+export const ADMIN_USER_ROLE_OPTIONS = ["Admin", "Provider", "Viewer"] as const;
+export const ADMIN_USER_ACCESS_OPTIONS: readonly UserAccessStatus[] = ["approved", "pending", "rejected"];
+
+export type UpdateUserAsAdminInput = {
+	email?: string;
+	firstName?: string;
+	lastName?: string;
+	organizationName?: string;
+	website?: string;
+	phoneNumber?: string;
+	userRole?: string;
+	access?: UserAccessStatus;
+};
+
+function toDisplayString(value: unknown): string {
+	if (typeof value === "string") {
+		return value;
+	}
+
+	if (Array.isArray(value)) {
+		return typeof value[0] === "string" ? value[0] : "";
+	}
+
+	return "";
+}
+
+/**
+ * All User-table records, for the Admin-only "Manage Users" table. Callers are
+ * responsible for verifying the caller is actually an Admin before invoking this —
+ * this function itself does not check, since it's a plain data-access helper.
+ */
+export async function getAllUsersForAdmin(): Promise<AdminUserRecord[]> {
+	const records = await getUserTable().select().all();
+
+	return records.map((record) => ({
+		id: record.id,
+		email: toDisplayString(record.get("email")),
+		firstName: toDisplayString(record.get("firstName")),
+		lastName: toDisplayString(record.get("lastName")),
+		organizationName: toDisplayString(record.get("organizationName")),
+		website: toDisplayString(record.get("website")),
+		phoneNumber: toDisplayString(record.get("phoneNumber")),
+		userRole: toDisplayString(record.get("userRole")),
+		access: normalizeUserAccessStatus(record.get("access") ?? record.get("Access")),
+		clerkUserId: toDisplayString(record.get("clerkUserId")),
+		providerId: toDisplayString(record.get("providerId")),
+		// Airtable's own record-creation timestamp — always present on every
+		// record via the API response, independent of any custom field.
+		createdTime: typeof (record._rawJson as { createdTime?: string })?.createdTime === "string"
+			? (record._rawJson as { createdTime: string }).createdTime
+			: "",
+	}));
+}
+
+/**
+ * Updates one User record's editable fields as an Admin. Callers are responsible
+ * for verifying the caller is actually an Admin, and for validating userRole/access
+ * against the allowed option lists, before invoking this — this function itself
+ * does not check either, since it's a plain data-access helper, not the security
+ * boundary (see updateUserAction in the Server Action layer for both).
+ */
+export async function updateUserAsAdmin(recordId: string, input: UpdateUserAsAdminInput): Promise<void> {
+	const fields: Partial<UserFieldSet> = {};
+
+	if (input.email !== undefined) fields.email = input.email;
+	if (input.firstName !== undefined) fields.firstName = input.firstName;
+	if (input.lastName !== undefined) fields.lastName = input.lastName;
+	if (input.organizationName !== undefined) fields.organizationName = input.organizationName;
+	if (input.website !== undefined) fields.website = input.website;
+	if (input.phoneNumber !== undefined) fields.phoneNumber = input.phoneNumber;
+	// The airtable package's own FieldSet type doesn't model null as a valid
+	// value, but Airtable's real API does accept it to clear a Single Select
+	// field — an empty string is not equivalent and may be rejected instead.
+	if (input.userRole !== undefined) {
+		fields.userRole = (input.userRole === "" ? null : input.userRole) as string | undefined;
+	}
+	if (input.access !== undefined) fields.access = input.access;
+
+	await getUserTable().update(recordId, fields, { typecast: true });
+}
+
 function getAirtableApiKey() {
 	return process.env.AIRTABLE_API_KEY;
 }
@@ -258,6 +360,102 @@ export async function createClientReferral(
 	);
 
 	return { id: record.id };
+}
+
+/**
+ * Airtable's 40 single-select option colors, as CSS rgb() values. Transcribed
+ * from Airtable's own open-source blocks SDK (github.com/Airtable/blocks,
+ * packages/sdk/src/colors.ts) rather than approximated, so these match exactly
+ * what the Airtable UI itself renders for each named color.
+ */
+const AIRTABLE_COLOR_RGB: Record<string, string> = {
+	blueLight2: "rgb(207, 223, 255)", blueLight1: "rgb(156, 199, 255)", blue: "rgb(18, 131, 218)",
+	blueBright: "rgb(45, 127, 249)", blueDark1: "rgb(39, 80, 174)",
+	cyanLight2: "rgb(208, 240, 253)", cyanLight1: "rgb(119, 209, 243)", cyan: "rgb(1, 169, 219)",
+	cyanBright: "rgb(24, 191, 255)", cyanDark1: "rgb(11, 118, 183)",
+	tealLight2: "rgb(194, 245, 233)", tealLight1: "rgb(114, 221, 195)", teal: "rgb(2, 170, 164)",
+	tealBright: "rgb(32, 217, 210)", tealDark1: "rgb(6, 160, 155)",
+	greenLight2: "rgb(209, 247, 196)", greenLight1: "rgb(147, 224, 136)", green: "rgb(17, 175, 34)",
+	greenBright: "rgb(32, 201, 51)", greenDark1: "rgb(51, 138, 23)",
+	yellowLight2: "rgb(255, 234, 182)", yellowLight1: "rgb(255, 214, 110)", yellow: "rgb(224, 141, 0)",
+	yellowBright: "rgb(252, 180, 0)", yellowDark1: "rgb(184, 117, 3)",
+	orangeLight2: "rgb(254, 226, 213)", orangeLight1: "rgb(255, 169, 129)", orange: "rgb(247, 101, 59)",
+	orangeBright: "rgb(255, 111, 44)", orangeDark1: "rgb(215, 77, 38)",
+	redLight2: "rgb(255, 220, 229)", redLight1: "rgb(255, 158, 183)", red: "rgb(239, 48, 97)",
+	redBright: "rgb(248, 43, 96)", redDark1: "rgb(186, 30, 69)",
+	pinkLight2: "rgb(255, 218, 246)", pinkLight1: "rgb(249, 157, 226)", pink: "rgb(233, 41, 186)",
+	pinkBright: "rgb(255, 8, 194)", pinkDark1: "rgb(178, 21, 139)",
+	purpleLight2: "rgb(237, 226, 254)", purpleLight1: "rgb(205, 176, 255)", purple: "rgb(124, 57, 237)",
+	purpleBright: "rgb(139, 70, 255)", purpleDark1: "rgb(107, 28, 176)",
+	grayLight2: "rgb(238, 238, 238)", grayLight1: "rgb(204, 204, 204)", gray: "rgb(102, 102, 102)",
+	grayBright: "rgb(102, 102, 102)", grayDark1: "rgb(68, 68, 68)",
+};
+
+export type FieldOptionColors = Record<string, string>;
+
+/**
+ * Reads the User table's actual configured single-select colors for the given
+ * field names, via Airtable's metadata (schema) API — a different endpoint than
+ * the record API the rest of this file uses, requiring a token with schema.bases:read
+ * access. Returns an empty map for any field whose colors can't be read (missing
+ * scope, network error, field not found, etc.) rather than throwing, since this is
+ * a display enhancement, not something that should block the page from rendering.
+ */
+export async function getUserFieldOptionColors(
+	fieldNames: readonly string[],
+): Promise<Record<string, FieldOptionColors>> {
+	const result: Record<string, FieldOptionColors> = {};
+
+	if (!hasAirtableConfig()) {
+		return result;
+	}
+
+	try {
+		const { apiKey, baseId } = requireAirtableConfig();
+		const response = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+			headers: { Authorization: `Bearer ${apiKey}` },
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			return result;
+		}
+
+		const data = (await response.json()) as {
+			tables?: Array<{
+				name?: string;
+				fields?: Array<{
+					name?: string;
+					options?: { choices?: Array<{ name?: string; color?: string }> };
+				}>;
+			}>;
+		};
+
+		const userTable = data.tables?.find((table) => table.name === AIRTABLE_USER_TABLE_NAME);
+
+		for (const fieldName of fieldNames) {
+			const field = userTable?.fields?.find((f) => f.name === fieldName);
+			const choices = field?.options?.choices;
+
+			if (!choices) {
+				continue;
+			}
+
+			const colorsForField: FieldOptionColors = {};
+
+			for (const choice of choices) {
+				if (choice.name && choice.color && AIRTABLE_COLOR_RGB[choice.color]) {
+					colorsForField[choice.name] = AIRTABLE_COLOR_RGB[choice.color];
+				}
+			}
+
+			result[fieldName] = colorsForField;
+		}
+
+		return result;
+	} catch {
+		return result;
+	}
 }
 
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
