@@ -913,14 +913,14 @@ export default function MapPage() {
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] xl:h-full">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] xl:h-full">
 
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (
                   <div className="h-full shrink-0 overflow-y-auto overscroll-contain border-b border-slate-200 px-4 py-4 lg:px-6">
                     <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
                       <div className="border-b border-slate-200 pb-4">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
                           <a
                             href={`mailto:${selectedService.provider_email}`}
                             className="inline-flex items-center justify-center rounded-md bg-[#4c8cc9] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3d77b6]"
