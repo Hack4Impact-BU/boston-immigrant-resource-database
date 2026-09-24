@@ -458,6 +458,121 @@ export async function getUserFieldOptionColors(
 	}
 }
 
+export type AirtableFieldSchema = {
+	name: string;
+	type: string;
+	/** Choice names, for singleSelect/multipleSelects fields; empty otherwise. */
+	options: readonly string[];
+	/** Choice name -> rgb() color string, for singleSelect/multipleSelects fields. */
+	optionColors: FieldOptionColors;
+};
+
+/**
+ * Reads a table's full field schema (name, type, and for select-type fields
+ * their options + Airtable-configured colors) via Airtable's metadata API — the
+ * same endpoint getUserFieldOptionColors uses, generalized to any table rather
+ * than just User. Returns an empty array if the schema can't be read (missing
+ * schema.bases:read scope, network error, table not found, etc.) rather than
+ * throwing, since callers should degrade gracefully rather than fail to render.
+ */
+export async function getTableSchema(tableName: string): Promise<AirtableFieldSchema[]> {
+	if (!hasAirtableConfig()) {
+		return [];
+	}
+
+	try {
+		const { apiKey, baseId } = requireAirtableConfig();
+		const response = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+			headers: { Authorization: `Bearer ${apiKey}` },
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			return [];
+		}
+
+		const data = (await response.json()) as {
+			tables?: Array<{
+				name?: string;
+				fields?: Array<{
+					name?: string;
+					type?: string;
+					options?: { choices?: Array<{ name?: string; color?: string }> };
+				}>;
+			}>;
+		};
+
+		const table = data.tables?.find((t) => t.name === tableName);
+
+		if (!table?.fields) {
+			return [];
+		}
+
+		return table.fields
+			.filter((field): field is { name: string; type: string; options?: { choices?: Array<{ name?: string; color?: string }> } } =>
+				typeof field.name === "string" && typeof field.type === "string",
+			)
+			.map((field) => {
+				const choices = field.options?.choices ?? [];
+				const optionColors: FieldOptionColors = {};
+
+				for (const choice of choices) {
+					if (choice.name && choice.color && AIRTABLE_COLOR_RGB[choice.color]) {
+						optionColors[choice.name] = AIRTABLE_COLOR_RGB[choice.color];
+					}
+				}
+
+				return {
+					name: field.name,
+					type: field.type,
+					options: choices.map((choice) => choice.name).filter((name): name is string => typeof name === "string"),
+					optionColors,
+				};
+			});
+	} catch {
+		return [];
+	}
+}
+
+export type AdminContactRequestRecord = {
+	id: string;
+	createdTime: string;
+	fields: Record<string, unknown>;
+};
+
+/**
+ * All Contact Us Requests records, for the Admin-only management table. Fields
+ * are returned as a raw, dynamic map (not a fixed TypeScript shape) since the
+ * columns this tool shows are discovered from the live schema via getTableSchema,
+ * not hard-coded. Callers are responsible for verifying the caller is actually
+ * an Admin before invoking this — this function itself does not check.
+ */
+export async function getAllContactUsRequestsForAdmin(): Promise<AdminContactRequestRecord[]> {
+	const records = await getContactUsRequestsTable().select().all();
+
+	return records.map((record) => ({
+		id: record.id,
+		createdTime: typeof (record._rawJson as { createdTime?: string })?.createdTime === "string"
+			? (record._rawJson as { createdTime: string }).createdTime
+			: "",
+		fields: record.fields as Record<string, unknown>,
+	}));
+}
+
+/**
+ * Updates a single field on a single Contact Us Requests record, by field name
+ * discovered at runtime rather than a fixed set of known keys — this table's
+ * columns aren't hard-coded, so the field name isn't known at compile time.
+ * typecast is left off deliberately: for a dynamic tool without a hard-coded
+ * list of valid Single Select options, Airtable's own validation (rejecting an
+ * unrecognized option) is safer than typecast silently creating a new one from
+ * a typo. Callers are responsible for verifying the caller is actually an Admin
+ * before invoking this.
+ */
+export async function updateContactUsRequestField(recordId: string, fieldName: string, value: unknown): Promise<void> {
+	await getContactUsRequestsTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
+}
+
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
 	const fields: Partial<UserFieldSet> = {
 		clerkUserId: input.clerkUserId,
