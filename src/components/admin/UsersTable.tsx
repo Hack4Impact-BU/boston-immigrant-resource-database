@@ -178,6 +178,7 @@ function EditableTextCell({ recordId, field, initialValue }: { recordId: string;
         onChange={(event) => setValue(event.target.value)}
         onBlur={handleBlur}
         onFocus={() => setSaveState("idle")}
+        title={value}
         className="w-full truncate rounded-md border border-transparent bg-transparent px-2 py-1.5 pr-14 text-sm text-slate-700 outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-200"
       />
       <SaveIndicator state={saveState} />
@@ -227,6 +228,7 @@ function EditableSelectCell({
         value={value}
         onChange={(event) => handleChange(event.target.value)}
         style={backgroundColor ? { backgroundColor, color: textColor } : undefined}
+        title={value}
         className="w-full cursor-pointer truncate rounded-md border border-transparent px-2 py-1.5 pr-14 text-sm font-medium outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
       >
         {allowBlank ? <option value="">— (none)</option> : null}
@@ -379,7 +381,7 @@ export default function UsersTable({
         <tbody>
           {sortedUsers.map((user) => (
             <tr key={user.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
-              <td className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{formatCreatedTime(user.createdTime)}</td>
+              <td title={formatCreatedTime(user.createdTime)} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{formatCreatedTime(user.createdTime)}</td>
               <td className="overflow-hidden px-1 py-1">
                 <EditableTextCell recordId={user.id} field="email" initialValue={user.email} />
               </td>
@@ -417,8 +419,8 @@ export default function UsersTable({
               <td className="overflow-hidden px-1 py-1">
                 <EditableTextCell recordId={user.id} field="website" initialValue={user.website} />
               </td>
-              <td className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.clerkUserId || "—"}</td>
-              <td className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.providerId || "—"}</td>
+              <td title={user.clerkUserId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.clerkUserId || "—"}</td>
+              <td title={user.providerId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.providerId || "—"}</td>
             </tr>
           ))}
         </tbody>
