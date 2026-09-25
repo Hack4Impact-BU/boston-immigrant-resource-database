@@ -273,6 +273,7 @@ function ReadOnlyCell({ value, multiline }: { value: string; multiline?: boolean
 function FilterDropdown({
   label,
   options,
+  optionColors,
   selected,
   onChange,
   isOpen,
@@ -280,6 +281,7 @@ function FilterDropdown({
 }: {
   label: string;
   options: readonly string[];
+  optionColors: FieldOptionColors;
   selected: string[];
   onChange: (values: string[]) => void;
   isOpen: boolean;
@@ -306,21 +308,43 @@ function FilterDropdown({
 
       {isOpen ? (
         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+            {selected.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+              >
+                Clear All
+              </button>
+            ) : null}
+          </div>
           <div className="max-h-72 overflow-y-auto p-2">
             {options.length === 0 ? (
               <p className="px-3 py-2 text-sm text-slate-400">No options found.</p>
             ) : (
               options.map((option) => {
                 const isActive = selected.includes(option);
+                const color = optionColors[option];
                 return (
                   <label
                     key={option}
                     className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                      isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
+                      isActive && !color ? "bg-sky-50 text-sky-800" : !color ? "text-slate-700 hover:bg-slate-50" : "hover:bg-slate-50"
                     }`}
                   >
-                    <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="h-4 w-4 cursor-pointer" />
-                    <span className="truncate">{option}</span>
+                    <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="h-4 w-4 shrink-0 cursor-pointer" />
+                    {color ? (
+                      <span
+                        style={{ backgroundColor: color, color: getReadableTextColor(color) }}
+                        className="truncate rounded-full px-2.5 py-0.5 text-xs font-medium"
+                      >
+                        {option}
+                      </span>
+                    ) : (
+                      <span className="truncate">{option}</span>
+                    )}
                   </label>
                 );
               })
@@ -436,13 +460,25 @@ export default function ContactRequestsTable({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <input
-        type="text"
-        value={searchText}
-        onChange={(event) => setSearchText(event.target.value)}
-        placeholder="Search by Admin Notes, Organization, First Name, Last Name, Email, or Message…"
-        className="w-full shrink-0 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
-      />
+      <div className="relative shrink-0">
+        <input
+          type="text"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search by Admin Notes, Organization, First Name, Last Name, Email, or Message…"
+          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 pr-9 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
+        />
+        {searchText.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setSearchText("")}
+            aria-label="Clear search"
+            className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
 
       <div className="flex shrink-0 flex-wrap gap-2">
         {FILTERABLE_FIELDS.map((fieldName) => {
@@ -454,6 +490,7 @@ export default function ContactRequestsTable({
               key={fieldName}
               label={fieldName}
               options={column.options}
+              optionColors={column.optionColors}
               selected={activeFilters[fieldName] ?? []}
               onChange={(values) => setActiveFilters((previous) => ({ ...previous, [fieldName]: values }))}
               isOpen={openFilterField === fieldName}

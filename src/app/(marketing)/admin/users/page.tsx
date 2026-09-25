@@ -29,7 +29,7 @@ export default async function ManageUsersPage() {
 
   return (
     <div className="flex h-screen items-stretch overflow-hidden bg-slate-100">
-      <Sidebar isOpen={true} activePage="Manage Users" />
+      <Sidebar isOpen={true} activePage="Users" />
 
       <main className="ml-55 flex h-screen flex-1 flex-col overflow-hidden px-6 py-8">
         <div className="flex h-full w-full min-h-0 flex-col">

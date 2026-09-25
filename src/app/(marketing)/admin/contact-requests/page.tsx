@@ -59,12 +59,12 @@ export default async function ManageContactRequestsPage() {
 
   return (
     <div className="flex h-screen items-stretch overflow-hidden bg-slate-100">
-      <Sidebar isOpen={true} activePage="Manage Contact Requests" />
+      <Sidebar isOpen={true} activePage="Contact Us Requests" />
 
       <main className="ml-55 flex h-screen flex-1 flex-col overflow-hidden px-6 py-8">
         <div className="flex h-full w-full min-h-0 flex-col">
           <div className="shrink-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Contact Requests</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Contact Us Requests</h1>
             <p className="mt-1 text-sm text-slate-600">
               {requests.length} request{requests.length === 1 ? "" : "s"} in the Contact Us Requests table. Changes
               save automatically when you click away from a field.
