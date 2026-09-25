@@ -30,7 +30,7 @@ export default async function ServiceTypesPage() {
       <main className="ml-55 flex h-screen flex-1 flex-col overflow-hidden px-6 py-8">
         <div className="flex h-full w-full min-h-0 flex-col">
           <div className="shrink-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Service Types</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Service Types</h1>
             <p className="mt-1 text-sm text-slate-600">
               {serviceTypes.length} service type{serviceTypes.length === 1 ? "" : "s"}.
               Changes save automatically when you click away from a field.

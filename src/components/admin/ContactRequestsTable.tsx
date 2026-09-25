@@ -364,7 +364,7 @@ export default function ContactRequestsTable({
   columns: ContactRequestColumn[];
 }) {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => computeEstimatedWidths(requests, columns));
-  const [sort, setSort] = useState<{ field: string; direction: "asc" | "desc" } | null>(null);
+  const [sort, setSort] = useState<{ field: string; direction: "asc" | "desc" } | null>({ field: "Request Date", direction: "desc" });
   const [resizingField, setResizingField] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});

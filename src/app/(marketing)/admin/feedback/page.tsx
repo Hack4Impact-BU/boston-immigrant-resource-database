@@ -75,7 +75,7 @@ export default async function FeedbackPage() {
       <main className="ml-55 flex h-screen flex-1 flex-col overflow-hidden px-6 py-8">
         <div className="flex h-full w-full min-h-0 flex-col">
           <div className="shrink-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage User Support/Feedback Requests</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Support/Feedback Requests</h1>
             <p className="mt-1 text-sm text-slate-600">
               {feedback.length} entr{feedback.length === 1 ? "y" : "ies"} in the User Support / Feedback table.
               Changes save automatically when you click away from a field.
