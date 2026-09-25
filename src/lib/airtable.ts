@@ -954,3 +954,37 @@ export async function markOldSoftrUserAsMigrated(email: string): Promise<void> {
 		// Bookkeeping only — never let a failure here surface as a registration error.
 	}
 }
+
+export type AdminOldSoftrUserRecord = {
+	id: string;
+	fields: Record<string, unknown>;
+};
+
+/**
+ * All Old Softr Users records, for the Admin-only management table. Fields are
+ * returned as a raw, dynamic map (not the narrow OldSoftrUserFieldSet type used
+ * elsewhere for registration matching), since this tool shows every field the
+ * live schema returns. Callers are responsible for verifying the caller is
+ * actually an Admin before invoking this.
+ */
+export async function getAllOldSoftrUsersForAdmin(): Promise<AdminOldSoftrUserRecord[]> {
+	const records = await getOldSoftrUsersTable().select().all();
+
+	return records.map((record) => ({
+		id: record.id,
+		fields: record.fields as Record<string, unknown>,
+	}));
+}
+
+/**
+ * Updates a single field on a single Old Softr Users record. In practice only
+ * "Admin Notes" is ever passed here — every other field on this table is
+ * read-only in the Admin tool — but this takes a field name rather than
+ * hard-coding "Admin Notes" for consistency with the other admin tools' update
+ * functions.
+ * Callers are responsible for verifying the caller is actually an Admin
+ * before invoking this.
+ */
+export async function updateOldSoftrUserField(recordId: string, fieldName: string, value: unknown): Promise<void> {
+	await getOldSoftrUsersTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
+}

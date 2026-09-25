@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare, MessageCircle, Menu, X, UserCog, Inbox, Tag } from "lucide-react";
+import { Users, Search, Plus, Mail, Briefcase, Building2, MessageSquare, MessageCircle, Menu, X, UserCog, Inbox, Tag, Archive } from "lucide-react";
 import BirdLogo from "./home/BirdLogo";
 
 type SidebarProps = {
@@ -90,6 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
           { name: "Contact Us", href: "/admin/contact-requests", icon: <Inbox size={20} /> },
           { name: "Support / Feedback", href: "/admin/feedback", icon: <MessageCircle size={20} /> },
           { name: "Service Types", href: "/admin/service-types", icon: <Tag size={20} /> },
+          { name: "Old Softr Users", href: "/admin/old-softr-users", icon: <Archive size={20} /> },
         ]
       : []),
   ];
