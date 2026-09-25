@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
     ...(userRole === "Admin"
       ? [
           { name: "Users", href: "/admin/users", icon: <UserCog size={20} /> },
-          { name: "Contact Us Requests", href: "/admin/contact-requests", icon: <Inbox size={20} /> },
+          { name: "Contact Us", href: "/admin/contact-requests", icon: <Inbox size={20} /> },
           { name: "Support / Feedback", href: "/admin/feedback", icon: <MessageCircle size={20} /> },
         ]
       : []),
@@ -187,6 +187,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
         {manageItems.length > 0 ? (
           <>
             <div className="my-3 border-t border-slate-200" />
+            {userRole === "Admin" ? (
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
+                Admin Tools
+              </h3>
+            ) : null}
             <ul className="space-y-2">
               {manageItems.map((item) => {
                 const isActive = activePage === item.name;
