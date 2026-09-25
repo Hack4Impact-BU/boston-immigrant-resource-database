@@ -8,7 +8,18 @@ const TABLE_NAME = "Contact Us Requests";
 
 // Enforced here too, not just hidden in the UI — a Server Action is reachable
 // directly, so the read-only list needs to hold even if someone bypasses the form.
-const READ_ONLY_FIELDS = new Set(["Request Date", "Last Modified", "Message"]);
+const READ_ONLY_FIELDS = new Set([
+  "Request Date",
+  "Last Modified",
+  "Message",
+  "Organization",
+  "First Name",
+  "Last Name",
+  "Primary Reason For Contact",
+  "Preferred Method of Contact",
+  "Email",
+  "Phone",
+]);
 
 async function requireAdmin(): Promise<void> {
   const { userId } = await auth();

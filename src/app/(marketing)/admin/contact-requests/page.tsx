@@ -9,7 +9,18 @@ export const dynamic = "force-dynamic";
 
 const TABLE_NAME = "Contact Us Requests";
 const EXCLUDED_FIELDS = new Set(["AI Message Summary", "ID"]);
-const READ_ONLY_FIELDS = new Set(["Request Date", "Last Modified", "Message"]);
+const READ_ONLY_FIELDS = new Set([
+  "Request Date",
+  "Last Modified",
+  "Message",
+  "Organization",
+  "First Name",
+  "Last Name",
+  "Primary Reason For Contact",
+  "Preferred Method of Contact",
+  "Email",
+  "Phone",
+]);
 // Forced to the multi-line textarea treatment by name, regardless of their
 // detected Airtable type — more robust than relying purely on type detection
 // against a live schema I can't directly verify myself.
