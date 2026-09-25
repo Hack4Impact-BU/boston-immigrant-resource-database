@@ -94,7 +94,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activePage = "About BIRD" }) 
   ];
 
   const helpcenterItems: MenuItem[] = [
-    { name: "Support / Feedback", href: "/feedback", icon: <MessageSquare size={20} /> },
+    // Admins already have their own "Support / Feedback" admin tool (in manageItems above) — hiding 
+    // this one avoids two identically-labeled nav items pointing at two different pages. Admins also
+    // should not have a need to fill out a "Support / Feedback" form!
+    ...(userRole === "Admin" ? [] : [{ name: "Support / Feedback", href: "/feedback", icon: <MessageSquare size={20} /> }]),
     { name: "Additional Resources", href: "/resources", icon: <Plus size={20} /> },
   ];
 
