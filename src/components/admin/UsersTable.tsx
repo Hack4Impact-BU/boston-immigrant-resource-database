@@ -247,6 +247,88 @@ function EditableSelectCell({
   );
 }
 
+function FilterDropdown({
+  label,
+  options,
+  optionColors,
+  selected,
+  onChange,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  options: readonly string[];
+  optionColors: FieldOptionColors;
+  selected: string[];
+  onChange: (values: string[]) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  function toggleOption(option: string) {
+    onChange(selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option]);
+  }
+
+  const buttonLabel = selected.length === 0 ? label : selected.length === 1 ? selected[0] : `${label} (${selected.length})`;
+
+  return (
+    <div className="relative" data-filter-dropdown-root>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
+          selected.length === 0 ? "border-slate-200 bg-white text-slate-700" : "border-sky-200 bg-sky-50 text-sky-800"
+        }`}
+      >
+        <span className="truncate">{buttonLabel}</span>
+        <span className="shrink-0 text-slate-400">{isOpen ? "▲" : "▼"}</span>
+      </button>
+
+      {isOpen ? (
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+            {selected.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+              >
+                Clear All
+              </button>
+            ) : null}
+          </div>
+          <div className="max-h-72 overflow-y-auto p-2">
+            {options.map((option) => {
+              const isActive = selected.includes(option);
+              const color = optionColors[option];
+              return (
+                <label
+                  key={option}
+                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                    isActive && !color ? "bg-sky-50 text-sky-800" : !color ? "text-slate-700 hover:bg-slate-50" : "hover:bg-slate-50"
+                  }`}
+                >
+                  <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="h-4 w-4 shrink-0 cursor-pointer" />
+                  {color ? (
+                    <span
+                      style={{ backgroundColor: color, color: getReadableTextColor(color) }}
+                      className="truncate rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    >
+                      {option}
+                    </span>
+                  ) : (
+                    <span className="truncate">{option}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function UsersTable({
   users,
   fieldColors,
@@ -261,6 +343,18 @@ export default function UsersTable({
   });
   const [resizingField, setResizingField] = useState<ColumnField | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  const [openFilterField, setOpenFilterField] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-filter-dropdown-root]")) {
+        setOpenFilterField(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Upgrade from the SSR-safe character estimate to precise canvas-measured
   // widths once mounted — canvas isn't available during server rendering.
@@ -270,16 +364,25 @@ export default function UsersTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users]);
 
-  const searchedUsers = useMemo(() => {
-    const query = searchText.trim().toLowerCase();
-    if (!query) return users;
+  const filteredUsers = useMemo(() => {
+    const activeEntries = Object.entries(activeFilters).filter(([, values]) => values.length > 0);
+    if (activeEntries.length === 0) return users;
 
     return users.filter((user) =>
+      activeEntries.every(([field, values]) => values.includes(getDisplayValue(user, field as ColumnField))),
+    );
+  }, [users, activeFilters]);
+
+  const searchedUsers = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    if (!query) return filteredUsers;
+
+    return filteredUsers.filter((user) =>
       [user.email, user.firstName, user.lastName, user.organizationName, user.website].some((field) =>
         field.toLowerCase().includes(query),
       ),
     );
-  }, [users, searchText]);
+  }, [filteredUsers, searchText]);
 
   const sortedUsers = useMemo(() => {
     if (!sort) return searchedUsers;
@@ -331,13 +434,46 @@ export default function UsersTable({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <input
-        type="text"
-        value={searchText}
-        onChange={(event) => setSearchText(event.target.value)}
-        placeholder="Search by email, first name, last name, organization, or website…"
-        className="w-full shrink-0 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
-      />
+      <div className="relative shrink-0">
+        <input
+          type="text"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search by email, first name, last name, organization, or website…"
+          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 pr-9 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
+        />
+        {searchText.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setSearchText("")}
+            aria-label="Clear search"
+            className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <FilterDropdown
+          label="Role"
+          options={ROLE_OPTIONS}
+          optionColors={fieldColors.userRole ?? {}}
+          selected={activeFilters.userRole ?? []}
+          onChange={(values) => setActiveFilters((previous) => ({ ...previous, userRole: values }))}
+          isOpen={openFilterField === "userRole"}
+          onToggle={() => setOpenFilterField((current) => (current === "userRole" ? null : "userRole"))}
+        />
+        <FilterDropdown
+          label="Access"
+          options={ACCESS_OPTIONS}
+          optionColors={fieldColors.access ?? {}}
+          selected={activeFilters.access ?? []}
+          onChange={(values) => setActiveFilters((previous) => ({ ...previous, access: values }))}
+          isOpen={openFilterField === "access"}
+          onToggle={() => setOpenFilterField((current) => (current === "access" ? null : "access"))}
+        />
+      </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="border-collapse text-left" style={{ tableLayout: "fixed", width: "max-content" }}>
