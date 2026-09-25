@@ -618,6 +618,60 @@ export async function updateFeedbackField(recordId: string, fieldName: string, v
 	await getFeedbackTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
 }
 
+const AIRTABLE_SERVICE_TYPES_TABLE_NAME = "Service Types";
+
+function getServiceTypesTable() {
+	return getAirtableBase()(AIRTABLE_SERVICE_TYPES_TABLE_NAME);
+}
+
+export type AdminServiceTypeRecord = {
+	id: string;
+	name: string;
+	lastModified: string;
+};
+
+/**
+ * All Service Types records, for the Admin-only management table. Unlike the
+ * Contact Us Requests / Feedback tools, this table's shown columns are a fixed,
+ * two-field allowlist (Name, Last Modified) rather than a dynamically
+ * discovered schema, so the Airtable query itself is restricted to just those
+ * fields — this table also has several linked-record fields (Providers,
+ * Services) that are never shown, so there's no reason to fetch them.
+ */
+export async function getAllServiceTypesForAdmin(): Promise<AdminServiceTypeRecord[]> {
+	const records = await getServiceTypesTable().select({ fields: ["Name", "Last Modified"] }).all();
+
+	return records.map((record) => ({
+		id: record.id,
+		name: (record.fields["Name"] as string | undefined) ?? "",
+		lastModified: (record.fields["Last Modified"] as string | undefined) ?? "",
+	}));
+}
+
+/**
+ * Updates the Name field on a single Service Types record. Callers are
+ * responsible for verifying the caller is actually an Admin before invoking
+ * this.
+ */
+export async function updateServiceTypeName(recordId: string, name: string): Promise<void> {
+	await getServiceTypesTable().update(recordId, { Name: name });
+}
+
+/**
+ * Creates a new Service Types record with just a Name. Callers are
+ * responsible for verifying the caller is actually an Admin before invoking
+ * this.
+ */
+export async function createServiceType(name: string): Promise<AdminServiceTypeRecord> {
+	const record = await getServiceTypesTable().create({ Name: name });
+
+	return {
+		id: record.id,
+		name: (record.fields["Name"] as string | undefined) ?? "",
+		lastModified: (record.fields["Last Modified"] as string | undefined) ?? "",
+	};
+}
+
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
 	const fields: Partial<UserFieldSet> = {
 		clerkUserId: input.clerkUserId,
