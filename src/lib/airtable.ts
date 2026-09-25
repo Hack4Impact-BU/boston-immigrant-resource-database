@@ -573,6 +573,51 @@ export async function updateContactUsRequestField(recordId: string, fieldName: s
 	await getContactUsRequestsTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
 }
 
+const AIRTABLE_FEEDBACK_TABLE_NAME = "User Support / Feedback";
+
+function getFeedbackTable() {
+	return getAirtableBase()(AIRTABLE_FEEDBACK_TABLE_NAME);
+}
+
+export type AdminFeedbackRecord = {
+	id: string;
+	createdTime: string;
+	fields: Record<string, unknown>;
+};
+
+/**
+ * All User Support / Feedback records, for the Admin-only management table.
+ * Fields are returned as a raw, dynamic map (not a fixed TypeScript shape) since
+ * the columns this tool shows are discovered from the live schema via
+ * getTableSchema, not hard-coded. Callers are responsible for verifying the
+ * caller is actually an Admin before invoking this — this function itself does
+ * not check.
+ */
+export async function getAllFeedbackForAdmin(): Promise<AdminFeedbackRecord[]> {
+	const records = await getFeedbackTable().select().all();
+
+	return records.map((record) => ({
+		id: record.id,
+		createdTime: typeof (record._rawJson as { createdTime?: string })?.createdTime === "string"
+			? (record._rawJson as { createdTime: string }).createdTime
+			: "",
+		fields: record.fields as Record<string, unknown>,
+	}));
+}
+
+/**
+ * Updates a single field on a single User Support / Feedback record, by field
+ * name discovered at runtime rather than a fixed set of known keys. typecast is
+ * left off deliberately, same reasoning as updateContactUsRequestField: without
+ * a hard-coded list of valid Single Select options, Airtable's own validation
+ * (rejecting an unrecognized option) is safer than typecast silently creating a
+ * new one from a typo. Callers are responsible for verifying the caller is
+ * actually an Admin before invoking this.
+ */
+export async function updateFeedbackField(recordId: string, fieldName: string, value: unknown): Promise<void> {
+	await getFeedbackTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
+}
+
 export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
 	const fields: Partial<UserFieldSet> = {
 		clerkUserId: input.clerkUserId,
