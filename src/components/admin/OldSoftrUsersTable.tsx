@@ -180,7 +180,7 @@ function EditableTextCell({
 
 function ReadOnlyCell({ value }: { value: string }) {
   return (
-    <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-400">
+    <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-500">
       {value || "—"}
     </div>
   );
@@ -191,7 +191,7 @@ function ReadOnlyCell({ value }: { value: string }) {
 // read-only on this table (unlike every other admin tool, where a colored
 // Single Select is also the editable one).
 function ReadOnlySelectCell({ value, color }: { value: string; color?: string }) {
-  if (!value) return <div className="px-3 py-1.5 text-sm text-slate-400">—</div>;
+  if (!value) return <div className="px-3 py-1.5 text-sm text-slate-500">—</div>;
   if (!color) return <ReadOnlyCell value={value} />;
 
   return (

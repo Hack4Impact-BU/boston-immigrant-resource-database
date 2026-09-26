@@ -153,7 +153,7 @@ function EditableNameCell({ recordId, initialValue }: { recordId: string; initia
 
 function ReadOnlyCell({ value }: { value: string }) {
   return (
-    <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-400">
+    <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-500">
       {value}
     </div>
   );

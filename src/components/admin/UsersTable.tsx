@@ -517,7 +517,7 @@ export default function UsersTable({
         <tbody>
           {sortedUsers.map((user) => (
             <tr key={user.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
-              <td title={formatCreatedTime(user.createdTime)} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{formatCreatedTime(user.createdTime)}</td>
+              <td title={formatCreatedTime(user.createdTime)} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-500">{formatCreatedTime(user.createdTime)}</td>
               <td className="overflow-hidden px-1 py-1">
                 <EditableTextCell recordId={user.id} field="email" initialValue={user.email} />
               </td>
@@ -555,8 +555,8 @@ export default function UsersTable({
               <td className="overflow-hidden px-1 py-1">
                 <EditableTextCell recordId={user.id} field="website" initialValue={user.website} />
               </td>
-              <td title={user.clerkUserId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.clerkUserId || "—"}</td>
-              <td title={user.providerId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-400">{user.providerId || "—"}</td>
+              <td title={user.clerkUserId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-500">{user.clerkUserId || "—"}</td>
+              <td title={user.providerId} className="overflow-hidden truncate px-3 py-1.5 text-sm text-slate-500">{user.providerId || "—"}</td>
             </tr>
           ))}
         </tbody>
