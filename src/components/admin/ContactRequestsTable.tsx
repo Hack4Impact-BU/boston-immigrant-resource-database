@@ -270,6 +270,26 @@ function ReadOnlyCell({ value, multiline }: { value: string; multiline?: boolean
   return <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-500">{value || "—"}</div>;
 }
 
+// A read-only, but still color-coded, Single Select value — a static pill
+// rather than a <select>, for select-widget columns that are read-only
+// (same component as the one on the Old Softr Users page).
+function ReadOnlySelectCell({ value, color }: { value: string; color?: string }) {
+  if (!value) return <div className="px-3 py-1.5 text-sm text-slate-500">—</div>;
+  if (!color) return <ReadOnlyCell value={value} />;
+
+  return (
+    <div className="px-2 py-1">
+      <span
+        title={value}
+        style={{ backgroundColor: color, color: getReadableTextColor(color) }}
+        className="inline-block max-w-full truncate rounded-full px-2.5 py-0.5 text-xs font-medium"
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function FilterDropdown({
   label,
   options,
@@ -543,11 +563,37 @@ export default function ContactRequestsTable({
                 {columns.map((column) => {
                   const rawValue = request.fields[column.field];
 
-                  if (!column.editable || column.widget === "date") {
+                  const isReadOnly = !column.editable || column.widget === "date";
+
+                  if (!isReadOnly) {
+                    if (column.widget === "select") {
+                      return (
+                        <td key={column.field} className="h-px overflow-hidden px-1 py-1">
+                          <EditableSelectCell
+                            recordId={request.id}
+                            fieldName={column.field}
+                            initialValue={toDisplayString(rawValue)}
+                            options={column.options}
+                            optionColors={column.optionColors}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (column.widget === "checkbox") {
+                      return (
+                        <td key={column.field} className="h-px overflow-hidden px-1 py-1">
+                          <EditableCheckboxCell recordId={request.id} fieldName={column.field} initialValue={Boolean(rawValue)} />
+                        </td>
+                      );
+                    }
+
                     return (
                       <td key={column.field} className="h-px overflow-hidden px-1 py-1">
-                        <ReadOnlyCell
-                          value={getDisplayValue(request, column)}
+                        <EditableTextCell
+                          recordId={request.id}
+                          fieldName={column.field}
+                          initialValue={toDisplayString(rawValue)}
                           multiline={column.widget === "textarea" || column.widget === "multiSelectText"}
                         />
                       </td>
@@ -557,31 +603,15 @@ export default function ContactRequestsTable({
                   if (column.widget === "select") {
                     return (
                       <td key={column.field} className="h-px overflow-hidden px-1 py-1">
-                        <EditableSelectCell
-                          recordId={request.id}
-                          fieldName={column.field}
-                          initialValue={toDisplayString(rawValue)}
-                          options={column.options}
-                          optionColors={column.optionColors}
-                        />
-                      </td>
-                    );
-                  }
-
-                  if (column.widget === "checkbox") {
-                    return (
-                      <td key={column.field} className="h-px overflow-hidden px-1 py-1">
-                        <EditableCheckboxCell recordId={request.id} fieldName={column.field} initialValue={Boolean(rawValue)} />
+                        <ReadOnlySelectCell value={getDisplayValue(request, column)} color={column.optionColors[toDisplayString(rawValue)]} />
                       </td>
                     );
                   }
 
                   return (
                     <td key={column.field} className="h-px overflow-hidden px-1 py-1">
-                      <EditableTextCell
-                        recordId={request.id}
-                        fieldName={column.field}
-                        initialValue={toDisplayString(rawValue)}
+                      <ReadOnlyCell
+                        value={getDisplayValue(request, column)}
                         multiline={column.widget === "textarea" || column.widget === "multiSelectText"}
                       />
                     </td>
