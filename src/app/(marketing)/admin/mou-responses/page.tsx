@@ -15,7 +15,14 @@ const MOU_SHEET_ID = "1r8qq57tQUewDDBwivRszzOJG5aYpfXSwHimy-MoG-sU";
 // the real headers contain embedded multi-line question text / instructions
 // whose exact whitespace can drift or vary from what's visible when just
 // reading the sheet in a browser.
-const COLUMN_DEFINITIONS: { prefix: string; label: string; multiline?: boolean; isDate?: boolean }[] = [
+const COLUMN_DEFINITIONS: {
+  prefix: string;
+  label: string;
+  multiline?: boolean;
+  isDate?: boolean;
+  isFilterable?: boolean;
+  isMultiSelect?: boolean;
+}[] = [
   { prefix: "Timestamp", label: "Timestamp", isDate: true },
   { prefix: "Primary Contact Name", label: "Primary Contact Name" },
   { prefix: "Primary Contact Title/Role", label: "Primary Contact Title/Role" },
@@ -24,8 +31,19 @@ const COLUMN_DEFINITIONS: { prefix: string; label: string; multiline?: boolean; 
   { prefix: "Organization Phone", label: "Organization Phone" },
   { prefix: "Backup contact name & email", label: "Backup Contact Name & Email" },
   { prefix: "What resources will you list on BIRD", label: "What resources will you list on BIRD (or search for)", multiline: true },
-  { prefix: "Which of the following best describes how you will use BIRD", label: "Which of the following best describes how you will use BIRD" },
-  { prefix: "How should we remind you to update your service information", label: "How should we remind you to update your service information?" },
+  {
+    prefix: "Which of the following best describes how you will use BIRD",
+    label: "Which of the following best describes how you will use BIRD",
+    isFilterable: true,
+  },
+  {
+    prefix: "How should we remind you to update your service information",
+    label: "How should we remind you to update your service information?",
+    // A "Check all that apply" question — each cell is a comma-joined list of
+    // whatever the respondent checked, not one atomic value.
+    isFilterable: true,
+    isMultiSelect: true,
+  },
   { prefix: "Do you have any other questions, comments or feedback", label: "Do you have any other questions, comments, or feedback" },
 ];
 
@@ -53,7 +71,16 @@ export default async function MouResponsesPage() {
   const columns: MouColumn[] = COLUMN_DEFINITIONS.flatMap((definition) => {
     const realHeader = findHeaderByPrefix(headers, definition.prefix);
     if (!realHeader) return [];
-    return [{ field: realHeader, label: definition.label, multiline: definition.multiline ?? false, isDate: definition.isDate ?? false }];
+    return [
+      {
+        field: realHeader,
+        label: definition.label,
+        multiline: definition.multiline ?? false,
+        isDate: definition.isDate ?? false,
+        isFilterable: definition.isFilterable ?? false,
+        isMultiSelect: definition.isMultiSelect ?? false,
+      },
+    ];
   });
 
   const timestampColumn = columns.find((column) => column.isDate);

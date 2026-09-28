@@ -1,13 +1,30 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type MouColumn = {
   field: string;
   label: string;
   multiline: boolean;
   isDate?: boolean;
+  isFilterable?: boolean;
+  isMultiSelect?: boolean;
 };
+
+/**
+ * Splits a "Check all that apply"-style cell value into its individual,
+ * checked options. This sheet has no schema at all (unlike the Airtable admin
+ * tools), so there's no predefined option list to split against — the form
+ * itself joins checked options with ", " when Google Forms writes them to the
+ * Sheet, so that's what's split on here, trimming the whitespace each split
+ * leaves on every piece after the first.
+ */
+function splitMultiSelectValue(value: string): string[] {
+  return value
+    .split(",")
+    .map((piece) => piece.trim())
+    .filter((piece) => piece.length > 0);
+}
 
 const MIN_COLUMN_WIDTH = 70;
 const CELL_HORIZONTAL_PADDING = 40;
@@ -69,6 +86,80 @@ function ReadOnlyCell({ value, multiline }: { value: string; multiline?: boolean
   return <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-700">{value || "—"}</div>;
 }
 
+function FilterDropdown({
+  label,
+  options,
+  selected,
+  onChange,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  options: readonly string[];
+  selected: string[];
+  onChange: (values: string[]) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  function toggleOption(option: string) {
+    onChange(selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option]);
+  }
+
+  const buttonLabel = selected.length === 0 ? label : selected.length === 1 ? selected[0] : `${label} (${selected.length})`;
+
+  return (
+    <div className="relative" data-filter-dropdown-root>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`inline-flex max-w-64 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
+          selected.length === 0 ? "border-slate-200 bg-white text-slate-700" : "border-sky-200 bg-sky-50 text-sky-800"
+        }`}
+      >
+        <span className="truncate">{buttonLabel}</span>
+        <span className="shrink-0 text-slate-400">{isOpen ? "▲" : "▼"}</span>
+      </button>
+
+      {isOpen ? (
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+            {selected.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+              >
+                Clear All
+              </button>
+            ) : null}
+          </div>
+          <div className="max-h-72 overflow-y-auto p-2">
+            {options.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-slate-400">No options found.</p>
+            ) : (
+              options.map((option) => {
+                const isActive = selected.includes(option);
+                return (
+                  <label
+                    key={option}
+                    className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                      isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="h-4 w-4 shrink-0 cursor-pointer" />
+                    <span className="truncate">{option}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function MouResponsesTable({
   rows,
   columns,
@@ -82,6 +173,18 @@ export default function MouResponsesTable({
   const [sort, setSort] = useState<{ field: string; direction: "asc" | "desc" } | null>(defaultSort ?? null);
   const [resizingField, setResizingField] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  const [openFilterField, setOpenFilterField] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-filter-dropdown-root]")) {
+        setOpenFilterField(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useState(() => {
     // Runs once on mount, after the DOM (and canvas measurement) is available.
@@ -90,11 +193,46 @@ export default function MouResponsesTable({
     }
   });
 
+  const filterOptionsByField = useMemo(() => {
+    const optionsByField: Record<string, string[]> = {};
+    for (const column of columns) {
+      if (!column.isFilterable) continue;
+      const distinctValues = new Set<string>();
+      for (const row of rows) {
+        const rawValue = getDisplayValue(row, column);
+        if (column.isMultiSelect) {
+          for (const piece of splitMultiSelectValue(rawValue)) distinctValues.add(piece);
+        } else if (rawValue) {
+          distinctValues.add(rawValue);
+        }
+      }
+      optionsByField[column.field] = Array.from(distinctValues).sort((a, b) => a.localeCompare(b));
+    }
+    return optionsByField;
+  }, [rows, columns]);
+
+  const filteredRows = useMemo(() => {
+    const activeEntries = Object.entries(activeFilters).filter(([, values]) => values.length > 0);
+    if (activeEntries.length === 0) return rows;
+
+    return rows.filter((row) =>
+      activeEntries.every(([field, values]) => {
+        const column = columns.find((c) => c.field === field);
+        const rawValue = row[field] ?? "";
+        if (column?.isMultiSelect) {
+          const rowValues = splitMultiSelectValue(rawValue);
+          return values.some((selected) => rowValues.includes(selected));
+        }
+        return values.includes(rawValue);
+      }),
+    );
+  }, [rows, columns, activeFilters]);
+
   const searchedRows = useMemo(() => {
     const query = searchText.trim().toLowerCase();
-    if (!query) return rows;
-    return rows.filter((row) => columns.some((column) => getDisplayValue(row, column).toLowerCase().includes(query)));
-  }, [rows, columns, searchText]);
+    if (!query) return filteredRows;
+    return filteredRows.filter((row) => columns.some((column) => getDisplayValue(row, column).toLowerCase().includes(query)));
+  }, [filteredRows, columns, searchText]);
 
   const sortedRows = useMemo(() => {
     if (!sort) return searchedRows;
@@ -161,6 +299,20 @@ export default function MouResponsesTable({
             ×
           </button>
         ) : null}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {columns.filter((column) => column.isFilterable).map((column) => (
+          <FilterDropdown
+            key={column.field}
+            label={column.label}
+            options={filterOptionsByField[column.field] ?? []}
+            selected={activeFilters[column.field] ?? []}
+            onChange={(values) => setActiveFilters((previous) => ({ ...previous, [column.field]: values }))}
+            isOpen={openFilterField === column.field}
+            onToggle={() => setOpenFilterField((current) => (current === column.field ? null : column.field))}
+          />
+        ))}
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
