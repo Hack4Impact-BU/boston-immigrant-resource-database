@@ -988,3 +988,54 @@ export async function getAllOldSoftrUsersForAdmin(): Promise<AdminOldSoftrUserRe
 export async function updateOldSoftrUserField(recordId: string, fieldName: string, value: unknown): Promise<void> {
 	await getOldSoftrUsersTable().update(recordId, { [fieldName]: value } as Partial<Airtable.FieldSet>);
 }
+
+const AIRTABLE_MOU_NOTES_TABLE_NAME = "MOU Response Notes";
+
+function getMouNotesTable() {
+	return getAirtableBase()(AIRTABLE_MOU_NOTES_TABLE_NAME);
+}
+
+/**
+ * All MOU Response Notes, keyed by their "MOU Timestamp" field — which
+ * matches a given MOU Google Sheet row's own Timestamp value exactly, since
+ * the Sheet itself has no stable ID of its own to key on. Missing entries
+ * (no note yet for that response) are simply absent from the returned map,
+ * rather than present with an empty string.
+ */
+export async function getAllMouNotes(): Promise<Record<string, string>> {
+	const records = await getMouNotesTable().select().all();
+
+	const notesByTimestamp: Record<string, string> = {};
+	for (const record of records) {
+		const timestamp = record.fields["MOU Timestamp"];
+		if (typeof timestamp === "string" && timestamp !== "") {
+			notesByTimestamp[timestamp] = (record.fields["Admin Notes"] as string | undefined) ?? "";
+		}
+	}
+	return notesByTimestamp;
+}
+
+/**
+ * Creates or updates the Admin Notes for a single MOU response, matched by
+ * its Timestamp. The MOU Response Notes table doesn't yet have a row for
+ * every response (only ones an Admin has actually annotated), so this reads
+ * first to decide whether to create a new row or update an existing one,
+ * rather than assuming one already exists.
+ */
+export async function upsertMouNote(timestamp: string, organizationName: string, notes: string): Promise<void> {
+	const table = getMouNotesTable();
+	const escapedTimestamp = escapeAirtableFormulaValue(timestamp);
+
+	const existing = await table
+		.select({
+			filterByFormula: `{MOU Timestamp} = '${escapedTimestamp}'`,
+			maxRecords: 1,
+		})
+		.all();
+
+	if (existing[0]) {
+		await table.update(existing[0].id, { "Admin Notes": notes });
+	} else {
+		await table.create({ "MOU Timestamp": timestamp, "Organization Name": organizationName, "Admin Notes": notes });
+	}
+}

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { updateMouNoteAction } from "@/features/admin/mou-responses/manage-mou-notes";
+
 export type MouColumn = {
   field: string;
   label: string;
@@ -9,6 +11,7 @@ export type MouColumn = {
   isDate?: boolean;
   isFilterable?: boolean;
   isMultiSelect?: boolean;
+  isEditable?: boolean;
 };
 
 /**
@@ -77,6 +80,61 @@ function computeMeasuredWidths(rows: Record<string, string>[], columns: MouColum
     widths[column.field] = Math.max(MIN_COLUMN_WIDTH, Math.max(headerWidth, longestCellWidth) + CELL_HORIZONTAL_PADDING);
   }
   return widths;
+}
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+function SaveIndicator({ state }: { state: SaveState }) {
+  if (state === "saving") {
+    return <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">Saving…</span>;
+  }
+  if (state === "saved") {
+    return <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600">Saved</span>;
+  }
+  if (state === "error") {
+    return <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-rose-600">Not saved</span>;
+  }
+  return null;
+}
+
+// The one editable field on this page — Admin Notes, backed by a separate
+// Airtable table (MOU Response Notes) keyed by this row's Timestamp, since
+// the Sheet itself is read-only, unauthenticated public access.
+function EditableAdminNotesCell({ timestamp, organizationName, initialValue }: { timestamp: string; organizationName: string; initialValue: string }) {
+  const [value, setValue] = useState(initialValue);
+  const [lastSaved, setLastSaved] = useState(initialValue);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+
+  async function handleBlur() {
+    if (value === lastSaved) return;
+    setSaveState("saving");
+    try {
+      await updateMouNoteAction({ timestamp, organizationName, notes: value });
+      setLastSaved(value);
+      setSaveState("saved");
+    } catch (error) {
+      console.error(error);
+      setValue(lastSaved);
+      setSaveState("error");
+    }
+  }
+
+  const lineCount = Math.max(1, value.split("\n").length);
+
+  return (
+    <div className="relative h-full">
+      <textarea
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={handleBlur}
+        onFocus={() => setSaveState("idle")}
+        rows={lineCount}
+        title={value}
+        className="h-full w-full resize-none overflow-y-auto whitespace-normal rounded-md border border-transparent bg-transparent px-2 py-1.5 pr-14 text-sm text-slate-700 outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-200"
+      />
+      <SaveIndicator state={saveState} />
+    </div>
+  );
 }
 
 function ReadOnlyCell({ value, multiline }: { value: string; multiline?: boolean }) {
@@ -164,10 +222,14 @@ export default function MouResponsesTable({
   rows,
   columns,
   defaultSort,
+  timestampField,
+  organizationField,
 }: {
   rows: Record<string, string>[];
   columns: MouColumn[];
   defaultSort?: { field: string; direction: "asc" | "desc" };
+  timestampField?: string;
+  organizationField?: string;
 }) {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => computeEstimatedWidths(rows, columns));
   const [sort, setSort] = useState<{ field: string; direction: "asc" | "desc" } | null>(defaultSort ?? null);
@@ -337,6 +399,9 @@ export default function MouResponsesTable({
                       <span className="truncate" title={column.label}>{column.label}</span>
                       <span className="shrink-0 text-slate-300">{isSorted ? (sort.direction === "asc" ? "▲" : "▼") : "⇅"}</span>
                     </button>
+                    {!column.isEditable ? (
+                      <span className="mt-0.5 block font-normal normal-case text-slate-400">read-only</span>
+                    ) : null}
                     <div
                       onMouseDown={(event) => handleResizeStart(event, column.field)}
                       className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none ${
@@ -351,11 +416,24 @@ export default function MouResponsesTable({
           <tbody>
             {sortedRows.map((row, index) => (
               <tr key={index} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
-                {columns.map((column) => (
-                  <td key={column.field} className="h-px overflow-hidden px-1 py-1">
-                    <ReadOnlyCell value={getDisplayValue(row, column)} multiline={column.multiline} />
-                  </td>
-                ))}
+                {columns.map((column) => {
+                  if (column.isEditable) {
+                    return (
+                      <td key={column.field} className="h-px overflow-hidden px-1 py-1">
+                        <EditableAdminNotesCell
+                          timestamp={timestampField ? row[timestampField] ?? "" : ""}
+                          organizationName={organizationField ? row[organizationField] ?? "" : ""}
+                          initialValue={getDisplayValue(row, column)}
+                        />
+                      </td>
+                    );
+                  }
+                  return (
+                    <td key={column.field} className="h-px overflow-hidden px-1 py-1">
+                      <ReadOnlyCell value={getDisplayValue(row, column)} multiline={column.multiline} />
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

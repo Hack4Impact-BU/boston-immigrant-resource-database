@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import MouResponsesTable, { type MouColumn } from "@/components/admin/MouResponsesTable";
 import { fetchPublicSheetAsCsv, findHeaderByPrefix, parseSheetCsv } from "@/lib/googleSheets";
-import { getUserRole } from "@/lib/airtable";
+import { getAllMouNotes, getUserRole } from "@/lib/airtable";
 
 export const dynamic = "force-dynamic";
 
@@ -61,8 +61,8 @@ export default async function MouResponsesPage() {
     notFound();
   }
 
-  const csvText = await fetchPublicSheetAsCsv(MOU_SHEET_ID);
-  const { rows, headers } = parseSheetCsv(csvText);
+  const [csvText, notesByTimestamp] = await Promise.all([fetchPublicSheetAsCsv(MOU_SHEET_ID), getAllMouNotes()]);
+  const { rows: sheetRows, headers } = parseSheetCsv(csvText);
 
   // Resolve each column definition's prefix to the sheet's actual, current
   // header string. A column is silently skipped if its prefix no longer
@@ -84,6 +84,24 @@ export default async function MouResponsesPage() {
   });
 
   const timestampColumn = columns.find((column) => column.isDate);
+  const organizationColumn = findHeaderByPrefix(headers, "Organization Name");
+
+  // Admin Notes isn't a real column in the Sheet at all — it's merged in from
+  // a separate Airtable table (MOU Response Notes), matched to each row by
+  // its own Timestamp value, since the Sheet has no stable ID of its own.
+  const rows = sheetRows.map((row) => {
+    const timestamp = timestampColumn ? row[timestampColumn.field] : undefined;
+    return { ...row, "Admin Notes": (timestamp && notesByTimestamp[timestamp]) || "" };
+  });
+
+  const adminNotesColumn: MouColumn = {
+    field: "Admin Notes",
+    label: "Admin Notes",
+    multiline: true,
+    isEditable: true,
+  };
+  const allColumns = [...columns, adminNotesColumn];
+
   const defaultSort = timestampColumn ? { field: timestampColumn.field, direction: "desc" as const } : undefined;
 
   return (
@@ -104,12 +122,18 @@ export default async function MouResponsesPage() {
               >
                 Sheet
               </a>
-              . This view is read-only.
+              . Everything except Admin Notes is read-only; notes save automatically when you click away from the field.
             </p>
           </div>
 
           <div className="mt-5 min-h-0 flex-1">
-            <MouResponsesTable rows={rows} columns={columns} defaultSort={defaultSort} />
+            <MouResponsesTable
+              rows={rows}
+              columns={allColumns}
+              defaultSort={defaultSort}
+              timestampField={timestampColumn?.field}
+              organizationField={organizationColumn}
+            />
           </div>
         </div>
       </main>
