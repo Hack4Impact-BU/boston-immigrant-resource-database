@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BirdLogo from "./BirdLogo";
-import ImmigrationGptBadge from "./ImmigrationGptBadge";
+import ImmigrationGptLink from "./ImmigrationGptLink";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -21,7 +21,7 @@ export default function HomeHeader() {
 
         <nav className="flex items-center gap-6 text-sm font-medium text-[#27317B]">
           <span className="hidden md:contents">
-            <ImmigrationGptBadge />
+            <ImmigrationGptLink />
             |
           </span>
           <Link href="/#contact" className="no-underline hover:text-bird-accent">
