@@ -139,9 +139,9 @@ function EditableAdminNotesCell({ timestamp, organizationName, initialValue }: {
 
 function ReadOnlyCell({ value, multiline }: { value: string; multiline?: boolean }) {
   if (multiline) {
-    return <div title={value} className="whitespace-pre-wrap break-words px-3 py-1.5 text-sm text-slate-700">{value || "—"}</div>;
+    return <div title={value} className="whitespace-pre-wrap break-words px-3 py-1.5 text-sm text-slate-500">{value || "—"}</div>;
   }
-  return <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-700">{value || "—"}</div>;
+  return <div title={value} className="truncate px-3 py-1.5 text-sm text-slate-500">{value || "—"}</div>;
 }
 
 function FilterDropdown({
