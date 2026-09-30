@@ -2,6 +2,7 @@ import Image from "next/image";
 import { urlFor } from "@/lib/sanity";
 import { PARTNER_LOGOS } from "./data";
 import { getMarketingPageContent } from "@/lib/marketing-content";
+import ImmigrationGptBadge from "./ImmigrationGptBadge";
 
 export default async function SponsorLogos() {
   const { partnerLogos } = await getMarketingPageContent();
@@ -55,6 +56,7 @@ export default async function SponsorLogos() {
                   />
                 </div>
               ))}
+          <ImmigrationGptBadge />
         </div>
       </div>
     </section>
