@@ -418,6 +418,15 @@ export default function OldSoftrUsersTable({
             />
           );
         })}
+        {Object.values(activeFilters).some((values) => values.length > 0) ? (
+          <button
+            type="button"
+            onClick={() => setActiveFilters({})}
+            className="cursor-pointer text-sm font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800"
+          >
+            Clear All
+          </button>
+        ) : null}
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
