@@ -760,7 +760,7 @@ export default function MapPage() {
             </div>
           </div>
 
-          <div className="relative z-0 grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
+          <div className="relative z-[35] grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
             <div className="flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
                 <p className="min-w-0 truncate text-sm text-slate-500">
@@ -917,7 +917,7 @@ export default function MapPage() {
 
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (
-                  <div className="h-full shrink-0 overflow-y-auto overscroll-contain border-b border-slate-200 px-4 py-4 lg:px-6">
+                  <div className="fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
                     <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
                       <div className="border-b border-slate-200 pb-4">
                         <div className="flex flex-wrap justify-end gap-2">
@@ -945,7 +945,8 @@ export default function MapPage() {
                             }}
                             className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer"
                           >
-                            Back to map
+                            <span className="xl:hidden">Back To List</span>
+                            <span className="hidden xl:inline">Back To Map</span>
                           </button>
                         </div>
 
