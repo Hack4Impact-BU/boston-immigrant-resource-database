@@ -1015,8 +1015,23 @@ export default function MapPage() {
                             ) : (
                               <p className="truncate text-sm font-medium text-slate-700">{selectedServiceProvider}</p>
                             )}
-                            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
-                              {selectedService.name}
+                            <h2 className="mt-1 flex flex-wrap items-center gap-2 text-xl font-semibold tracking-tight text-slate-900">
+                              <span>{selectedService.name}</span>
+                              <span
+                                className={`h-4 shrink-0 rounded-xs px-1 text-xs font-normal leading-4 ${
+                                  selectedService.status === "Open"
+                                    ? "bg-green-500"
+                                    : selectedService.status === "Full"
+                                      ? "bg-rose-500"
+                                      : selectedService.status === "Waitlist"
+                                        ? "bg-[#e69b00]"
+                                        : selectedService.status === "Contact Provider"
+                                          ? "bg-[#abf7b1]"
+                                          : "bg-slate-300"
+                                }`}
+                              >
+                                {selectedService.status}
+                              </span>
                             </h2>
                             <p className="mt-2 text-xs text-slate-500">
                               {formatRelativeUpdateDate(selectedService.last_modified)}
