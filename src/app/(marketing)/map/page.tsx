@@ -792,7 +792,11 @@ export default function MapPage() {
             </div>
           </div>
 
-          <div className="relative z-[35] grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(360px,430px)_1fr]">
+          <div
+            className={`relative grid min-h-0 flex-1 gap-4 overflow-hidden xl:z-0 xl:grid-cols-[minmax(360px,430px)_1fr] ${
+              isDescriptionView ? "z-[35]" : "z-0"
+            }`}
+          >
             <div className="flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
                 <p className="min-w-0 truncate text-sm text-slate-500">
