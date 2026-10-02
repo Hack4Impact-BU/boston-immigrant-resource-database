@@ -445,7 +445,7 @@ export default function MapPage() {
         const provider = services[0]?.providerDetails;
         const providerName = provider?.name || "Provider unavailable";
         const address = provider?.address || "Location not listed";
-        const languages = provider?.language_support?.slice(0, 3).join(" · ") || "Language support varies";
+        const languages = provider?.language_support?.join(" · ") || "Language support varies";
 
         const serviceLinksHtml = services
           .map(
