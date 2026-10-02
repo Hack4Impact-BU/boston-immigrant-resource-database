@@ -22,6 +22,7 @@ const COLUMN_DEFINITIONS: {
   isDate?: boolean;
   isFilterable?: boolean;
   isMultiSelect?: boolean;
+  width?: number;
 }[] = [
   { prefix: "Timestamp", label: "Timestamp", isDate: true },
   { prefix: "Primary Contact Name", label: "Primary Contact Name" },
@@ -43,8 +44,15 @@ const COLUMN_DEFINITIONS: {
     // whatever the respondent checked, not one atomic value.
     isFilterable: true,
     isMultiSelect: true,
+    multiline: true,
+    width: 280,
   },
-  { prefix: "Do you have any other questions, comments or feedback", label: "Do you have any other questions, comments, or feedback" },
+  {
+    prefix: "Do you have any other questions, comments or feedback",
+    label: "Do you have any other questions, comments, or feedback",
+    multiline: true,
+    width: 280,
+  },
 ];
 
 export default async function MouResponsesPage() {
@@ -79,6 +87,7 @@ export default async function MouResponsesPage() {
         isDate: definition.isDate ?? false,
         isFilterable: definition.isFilterable ?? false,
         isMultiSelect: definition.isMultiSelect ?? false,
+        width: definition.width,
       },
     ];
   });

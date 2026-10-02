@@ -12,6 +12,8 @@ export type MouColumn = {
   isFilterable?: boolean;
   isMultiSelect?: boolean;
   isEditable?: boolean;
+  /** Overrides MULTILINE_COLUMN_WIDTH for this specific multiline column, when it needs a different fixed width than the standard one. */
+  width?: number;
 };
 
 /**
@@ -45,7 +47,7 @@ function computeEstimatedWidths(rows: Record<string, string>[], columns: MouColu
   const widths: Record<string, number> = {};
   for (const column of columns) {
     if (column.multiline) {
-      widths[column.field] = MULTILINE_COLUMN_WIDTH;
+      widths[column.field] = column.width ?? MULTILINE_COLUMN_WIDTH;
       continue;
     }
     const longest = Math.max(column.label.length, ...rows.map((row) => getDisplayValue(row, column).length));
@@ -72,7 +74,7 @@ function computeMeasuredWidths(rows: Record<string, string>[], columns: MouColum
   const widths: Record<string, number> = {};
   for (const column of columns) {
     if (column.multiline) {
-      widths[column.field] = MULTILINE_COLUMN_WIDTH;
+      widths[column.field] = column.width ?? MULTILINE_COLUMN_WIDTH;
       continue;
     }
     const headerWidth = measureTextWidth(column.label, headerFont);
@@ -170,11 +172,11 @@ function FilterDropdown({
       <button
         type="button"
         onClick={onToggle}
-        className={`inline-flex max-w-64 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
           selected.length === 0 ? "border-slate-200 bg-white text-slate-700" : "border-sky-200 bg-sky-50 text-sky-800"
         }`}
       >
-        <span className="truncate">{buttonLabel}</span>
+        <span>{buttonLabel}</span>
         <span className="shrink-0 text-slate-400">{isOpen ? "▲" : "▼"}</span>
       </button>
 
