@@ -6,6 +6,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Phones in landscape are wide (~640-930px) but very short, so Tailwind's
+   width-only breakpoints would hand them the desktop layout. Require a
+   minimum viewport height too, so short landscape viewports keep the same
+   compact layout as portrait. These override the built-in breakpoint
+   variants of the same names. */
+@custom-variant sm (@media (width >= 40rem) and (height >= 31.25rem));
+@custom-variant md (@media (width >= 48rem) and (height >= 31.25rem));
+@custom-variant lg (@media (width >= 64rem) and (height >= 31.25rem));
+@custom-variant xl (@media (width >= 80rem) and (height >= 31.25rem));
+@custom-variant 2xl (@media (width >= 96rem) and (height >= 31.25rem));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -152,7 +163,7 @@ body {
   }
 }
 
-/* Short-term mobile sidebar workaround: below md, the sidebar (see
+/* Short-term mobile sidebar workaround: below md (or on a short landscape phone), the sidebar (see
    Sidebar.tsx) slides off-screen and overlays the page when opened, rather
    than pushing content aside — so the fixed left-margins used across many
    pages to make room for the always-visible desktop sidebar need to
@@ -160,7 +171,7 @@ body {
    replaces it instead, so the same elements also need top padding to clear
    that header rather than sitting underneath it. Centralized so it applies
    everywhere without editing each page's own classes individually. */
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-height: 499px) {
   .ml-55,
   .ml-52,
   .ml-\[260px\] {
