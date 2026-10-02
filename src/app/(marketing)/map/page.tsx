@@ -405,12 +405,20 @@ export default function MapPage() {
     const markerLayer = markerLayerRef.current;
     const map = mapRef.current;
 
-    const visibleLocations = filteredServices
-      .map((service) => {
-        const coordinates = providerCoordinates[getProviderRecordId(service)];
-        return coordinates ? { service, coordinates } : null;
-      })
-      .filter((value): value is { service: ServiceWithProvider; coordinates: Coordinates } => Boolean(value));
+    const locationsByProvider = new Map<string, { coordinates: Coordinates; services: ServiceWithProvider[] }>();
+    for (const service of filteredServices) {
+      const providerId = getProviderRecordId(service);
+      const coordinates = providerCoordinates[providerId];
+      if (!coordinates) continue;
+
+      const existing = locationsByProvider.get(providerId);
+      if (existing) {
+        existing.services.push(service);
+      } else {
+        locationsByProvider.set(providerId, { coordinates, services: [service] });
+      }
+    }
+    const visibleLocations = Array.from(locationsByProvider.values());
 
     markerLayer.clearLayers();
 
@@ -418,7 +426,7 @@ export default function MapPage() {
       const leafletModule = (await import("leaflet")) as typeof import("leaflet");
       const L = leafletModule;
 
-      const markers = visibleLocations.map(({ service, coordinates }) => {
+      const markers = visibleLocations.map(({ services, coordinates }) => {
         const marker = L.marker([coordinates.lat, coordinates.lng], {
           icon: L.divIcon({
             className: "",
@@ -434,25 +442,49 @@ export default function MapPage() {
           }),
         });
 
-        const provider = service.providerDetails;
-        const languages = provider?.language_support?.slice(0, 3).join(" · ") || "Language support varies";
-        const location = provider?.address || "Location not listed";
-        const serviceSummary = service.service_types || service.description || "Community service";
+        const provider = services[0]?.providerDetails;
         const providerName = provider?.name || "Provider unavailable";
+        const address = provider?.address || "Location not listed";
+        const languages = provider?.language_support?.slice(0, 3).join(" · ") || "Language support varies";
+
+        const serviceLinksHtml = services
+          .map(
+            (service) => `
+              <a
+                href="#"
+                data-service-id="${service.id}"
+                style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#0284c7;text-decoration:underline;margin-top:4px;"
+              >${service.name}</a>
+            `,
+          )
+          .join("");
 
         marker.bindPopup(`
           <div style="max-width:220px;font-family:Arial, sans-serif;">
-            <div style="font-size:12px;color:#475569;margin-bottom:6px;">${providerName}</div>
-            <div style="font-weight:700;color:#0f172a;margin-bottom:6px;">${service.name}</div>
-            <div style="font-size:11px;color:#64748b;margin-bottom:2px;">${location}</div>
+            <div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${providerName}</div>
+            <div style="font-size:11px;color:#64748b;margin-bottom:2px;">${address}</div>
             <div style="font-size:11px;color:#0f172a;margin-bottom:6px;">${languages}</div>
-            <div style="font-size:12px;color:#334155;white-space:pre-line;">${serviceSummary}</div>
+            <div>${serviceLinksHtml}</div>
           </div>
         `);
 
+        marker.on("popupopen", () => {
+          const popupElement = marker.getPopup()?.getElement();
+          popupElement?.querySelectorAll<HTMLAnchorElement>("[data-service-id]").forEach((link) => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              const serviceId = link.dataset.serviceId;
+              if (serviceId) {
+                setSelectedServiceId(serviceId);
+                setPanelView("description");
+              }
+            });
+          });
+        });
+
         markerLayer.addLayer(marker);
 
-        return { service, coordinates };
+        return { coordinates };
       });
 
       if (!markers.length) {
