@@ -61,12 +61,11 @@ export async function saveRegisteredUser(input: SaveRegisteredUserInput) {
       },
     });
 
-    const oldSoftrUserRole = await getOldSoftrUserRole(input.email);
-    // Anyone going through this registration flow is registering an
-    // organization to offer Services — a Provider, by definition — unless
-    // they're a recognized returning Old Softr User whose actual committed
-    // role (Provider or Viewer) is already on file.
-    const userRole = oldSoftrUserRole ?? "Provider";
+    // Role stays blank unless this email matches a recognized, returning Old
+    // Softr User, whose actual committed role (Provider or Viewer) is already
+    // on file — createUser omits the field entirely when it's null, so there's
+    // no null-value concern here that would call for a default.
+    const userRole = await getOldSoftrUserRole(input.email);
 
     await createUser({
       clerkUserId,
