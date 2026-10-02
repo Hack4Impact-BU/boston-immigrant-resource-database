@@ -114,6 +114,14 @@ function matchesSearch(service: ServiceWithProvider, query: string) {
   return haystack.includes(query);
 }
 
+function getReadableTextColor(rgbString: string): string {
+  const match = rgbString.match(/(\d+),\s*(\d+),\s*(\d+)/);
+  if (!match) return "#1e293b";
+  const [, r, g, b] = match.map(Number);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#1e293b" : "#ffffff";
+}
+
 export default function MapPage() {
   const [search, setSearch] = useState("");
   const [providerFilter, setProviderFilter] = useState<string[]>([]);
@@ -154,6 +162,7 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [panelView, setPanelView] = useState<"map" | "description">("map");
+  const [statusColors, setStatusColors] = useState<Record<string, string>>({});
   const [providerCoordinates, setProviderCoordinates] = useState<Record<string, Coordinates | null>>({});
   const [mapReady, setMapReady] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -169,9 +178,10 @@ export default function MapPage() {
         setLoading(true);
         setError(null);
 
-        const [servicesResponse, providersResponse] = await Promise.all([
+        const [servicesResponse, providersResponse, statusColorsResponse] = await Promise.all([
           fetch("/api/services", { signal: abortController.signal }),
           fetch("/api/providers", { signal: abortController.signal }),
+          fetch("/api/service-status-colors", { signal: abortController.signal }),
         ]);
 
         if (!servicesResponse.ok || !providersResponse.ok) {
@@ -183,12 +193,20 @@ export default function MapPage() {
           providersResponse.json(),
         ])) as [Service[], Provider[]];
 
+        // Status colors are a visual nicety, not core map data — a failure
+        // here shouldn't block the page, so this is checked separately rather
+        // than thrown into the same "Failed to load map data" error above.
+        const statusColorsData = statusColorsResponse.ok
+          ? ((await statusColorsResponse.json()) as Record<string, string>)
+          : {};
+
         if (!active) {
           return;
         }
 
         setServices(servicesData);
         setProviders(providersData);
+        setStatusColors(statusColorsData);
       } catch (loadError) {
         if (!active) {
           return;
@@ -915,17 +933,11 @@ export default function MapPage() {
                                 </h2>
                               </div>
                               <p
-                                className={`mt-1 h-4 shrink-0 rounded-xs px-1 text-xs ${
-                                  service.status === "Open"
-                                    ? "bg-green-500"
-                                    : service.status === "Full"
-                                      ? "bg-rose-500"
-                                      : service.status === "Waitlist"
-                                        ? "bg-[#e69b00]"
-                                        : service.status === "Contact Provider"
-                                          ? "bg-[#abf7b1]"
-                                          : "bg-slate-300"
-                                }`}
+                                className="mt-1 h-4 shrink-0 rounded-xs px-1 text-xs"
+                                style={{
+                                  backgroundColor: statusColors[service.status] || "#cbd5e1",
+                                  color: getReadableTextColor(statusColors[service.status] || "#cbd5e1"),
+                                }}
                               >
                                 {service.status}
                               </p>
@@ -1022,17 +1034,11 @@ export default function MapPage() {
                             <h2 className="mt-1 flex flex-wrap items-center gap-2 text-xl font-semibold tracking-tight text-slate-900">
                               <span>{selectedService.name}</span>
                               <span
-                                className={`h-4 shrink-0 rounded-xs px-1 text-xs font-normal leading-4 ${
-                                  selectedService.status === "Open"
-                                    ? "bg-green-500"
-                                    : selectedService.status === "Full"
-                                      ? "bg-rose-500"
-                                      : selectedService.status === "Waitlist"
-                                        ? "bg-[#e69b00]"
-                                        : selectedService.status === "Contact Provider"
-                                          ? "bg-[#abf7b1]"
-                                          : "bg-slate-300"
-                                }`}
+                                className="h-4 shrink-0 rounded-xs px-1 text-xs font-normal leading-4"
+                                style={{
+                                  backgroundColor: statusColors[selectedService.status] || "#cbd5e1",
+                                  color: getReadableTextColor(statusColors[selectedService.status] || "#cbd5e1"),
+                                }}
                               >
                                 {selectedService.status}
                               </span>
