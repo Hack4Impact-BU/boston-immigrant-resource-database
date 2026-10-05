@@ -202,7 +202,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
       </div>
 
       <div className="relative mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 shadow-sm sm:max-w-md">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm sm:max-w-md">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input
             value={searchText}

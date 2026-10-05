@@ -681,7 +681,7 @@ export default function MapPage() {
         <section className="mx-auto flex h-[calc(100dvh-1rem-4.5rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
             <div className="flex items-center justify-between gap-2">
-              <h1 className="hidden text-[1.8rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[2.1rem] md:block">
+              <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
                 Search Services
               </h1>
               {hasActiveSearchOrFilters ? (
@@ -696,7 +696,7 @@ export default function MapPage() {
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-4 sm:py-3 xl:max-w-[560px]">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 xl:max-w-[560px]">
                 <Search size={16} className="shrink-0 text-slate-400" />
                 <input
                   value={search}
@@ -736,7 +736,7 @@ export default function MapPage() {
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:gap-2 sm:px-4 sm:py-3 sm:text-sm ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3.5 sm:text-sm ${
                           selectedCount === 0
                             ? "border-[#a8d0e6] bg-white text-slate-700"
                             : "border-sky-200 bg-[#f7fbff] text-sky-800"
