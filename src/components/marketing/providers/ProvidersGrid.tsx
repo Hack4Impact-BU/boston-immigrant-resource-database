@@ -265,7 +265,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             ) : null}
 
             {provider.language_support.length > 0 ? (
-              <p className="mt-3 truncate text-xs text-slate-400">{provider.language_support.slice(0, 3).join(" · ")}</p>
+              <p className="mt-3 truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
             ) : null}
           </Link>
         ))}
