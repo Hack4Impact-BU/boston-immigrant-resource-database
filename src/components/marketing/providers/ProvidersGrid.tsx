@@ -257,7 +257,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
               </div>
 
               <div className="min-w-0">
-                <h2 className="truncate text-sm font-semibold text-slate-900">{provider.name}</h2>
+                <h2 className="break-words text-sm font-semibold text-slate-900">{provider.name}</h2>
                 <p className="truncate text-xs text-slate-500">{provider.address || "Location not listed"}</p>
               </div>
             </div>
