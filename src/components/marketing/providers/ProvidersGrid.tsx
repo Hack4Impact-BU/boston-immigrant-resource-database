@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, LayoutGrid, List, Mail, Phone, Search, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
 
 type FilterKey = "languages" | "serviceTypes";
+type ViewMode = "grid" | "list";
 
 function FilterDropdown({
   label,
@@ -116,10 +118,124 @@ function splitServiceTypes(value: string): string[] {
     .filter((part) => part.length > 0);
 }
 
+// Lets a long email wrap at natural points (after @ . - _) instead of mid-word. <wbr> only adds a
+// break opportunity and no characters, so copying the email still yields the exact original text.
+function BreakableEmail({ value }: { value: string }) {
+  return (
+    <>
+      {value.split(/([@._-])/).map((part, index) => (
+        <Fragment key={index}>
+          {part}
+          {/^[@._-]$/.test(part) ? <wbr /> : null}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+const PROVIDER_LINK_CLASSES =
+  "flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md";
+
+// Logo + name + address. Shared by both layouts so they can't drift apart.
+function ProviderIdentity({
+  provider,
+  className,
+  listLayout = false,
+  showContact = false,
+}: {
+  provider: Provider;
+  className?: string;
+  /** List-row styling: the address wraps instead of truncating, with a little space under the name. */
+  listLayout?: boolean;
+  showContact?: boolean;
+}) {
+  const phone = provider.primary_phone_number?.trim();
+  const email = provider.email?.trim();
+
+  return (
+    <div className={cn("flex items-center gap-3", className)}>
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element -- provider logos are arbitrary external Airtable attachment URLs, not a fixed set next/image can optimize */}
+        <img src={provider.logo || "/icons/Just_BIRD_logo_blue.png"} alt={provider.name} className="h-full w-full object-contain p-1.5" />
+      </div>
+
+      <div className="min-w-0">
+        <h2 className="break-words text-sm font-semibold text-slate-900">{provider.name}</h2>
+        <p className={listLayout ? "mt-1 break-words text-xs text-slate-500" : "truncate text-xs text-slate-500"}>{provider.address || "Location not listed"}</p>
+
+        {/* Plain text, not mailto:/tel: links — the whole row is already a <Link>, and a link can't contain a link. */}
+        {showContact && (phone || email) ? (
+          <div className="mt-1 flex flex-col gap-0.5 text-xs text-slate-500">
+            {phone ? (
+              <p className="flex items-start gap-1.5">
+                <Phone size={12} className="mt-0.5 shrink-0 text-slate-400" />
+                <span className="sr-only">Phone:</span>
+                <span className="min-w-0 break-words">{phone}</span>
+              </p>
+            ) : null}
+            {email ? (
+              <p className="flex items-start gap-1.5">
+                <Mail size={12} className="mt-0.5 shrink-0 text-slate-400" />
+                <span className="sr-only">Email:</span>
+                <span className="min-w-0 break-words">
+                  <BreakableEmail value={email} />
+                </span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+// Grid view: the original card, unchanged.
+function ProviderCard({ provider }: { provider: Provider }) {
+  return (
+    <Link href={`/providers/${provider.id}`} className={PROVIDER_LINK_CLASSES}>
+      <ProviderIdentity provider={provider} />
+
+      {provider.description ? (
+        <p className="mt-3 line-clamp-4 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
+      ) : null}
+
+      {provider.language_support.length > 0 ? (
+        <p className="mt-3 truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
+      ) : null}
+    </Link>
+  );
+}
+
+// List view: one full-width row per provider. Same information as the card, but on wide screens
+// the description sits beside the name instead of underneath it, so far more of it is visible
+// before it's truncated. Below lg it stacks like a single full-width card.
+function ProviderRow({ provider }: { provider: Provider }) {
+  const hasDetails = Boolean(provider.description) || provider.language_support.length > 0;
+
+  return (
+    <Link href={`/providers/${provider.id}`} className={cn(PROVIDER_LINK_CLASSES, "lg:flex-row lg:items-start lg:gap-6")}>
+      <ProviderIdentity provider={provider} className="lg:w-72 lg:shrink-0" listLayout showContact />
+
+      {hasDetails ? (
+        <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 lg:mt-0">
+          {provider.description ? (
+            <p className="line-clamp-5 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
+          ) : null}
+
+          {provider.language_support.length > 0 ? (
+            <p className="truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
+          ) : null}
+        </div>
+      ) : null}
+    </Link>
+  );
+}
+
 export default function ProvidersGrid({ providers }: { providers: Provider[] }) {
   const [searchText, setSearchText] = useState("");
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({ languages: [], serviceTypes: [] });
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -241,36 +357,45 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             align="right"
           />
         </div>
+
+        {/* Hidden below sm: on a phone the grid is already one full-width column, so the toggle would do nothing. */}
+        <div
+          role="group"
+          aria-label="Layout"
+          className="hidden shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex"
+        >
+          {(
+            [
+              { mode: "grid", label: "Grid view", Icon: LayoutGrid },
+              { mode: "list", label: "List view", Icon: List },
+            ] as const
+          ).map(({ mode, label, Icon }) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              aria-pressed={viewMode === mode}
+              aria-label={label}
+              title={label}
+              className={cn(
+                "rounded-md p-2 transition-colors cursor-pointer",
+                viewMode === mode ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
+              )}
+            >
+              <Icon size={16} />
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredProviders.map((provider) => (
-          <Link
-            key={provider.id}
-            href={`/providers/${provider.id}`}
-            className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element -- provider logos are arbitrary external Airtable attachment URLs, not a fixed set next/image can optimize */}
-                <img src={provider.logo || "/icons/Just_BIRD_logo_blue.png"} alt={provider.name} className="h-full w-full object-contain p-1.5" />
-              </div>
-
-              <div className="min-w-0">
-                <h2 className="break-words text-sm font-semibold text-slate-900">{provider.name}</h2>
-                <p className="truncate text-xs text-slate-500">{provider.address || "Location not listed"}</p>
-              </div>
-            </div>
-
-            {provider.description ? (
-              <p className="mt-3 line-clamp-4 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
-            ) : null}
-
-            {provider.language_support.length > 0 ? (
-              <p className="mt-3 truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
-            ) : null}
-          </Link>
-        ))}
+      <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 flex flex-col gap-3"}>
+        {filteredProviders.map((provider) =>
+          viewMode === "grid" ? (
+            <ProviderCard key={provider.id} provider={provider} />
+          ) : (
+            <ProviderRow key={provider.id} provider={provider} />
+          ),
+        )}
       </div>
     </div>
   );
