@@ -186,7 +186,9 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm text-slate-600">
-          {filteredProviders.length} organization{filteredProviders.length === 1 ? "" : "s"} in the BIRD directory
+          {hasActiveSearchOrFilters
+            ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
+            : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
         </p>
         {hasActiveSearchOrFilters ? (
           <button
