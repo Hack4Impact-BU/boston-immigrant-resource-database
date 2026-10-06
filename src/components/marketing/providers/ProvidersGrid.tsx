@@ -2,8 +2,9 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LayoutGrid, List, Mail, Phone, Search, X } from "lucide-react";
+import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "lucide-react";
 
+import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
@@ -236,6 +237,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({ languages: [], serviceTypes: [] });
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -306,6 +308,14 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
             : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
         </p>
+        <button
+          type="button"
+          onClick={() => setShowMap((current) => !current)}
+          className="ml-2 inline-flex items-center gap-1 text-sm font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+        >
+          {showMap ? <List size={14} aria-hidden="true" /> : <MapPin size={14} aria-hidden="true" />}
+          {showMap ? "View List" : "View Map"}
+        </button>
         {hasActiveSearchOrFilters ? (
           <button
             type="button"
@@ -362,7 +372,10 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         <div
           role="group"
           aria-label="Layout"
-          className="hidden shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex"
+          className={cn(
+            "hidden shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex",
+            showMap && "sm:hidden",
+          )}
         >
           {(
             [
@@ -388,15 +401,22 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         </div>
       </div>
 
-      <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 flex flex-col gap-3"}>
-        {filteredProviders.map((provider) =>
-          viewMode === "grid" ? (
-            <ProviderCard key={provider.id} provider={provider} />
-          ) : (
-            <ProviderRow key={provider.id} provider={provider} />
-          ),
-        )}
-      </div>
+      {showMap ? (
+        // The map takes the place of the cards; the search and filters above stay live and drive the pins.
+        <div className="mt-6">
+          <ProvidersMap providers={filteredProviders} />
+        </div>
+      ) : (
+        <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 flex flex-col gap-3"}>
+          {filteredProviders.map((provider) =>
+            viewMode === "grid" ? (
+              <ProviderCard key={provider.id} provider={provider} />
+            ) : (
+              <ProviderRow key={provider.id} provider={provider} />
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
