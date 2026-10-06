@@ -150,20 +150,34 @@ function EditableTextCell({ recordId, fieldName, initialValue, multiline }: { re
   const sharedClassName =
     "w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 pr-14 text-sm text-slate-700 outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-200";
 
-  const lineCount = Math.max(1, value.split("\n").length);
-
   return (
-    <div className="relative h-full">
+    <div className={multiline ? "relative grid h-full" : "relative h-full"}>
       {multiline ? (
-        <textarea
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onBlur={handleBlur}
-          onFocus={() => setSaveState("idle")}
-          rows={lineCount}
-          title={value}
-          className={sharedClassName + " h-full resize-none overflow-y-auto whitespace-normal"}
-        />
+        <>
+          {/*
+              Auto-growing box. An invisible copy of the text shares the textarea's grid cell, so the cell is exactly as
+              tall as the text needs once it wraps at the column's real width (and it re-fits when the column is resized
+              or the text changes); the textarea fills that cell. Counting "\n" characters can't see wrapped lines.
+              The copy must match the textarea's font, padding, border and wrapping; the trailing space keeps a final
+              blank line from collapsing. The 13px bottom padding is the usual 6px plus the ~7px of spacing the old
+              inline textarea always carried, so rows stay the same height as the other Admin tools.
+            */}
+          <div
+            aria-hidden="true"
+            className="invisible col-start-1 row-start-1 whitespace-pre-wrap break-words rounded-md border border-transparent px-2 pb-[13px] pt-1.5 pr-14 text-sm"
+          >
+            {value + " "}
+          </div>
+          <textarea
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onBlur={handleBlur}
+            onFocus={() => setSaveState("idle")}
+            rows={1}
+            title={value}
+            className="col-start-1 row-start-1 w-full resize-none overflow-hidden rounded-md border border-transparent bg-transparent px-2 pb-[13px] pt-1.5 pr-14 text-sm text-slate-700 outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-200"
+          />
+        </>
       ) : (
         <input
           value={value}
