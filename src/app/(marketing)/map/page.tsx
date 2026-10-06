@@ -925,15 +925,15 @@ export default function MapPage() {
                           </div>
 
                           <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-[0.72rem] text-slate-900">{providerName}</p>
-                                <h2 className="truncate text-[1.05rem] font-semibold tracking-tight text-slate-900">
-                                  {service.name}
-                                </h2>
-                              </div>
+                            {/* The status pill shares the provider-name line, so the Service name below gets the card's full
+                                width. A grid (rather than reordering the markup) keeps the reading order: provider, name, status. */}
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+                              <p className="truncate text-[0.72rem] text-slate-900">{providerName}</p>
+                              <h2 className="col-span-2 row-start-2 break-words text-[1.05rem] font-semibold tracking-tight text-slate-900">
+                                {service.name}
+                              </h2>
                               <p
-                                className="mt-1 h-4 shrink-0 rounded-xs px-1 text-xs"
+                                className="col-start-2 row-start-1 h-4 rounded-xs px-1 text-xs"
                                 style={{
                                   backgroundColor: statusColors[service.status] || "#cbd5e1",
                                   color: getReadableTextColor(statusColors[service.status] || "#cbd5e1"),
