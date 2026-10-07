@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
 
 type FilterKey = "languages" | "serviceTypes";
-type ViewMode = "grid" | "list";
+type ViewMode = "grid" | "list" | "map";
 
 function FilterDropdown({
   label,
@@ -237,7 +237,6 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({ languages: [], serviceTypes: [] });
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -308,14 +307,6 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
             : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
         </p>
-        <button
-          type="button"
-          onClick={() => setShowMap((current) => !current)}
-          className="ml-2 inline-flex items-center gap-1 text-sm font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
-        >
-          {showMap ? <List size={14} aria-hidden="true" /> : <MapPin size={14} aria-hidden="true" />}
-          {showMap ? "View List" : "View Map"}
-        </button>
         {hasActiveSearchOrFilters ? (
           <button
             type="button"
@@ -368,19 +359,18 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           />
         </div>
 
-        {/* Hidden below sm: on a phone the grid is already one full-width column, so the toggle would do nothing. */}
+        {/* One control for how the results are shown. On a phone it's a full-width, labeled row of large buttons;
+            from sm up it shrinks to compact icon-only buttons at the right (the labels stay for screen readers). */}
         <div
           role="group"
-          aria-label="Layout"
-          className={cn(
-            "hidden shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex",
-            showMap && "sm:hidden",
-          )}
+          aria-label="View"
+          className="flex w-full items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex sm:w-auto sm:shrink-0"
         >
           {(
             [
-              { mode: "grid", label: "Grid view", Icon: LayoutGrid },
-              { mode: "list", label: "List view", Icon: List },
+              { mode: "grid", label: "Grid", Icon: LayoutGrid },
+              { mode: "list", label: "List", Icon: List },
+              { mode: "map", label: "Map", Icon: MapPin },
             ] as const
           ).map(({ mode, label, Icon }) => (
             <button
@@ -388,20 +378,21 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
               type="button"
               onClick={() => setViewMode(mode)}
               aria-pressed={viewMode === mode}
-              aria-label={label}
-              title={label}
+              aria-label={`${label} view`}
+              title={`${label} view`}
               className={cn(
-                "rounded-md p-2 transition-colors cursor-pointer",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer sm:flex-none sm:p-2",
                 viewMode === mode ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
               )}
             >
-              <Icon size={16} />
+              <Icon size={16} aria-hidden="true" />
+              <span className="sm:sr-only">{label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {showMap ? (
+      {viewMode === "map" ? (
         // The map takes the place of the cards; the search and filters above stay live and drive the pins.
         <div className="mt-6">
           <ProvidersMap providers={filteredProviders} />

@@ -191,6 +191,7 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
   const leafletRef = useRef<LeafletModule | null>(null);
   const mountedRef = useRef(false);
   const lastFitRef = useRef("");
+  const hasFramedRef = useRef(false);
 
   const [mapReady, setMapReady] = useState(false);
   const [resolved, setResolved] = useState<Record<string, Coordinates | null>>(() => Object.fromEntries(resolvedFallbacks));
@@ -290,11 +291,16 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
     return () => {
       cancelled = true;
       if (mapRef.current) {
+        // Leaflet finishes a zoom animation on an internal 250ms timer that remove() doesn't cancel. If the map is torn
+        // down mid-animation (e.g. switching views right after opening the map or changing a filter), that timer runs
+        // against a map that no longer exists and throws. Clearing the flag it checks turns it into a harmless no-op.
+        (mapRef.current as unknown as { _animatingZoom?: boolean })._animatingZoom = false;
         mapRef.current.remove();
         mapRef.current = null;
         layerRef.current = null;
         leafletRef.current = null;
         lastFitRef.current = "";
+        hasFramedRef.current = false;
         setMapReady(false);
       }
     };
@@ -333,7 +339,10 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
 
     if (groups.length > 0 && signature !== lastFitRef.current) {
       const bounds = L.latLngBounds(groups.map((group) => [group.coordinates.lat, group.coordinates.lng] as [number, number]));
-      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 15, animate: true });
+      // The first framing happens as the map opens, so it jumps straight to the pins instead of swooping in from the
+      // default view; later changes (search, filters) animate.
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 15, animate: hasFramedRef.current });
+      hasFramedRef.current = true;
     }
 
     lastFitRef.current = signature;
