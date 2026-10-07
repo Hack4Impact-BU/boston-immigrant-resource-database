@@ -398,7 +398,9 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           <ProvidersMap providers={filteredProviders} />
         </div>
       ) : (
-        <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 flex flex-col gap-3"}>
+        // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
+        // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
+        <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 grid grid-cols-1 gap-3"}>
           {filteredProviders.map((provider) =>
             viewMode === "grid" ? (
               <ProviderCard key={provider.id} provider={provider} />
