@@ -129,7 +129,7 @@ function buildProviderSummary(provider: Provider): HTMLElement {
     summary.append(
       createElement(
         "div",
-        "margin-top:8px;line-height:1.45;color:#475569;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;",
+        "margin-top:8px;line-height:1.45;color:#475569;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;",
         provider.description.trim(),
       ),
     );
