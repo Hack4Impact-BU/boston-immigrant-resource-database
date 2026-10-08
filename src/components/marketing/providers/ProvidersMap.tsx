@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 
 import type { Provider } from "@/app/api/airtable";
+import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 
 type Coordinates = { lat: number; lng: number };
 type LeafletModule = typeof import("leaflet");
@@ -72,6 +73,10 @@ function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, style: str
 
 const LINK_STYLE = "color:#0369a1;text-decoration:underline;overflow-wrap:anywhere;";
 
+// Same look as the service-type chips in the service-types picker (sky border, light sky fill, dark sky text).
+const PILL_STYLE =
+  "display:inline-block;max-width:100%;padding:2px 8px;border:1px solid #bae6fd;border-radius:9999px;background:#f0f9ff;color:#075985;font-size:11px;font-weight:500;line-height:1.3;overflow-wrap:anywhere;";
+
 function createLabeledRow(label: string, content: Node): HTMLElement {
   const row = createElement("div", "margin-top:6px;line-height:1.4;");
   row.append(createElement("span", "color:#94a3b8;", `${label} `), content);
@@ -121,8 +126,16 @@ function buildProviderSummary(provider: Provider): HTMLElement {
     summary.append(createLabeledRow("Languages", document.createTextNode(provider.language_support.join(" · "))));
   }
 
-  if (provider.service_types?.trim()) {
-    summary.append(createLabeledRow("Service types", document.createTextNode(provider.service_types.trim())));
+  const serviceTypes = splitServiceTypes(provider.service_types ?? "");
+  if (serviceTypes.length > 0) {
+    const row = createElement("div", "margin-top:6px;");
+    row.append(createElement("div", "color:#94a3b8;line-height:1.4;", "Service types"));
+    const pills = createElement("div", "display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;");
+    for (const serviceType of serviceTypes) {
+      pills.append(createElement("span", PILL_STYLE, serviceType));
+    }
+    row.append(pills);
+    summary.append(row);
   }
 
   if (provider.description?.trim()) {
@@ -153,7 +166,10 @@ function buildPopupContent(group: Provider[]): HTMLElement {
     content.append(createElement("div", "margin-bottom:8px;font-family:Arial, sans-serif;font-size:11px;font-weight:700;color:#64748b;", `${group.length} organizations at this location`));
   }
 
-  const list = createElement("div", "max-height:300px;overflow-y:auto;");
+  // Content taller than this scrolls inside the pop-up. It scales with the screen (so a provider with a long description,
+  // contact details and many service types isn't cut off before its "View full profile" link) but never drops below 300px,
+  // and 60vh keeps the pop-up comfortably inside the map, which is at least 70vh tall.
+  const list = createElement("div", "max-height:clamp(300px,60vh,480px);overflow-y:auto;");
   group.forEach((provider, index) => {
     const summary = buildProviderSummary(provider);
     if (index > 0) {

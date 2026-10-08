@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "lucide-react";
 
 import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
+import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { Input } from "@/components/ui/input";
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { cn } from "@/lib/utils";
@@ -120,13 +121,6 @@ function FilterDropdown({
       ) : null}
     </div>
   );
-}
-
-function splitServiceTypes(value: string): string[] {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
 }
 
 // Lets a long email wrap at natural points (after @ . - _) instead of mid-word. <wbr> only adds a
