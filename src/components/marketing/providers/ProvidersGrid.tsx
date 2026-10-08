@@ -224,7 +224,7 @@ function ProviderRow({ provider }: { provider: Provider }) {
       {hasDetails ? (
         <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 lg:mt-0">
           {provider.description ? (
-            <p className="line-clamp-5 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
+            <p className="line-clamp-6 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
           ) : null}
 
           {provider.language_support.length > 0 ? (
