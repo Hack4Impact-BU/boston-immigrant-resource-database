@@ -7,6 +7,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { SelectAllButton, canSelectMore } from "@/components/ui/select-all-button";
 import { formatRelativeUpdateDate, formatRelativeUpdateDateShort } from "@/lib/dates";
 import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
@@ -637,6 +638,7 @@ export default function MapPage() {
       value: providerFilter,
       options: providerOptions,
       onToggle: (option: string) => toggleFilterValue(setProviderFilter, option),
+      onSelect: setProviderFilter,
     },
     {
       key: "language" as const,
@@ -644,6 +646,7 @@ export default function MapPage() {
       value: languageFilter,
       options: languageOptions,
       onToggle: (option: string) => toggleFilterValue(setLanguageFilter, option),
+      onSelect: setLanguageFilter,
     },
     {
       key: "serviceType" as const,
@@ -651,6 +654,7 @@ export default function MapPage() {
       value: serviceTypeFilter,
       options: serviceTypeOptions,
       onToggle: (option: string) => toggleFilterValue(setServiceTypeFilter, option),
+      onSelect: setServiceTypeFilter,
     },
     {
       key: "status" as const,
@@ -658,6 +662,7 @@ export default function MapPage() {
       value: statusFilter,
       options: statusOptions,
       onToggle: (option: string) => toggleFilterValue(setStatusFilter, option),
+      onSelect: setStatusFilter,
     },
   ];
 
@@ -766,19 +771,30 @@ export default function MapPage() {
                               className="h-8 text-xs"
                             />
                           </div>
-                          {selectedCount > 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (filter.key === "provider") setProviderFilter([]);
-                                else if (filter.key === "language") setLanguageFilter([]);
-                                else if (filter.key === "serviceType") setServiceTypeFilter([]);
-                                else setStatusFilter([]);
-                              }}
-                              className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-sky-700 hover:bg-sky-50 cursor-pointer"
-                            >
-                              Clear ({selectedCount})
-                            </button>
+                          {selectedCount > 0 || canSelectMore(visibleOptions, filter.value) ? (
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-slate-100 px-3 py-1.5">
+                              <SelectAllButton
+                                options={filter.options}
+                                visibleOptions={visibleOptions}
+                                selected={filter.value}
+                                onSelect={filter.onSelect}
+                                className="rounded px-1 py-0.5 text-xs font-semibold uppercase tracking-wide text-sky-700 hover:bg-sky-50 cursor-pointer"
+                              />
+                              {selectedCount > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (filter.key === "provider") setProviderFilter([]);
+                                    else if (filter.key === "language") setLanguageFilter([]);
+                                    else if (filter.key === "serviceType") setServiceTypeFilter([]);
+                                    else setStatusFilter([]);
+                                  }}
+                                  className="ml-auto rounded px-1 py-0.5 text-xs font-semibold uppercase tracking-wide text-sky-700 hover:bg-sky-50 cursor-pointer"
+                                >
+                                  Clear ({selectedCount})
+                                </button>
+                              ) : null}
+                            </div>
                           ) : null}
                           <div className="max-h-72 overflow-y-auto p-2">
                             {visibleOptions.length === 0 ? (
@@ -818,7 +834,7 @@ export default function MapPage() {
             <div className="flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
                 <p className="min-w-0 truncate text-sm text-slate-500">
-                  Showing {sortedFilteredServices.length} service{sortedFilteredServices.length === 1 ? "" : "s"}
+                  Showing {sortedFilteredServices.length} of {services.length}
                 </p>
 
                 <div className="relative z-50 min-w-0 shrink" data-filter-menu-root>

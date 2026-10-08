@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateMouNoteAction } from "@/features/admin/mou-responses/manage-mou-notes";
 
 export type MouColumn = {
@@ -194,17 +195,26 @@ function FilterDropdown({
 
       {isOpen ? (
         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 min-w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-slate-100 px-3 py-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-            {selected.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => onChange([])}
+            <div className="ml-auto flex shrink-0 items-center gap-3">
+              <SelectAllButton
+                options={options}
+                visibleOptions={options}
+                selected={selected}
+                onSelect={onChange}
                 className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
-              >
-                Clear All
-              </button>
-            ) : null}
+              />
+              {selected.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => onChange([])}
+                  className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+                >
+                  Clear All
+                </button>
+              ) : null}
+            </div>
           </div>
           <div className="max-h-72 overflow-y-auto p-2">
             {options.length === 0 ? (

@@ -6,6 +6,7 @@ import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "l
 
 import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
 import { Input } from "@/components/ui/input";
+import { SelectAllButton } from "@/components/ui/select-all-button";
 import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
 
@@ -62,17 +63,26 @@ function FilterDropdown({
             align === "right" ? "sm:left-auto sm:right-0" : "sm:left-0 sm:right-auto"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-slate-100 px-3 py-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-            {selected.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => onChange([])}
+            <div className="ml-auto flex shrink-0 items-center gap-3">
+              <SelectAllButton
+                options={options}
+                visibleOptions={visibleOptions}
+                selected={selected}
+                onSelect={onChange}
                 className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
-              >
-                Clear All
-              </button>
-            ) : null}
+              />
+              {selected.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => onChange([])}
+                  className="text-xs font-medium text-sky-700 underline decoration-sky-300 hover:text-sky-800 cursor-pointer"
+                >
+                  Clear All
+                </button>
+              ) : null}
+            </div>
           </div>
           <div className="border-b border-slate-100 p-2">
             <Input
