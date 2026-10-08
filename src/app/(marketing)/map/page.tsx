@@ -8,7 +8,7 @@ import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { SelectAllButton, canSelectMore } from "@/components/ui/select-all-button";
-import { formatRelativeUpdateDate, formatRelativeUpdateDateShort } from "@/lib/dates";
+import { formatRelativeUpdateDate } from "@/lib/dates";
 import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
 type Provider = {
@@ -931,7 +931,8 @@ export default function MapPage() {
                           isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
                         }`}
                       >
-                        <div className="flex w-full gap-2">
+                        {/* self-stretch: a <button> defaults to align-items: flex-start, so without it this wrapper wouldn't fill a card sitting at its minimum height. */}
+                        <div className="flex w-full gap-2 self-stretch">
                           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-white">
                             <img
                               src={provider?.logo || "/icons/Just_BIRD_logo_blue.png"}
@@ -959,14 +960,18 @@ export default function MapPage() {
                               </p>
                             </div>
 
-                            <div className="mt-3 space-y-1 text-[0.72rem] text-slate-500">
+                            {/* The "Updated…" text sits at the card's bottom-right, on the languages line when it fits there and on its
+                                own right-aligned line when it doesn't. mt-auto + pt-3 keeps it at the bottom of a taller card. */}
+                            <div className="mt-auto pt-3 text-[0.72rem] text-slate-500">
                               <p className="truncate">
                                 {location}
                               </p>
-                              <p className="font-medium text-slate-900">
-                                {languages}
-                              </p>
-                              <p>{formatRelativeUpdateDateShort(service.last_modified)}</p>
+                              <div className="mt-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+                                <p className="font-medium text-slate-900">
+                                  {languages}
+                                </p>
+                                <p className="ml-auto shrink-0 whitespace-nowrap">{formatRelativeUpdateDate(service.last_modified)}</p>
+                              </div>
                             </div>
                           </div>
                         </div>
