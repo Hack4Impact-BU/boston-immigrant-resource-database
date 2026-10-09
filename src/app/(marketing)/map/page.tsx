@@ -6,6 +6,7 @@ import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { buildProviderSummaryBase, createElement as createPopupElement } from "@/components/marketing/map-popup-dom";
 import { Input } from "@/components/ui/input";
 import { SelectAllButton, canSelectMore } from "@/components/ui/select-all-button";
 import { formatRelativeUpdateDate } from "@/lib/dates";
@@ -121,6 +122,47 @@ function getReadableTextColor(rgbString: string): string {
   const [, r, g, b] = match.map(Number);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? "#1e293b" : "#ffffff";
+}
+
+// Pop-up for a pin: the provider summary shared with the Providers page (logo, linked name, address, phone, email,
+// languages) followed by the provider's services. Each service opens in the details panel. Built with DOM APIs, so
+// provider and service names can never be interpreted as markup.
+function buildProviderPopup(
+  provider: Provider | undefined,
+  services: ServiceWithProvider[],
+  onSelectService: (serviceId: string) => void,
+  maxHeight: number,
+): HTMLElement {
+  const summary = provider
+    ? buildProviderSummaryBase(provider)
+    : createPopupElement("div", "font-family:Arial, sans-serif;font-size:12px;color:#334155;");
+
+  if (!provider) {
+    summary.append(createPopupElement("div", "font-weight:700;font-size:13px;color:#0f172a;", "Provider unavailable"));
+  }
+
+  const list = createPopupElement("div", "margin-top:8px;");
+  for (const service of services) {
+    const link = document.createElement("a");
+    link.href = "#";
+    link.dataset.serviceId = service.id;
+    link.textContent = service.name;
+    link.style.cssText =
+      "display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#0284c7;text-decoration:underline;margin-top:4px;";
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      onSelectService(service.id);
+    });
+    list.append(link);
+  }
+  summary.append(list);
+
+  // Long lists (many services) scroll inside the pop-up instead of growing past the map.
+  const scroller = createPopupElement("div", `max-height:${maxHeight}px;overflow-y:auto;`);
+  scroller.append(summary);
+  const content = createPopupElement("div", "width:280px;max-width:100%;");
+  content.append(scroller);
+  return content;
 }
 
 export default function MapPage() {
@@ -462,44 +504,22 @@ export default function MapPage() {
         });
 
         const provider = services[0]?.providerDetails;
-        const providerName = provider?.name || "Provider unavailable";
-        const address = provider?.address || "Location not listed";
-        const languages = provider?.language_support?.join(" · ") || "Language support varies";
 
-        const serviceLinksHtml = services
-          .map(
-            (service) => `
-              <a
-                href="#"
-                data-service-id="${service.id}"
-                style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#0284c7;text-decoration:underline;margin-top:4px;"
-              >${service.name}</a>
-            `,
-          )
-          .join("");
-
-        marker.bindPopup(`
-          <div style="max-width:220px;font-family:Arial, sans-serif;">
-            <div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${providerName}</div>
-            <div style="font-size:11px;color:#64748b;margin-bottom:2px;">${address}</div>
-            <div style="font-size:11px;color:#0f172a;margin-bottom:6px;">${languages}</div>
-            <div>${serviceLinksHtml}</div>
-          </div>
-        `);
-
-        marker.on("popupopen", () => {
-          const popupElement = marker.getPopup()?.getElement();
-          popupElement?.querySelectorAll<HTMLAnchorElement>("[data-service-id]").forEach((link) => {
-            link.addEventListener("click", (event) => {
-              event.preventDefault();
-              const serviceId = link.dataset.serviceId;
-              if (serviceId) {
+        marker.bindPopup(
+          () =>
+            buildProviderPopup(
+              provider,
+              services,
+              (serviceId) => {
                 setSelectedServiceId(serviceId);
                 setPanelView("description");
-              }
-            });
-          });
-        });
+              },
+              // Sized to the map as it is when the pop-up opens: the content box plus Leaflet's padding and arrow (about 60px)
+              // must fit inside the map, which is shorter than the window because the search and filters sit above it.
+              Math.min(480, Math.max(160, map.getSize().y - 64)),
+            ),
+          { minWidth: 280, maxWidth: 300 },
+        );
 
         markerLayer.addLayer(marker);
 
