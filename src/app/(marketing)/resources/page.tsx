@@ -1,5 +1,19 @@
 import { client } from "@/lib/sanity";
 import Sidebar from "@/components/marketing/Sidebar";
+import CommunityPhotos, {
+  type CommunityPhoto,
+} from "@/components/marketing/CommunityPhotos";
+
+const COMMUNITY_PHOTOS: CommunityPhoto[] = [
+  {
+    src: "/img/boston-skyline-park.jpg",
+    alt: "The Boston skyline rising above the trees and lawn of a city park",
+  },
+  {
+    src: "/img/boston-welcoming-certificate-group.jpg",
+    alt: "A large group of smiling people gathered indoors holding a framed certificate for Boston, MA",
+  },
+];
 
 interface ResourceItem {
   _id: string;
@@ -48,7 +62,7 @@ export default async function ResourcesPage() {
     <div className="flex min-h-screen items-stretch">
       <Sidebar isOpen={true} activePage="Additional Resources" />
       <main className="flex-1 bg-[#f2f4f7] px-2 py-2 text-slate-800 sm:px-3 sm:py-3 ml-52">
-      <section className="mx-auto min-h-[calc(100vh-1rem)] rounded-xl bg-white px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] sm:px-5 sm:py-5">
+      <section className="mx-auto flex min-h-[calc(100vh-1rem)] flex-col rounded-xl bg-white px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] sm:px-5 sm:py-5">
         <h1 className="text-[1.15rem] font-semibold tracking-tight text-[#4c8cc9] sm:text-[1.3rem]">
           Additional Resources
         </h1>
@@ -88,6 +102,10 @@ export default async function ResourcesPage() {
             </p>
           </div>
         )}
+
+        <div className="mt-auto">
+          <CommunityPhotos photos={COMMUNITY_PHOTOS} aspectClassName="aspect-[3/2]" />
+        </div>
       </section>
     </main>
     </div>
