@@ -6,8 +6,22 @@ import ForumTabs from "@/components/forum/ForumTabs";
 import PostCard from "@/components/forum/PostCard";
 import { getForumPosts, type ForumTab } from "@/lib/forum";
 import Sidebar from "@/components/marketing/Sidebar";
+import CommunityPhotos, {
+  type CommunityPhoto,
+} from "@/components/marketing/CommunityPhotos";
 
 const VALID_TABS: ForumTab[] = ["recent", "unanswered", "unsolved", "solved"];
+
+const COMMUNITY_PHOTOS: CommunityPhoto[] = [
+  {
+    src: "/img/community-event-roundtables.webp",
+    alt: "A speaker addressing attendees seated at round tables during a community event",
+  },
+  {
+    src: "/img/people.png",
+    alt: "Community members holding “You Belong Here” posters in several languages",
+  },
+];
 
 async function PostList({ tab }: { tab: ForumTab }) {
   const posts = await getForumPosts(tab);
@@ -79,6 +93,8 @@ export default async function ForumPage({
 
             <RightRail />
           </div>
+
+          <CommunityPhotos photos={COMMUNITY_PHOTOS} />
         </section>
       </main>
     </div>
