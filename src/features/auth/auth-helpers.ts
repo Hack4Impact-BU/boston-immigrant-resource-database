@@ -28,6 +28,17 @@ export function requireNonEmptyString(value: string, fieldName: string) {
   return value.trim();
 }
 
+// Server-side enforcement of fields the form marks as required — client-side
+// validation alone isn't a real guarantee, since a Server Action is reachable
+// directly, not only through the form's own UI.
+export function requireNonEmptySelection(values: string[], fieldName: string): string[] {
+  if (values.length === 0) {
+    throw new Error(`Please select at least one ${fieldName}.`);
+  }
+
+  return values;
+}
+
 export function throwIfClerkError(result: ClerkMethodResult) {
   if (result.error) {
     throw result.error;

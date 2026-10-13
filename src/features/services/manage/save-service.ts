@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-import { requireNonEmptyString } from "@/features/auth/auth-helpers";
+import { requireNonEmptySelection, requireNonEmptyString } from "@/features/auth/auth-helpers";
 import { createService, deleteService, getServiceById, updateService, type Service } from "@/app/api/airtable";
 import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
@@ -107,7 +107,7 @@ export async function createServiceAction(providerId: string, input: SaveService
     status: requireNonEmptyString(input.status, "status"),
     description: input.description?.trim() || undefined,
     link: input.link?.trim() || undefined,
-    serviceTypeIds: input.serviceTypeIds,
+    serviceTypeIds: requireNonEmptySelection(input.serviceTypeIds, "service type"),
   });
 
   revalidatePath("/services/manage");
@@ -128,7 +128,7 @@ export async function updateServiceAction(serviceId: string, input: SaveServiceF
     status: requireNonEmptyString(input.status, "status"),
     description: input.description?.trim() || "",
     link: input.link?.trim() || "",
-    serviceTypeIds: input.serviceTypeIds,
+    serviceTypeIds: requireNonEmptySelection(input.serviceTypeIds, "service type"),
   });
 
   revalidatePath("/services/manage");

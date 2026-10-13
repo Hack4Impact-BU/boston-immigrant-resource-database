@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 
-import { requireNonEmptyString } from "@/features/auth/auth-helpers";
+import { requireNonEmptySelection, requireNonEmptyString } from "@/features/auth/auth-helpers";
 import { createProvider, getProviderById } from "@/app/api/airtable";
 import { getUserRole, linkUserToProvider } from "@/lib/airtable";
 
@@ -17,17 +17,6 @@ export type CreateAndLinkProviderInput = {
   serviceTypeIds: string[];
   languageIds: string[];
 };
-
-// Server-side enforcement of the same fields the form marks as required —
-// client-side validation alone isn't a real guarantee, since a Server Action
-// is reachable directly, not only through the form's own UI.
-function requireNonEmptySelection(values: string[], fieldName: string): string[] {
-  if (values.length === 0) {
-    throw new Error(`Please select at least one ${fieldName}.`);
-  }
-
-  return values;
-}
 
 // Viewer accounts represent users/organizations that don't offer Services
 // themselves — linking or creating a Provider is fundamentally "becoming a

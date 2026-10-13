@@ -37,12 +37,29 @@ export function ServiceForm({ serviceTypes, initialValues, submitLabel, onSubmit
   const [status, setStatus] = useState(initialValues?.status ?? STATUS_OPTIONS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [serviceTypesError, setServiceTypesError] = useState<string>();
+
+  function handleServiceTypesChange(nextSelectedIds: string[]) {
+    setSelectedServiceTypeIds(nextSelectedIds);
+    if (nextSelectedIds.length > 0) {
+      setServiceTypesError(undefined);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitting) return;
 
     setErrorMessage(undefined);
+
+    // Shown next to the picker rather than at the top of the form — the picker
+    // is the last field, so a top-of-form message could be scrolled out of view.
+    if (selectedServiceTypeIds.length === 0) {
+      setServiceTypesError("Please select at least one service type.");
+      return;
+    }
+
+    setServiceTypesError(undefined);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -128,8 +145,13 @@ export function ServiceForm({ serviceTypes, initialValues, submitLabel, onSubmit
         <ServiceTypesPicker
           serviceTypes={serviceTypes}
           selectedIds={selectedServiceTypeIds}
-          onChange={setSelectedServiceTypeIds}
+          onChange={handleServiceTypesChange}
         />
+        {serviceTypesError && (
+          <p role="alert" className="text-xs font-medium text-red-700">
+            {serviceTypesError}
+          </p>
+        )}
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
