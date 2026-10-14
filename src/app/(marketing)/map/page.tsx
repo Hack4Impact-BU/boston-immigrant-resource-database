@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
-import { ChevronDown, LoaderCircle, MapPinned, Search, X } from "lucide-react";
+import { ChevronDown, List, LoaderCircle, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { buildProviderSummaryBase, createElement as createPopupElement } from "@/components/marketing/map-popup-dom";
 import { Input } from "@/components/ui/input";
@@ -205,6 +205,9 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [panelView, setPanelView] = useState<"map" | "description">("map");
+  // Below the xl breakpoint the list and the map don't fit side by side, so only one shows at a time and this picks which.
+  // From xl up both always show and this has no effect.
+  const [narrowView, setNarrowView] = useState<"list" | "map">("list");
   const [statusColors, setStatusColors] = useState<Record<string, string>>({});
   const [providerCoordinates, setProviderCoordinates] = useState<Record<string, Coordinates | null>>({});
   const [mapReady, setMapReady] = useState(false);
@@ -709,15 +712,45 @@ export default function MapPage() {
               <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
                 Search Services
               </h1>
-              {hasActiveSearchOrFilters ? (
-                <button
-                  type="button"
-                  onClick={handleClearAll}
-                  className="ml-auto shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-3 md:flex-none">
+                {/* List / Map switch for screens too narrow to show both (hidden from xl up, where they sit side by side).
+                    Full-width on a phone, compact beside the title from md up. */}
+                <div
+                  role="group"
+                  aria-label="View"
+                  className="flex min-w-0 flex-1 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm md:flex-none xl:hidden"
                 >
-                  Clear All
-                </button>
-              ) : null}
+                  {(
+                    [
+                      { view: "list", label: "List", Icon: List },
+                      { view: "map", label: "Map", Icon: MapPin },
+                    ] as const
+                  ).map(({ view, label, Icon }) => (
+                    <button
+                      key={view}
+                      type="button"
+                      onClick={() => setNarrowView(view)}
+                      aria-pressed={narrowView === view}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer md:flex-none ${
+                        narrowView === view ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      }`}
+                    >
+                      <Icon size={16} aria-hidden="true" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {hasActiveSearchOrFilters ? (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
@@ -851,7 +884,14 @@ export default function MapPage() {
               isDescriptionView ? "z-[35]" : "z-0"
             }`}
           >
-            <div className="flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            {/* Below xl the list and the map are stacked on top of each other and the inactive one is made invisible rather
+                than display:none. That keeps both laid out at their real size, so the map still fits its pins and the
+                list keeps its scroll position when the user switches back and forth. */}
+            <div
+              className={`flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
+                narrowView === "map" ? "max-xl:invisible" : ""
+              }`}
+            >
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
                 <p className="min-w-0 truncate text-sm text-slate-500">
                   Showing {sortedFilteredServices.length} of {services.length}
@@ -1002,11 +1042,16 @@ export default function MapPage() {
               </div>
             </div>
 
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] xl:h-full">
+            <div
+              className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-xl:absolute max-xl:inset-0 xl:h-full ${
+                narrowView === "list" ? "max-xl:invisible" : ""
+              }`}
+            >
 
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (
-                  <div className="fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
+                  // `visible` because this panel is invisible while the list is showing, and the details open from the list too.
+                  <div className="visible fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
                     <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
                       <div className="border-b border-slate-200 pb-4">
                         <div className="flex flex-wrap justify-end gap-2">
@@ -1034,7 +1079,7 @@ export default function MapPage() {
                             }}
                             className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer"
                           >
-                            <span className="xl:hidden">Back To List</span>
+                            <span className="xl:hidden">{narrowView === "map" ? "Back To Map" : "Back To List"}</span>
                             <span className="hidden xl:inline">Back To Map</span>
                           </button>
                         </div>
@@ -1213,7 +1258,7 @@ export default function MapPage() {
 
                 <div className={isDescriptionView ? "hidden" : "flex-1 min-h-0 px-0 py-0"}>
                   <div className="mx-auto flex h-full max-w-3xl min-h-0 flex-col justify-center px-0 py-0">
-                    <div className="relative h-[90%] w-full overflow-hidden rounded-[10px] border border-slate-200 bg-slate-50 shadow-sm">
+                    <div className="relative h-full w-full overflow-hidden xl:h-[90%] rounded-[10px] border border-slate-200 bg-slate-50 shadow-sm">
                       <div ref={mapContainerRef} className="absolute inset-0 w-full" />
 
                       {!loading && !error && !filteredServices.some((service) => providerCoordinates[getProviderRecordId(service)]) ? (
