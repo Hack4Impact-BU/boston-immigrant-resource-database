@@ -14,8 +14,12 @@ const signedInRedirectPaths = new Set([
   '/sign-up',
 ])
 
+// Pages anyone can open: signed out, signed in, and whatever their access status. (/qr is the full-screen QR code
+// that is shown when presenting BIRD.)
+const openToEveryonePaths = new Set(['/', '/qr'])
+
 const signedOutPublicPagePaths = new Set([
-  '/',
+  ...openToEveryonePaths,
   ...signedInRedirectPaths,
 ])
 
@@ -61,7 +65,7 @@ export default clerkMiddleware(async (auth, request) => {
   console.log(accessStatus)
 
   if (accessStatus !== 'approved') {
-    if (pathname === '/') {
+    if (openToEveryonePaths.has(pathname)) {
       return
     }
 
