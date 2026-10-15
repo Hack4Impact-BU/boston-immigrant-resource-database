@@ -766,7 +766,7 @@ export default function MapPage() {
                 <ViewToggle
                   value={narrowView}
                   onChange={setNarrowView}
-                  className="hidden min-w-0 flex-1 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:flex md:flex-none xl:hidden"
+                  className="hidden min-w-0 flex-1 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm sm:flex md:flex-none xl:hidden"
                 />
 
                 {hasActiveSearchOrFilters ? (
@@ -808,7 +808,7 @@ export default function MapPage() {
                   value={narrowView}
                   onChange={setNarrowView}
                   iconOnly
-                  className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:hidden"
+                  className="flex shrink-0 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm sm:hidden"
                 />
               </div>
 
@@ -937,7 +937,7 @@ export default function MapPage() {
                 than display:none. That keeps both laid out at their real size, so the map still fits its pins and the
                 list keeps its scroll position when the user switches back and forth. */}
             <div
-              className={`flex min-h-0 min-w-0 flex-col rounded-2xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
+              className={`flex min-h-0 min-w-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
                 narrowView === "map" ? "max-xl:invisible" : ""
               }`}
             >
