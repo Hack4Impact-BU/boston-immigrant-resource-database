@@ -752,7 +752,8 @@ export default function MapPage() {
       <Sidebar isOpen={true} activePage="Search Services" />
 
       <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-2 py-2 text-slate-800 [--mobile-header-offset:4rem] sm:px-3">
-        <section className="mx-auto flex h-[calc(100dvh-4.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden rounded-[28px] bg-[#f8fafc] px-3 py-3 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
+        {/* Layout only (the page's height and maximum width). It has no background, border or corners of its own. */}
+        <section className="mx-auto flex h-[calc(100dvh-4.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-2 border-slate-200 sm:space-y-3 sm:border-b sm:pb-3">
             <div className="hidden items-center justify-between gap-2 sm:flex">
               <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
@@ -936,7 +937,7 @@ export default function MapPage() {
                 than display:none. That keeps both laid out at their real size, so the map still fits its pins and the
                 list keeps its scroll position when the user switches back and forth. */}
             <div
-              className={`flex min-h-0 min-w-0 flex-col rounded-[24px] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
+              className={`flex min-h-0 min-w-0 flex-col rounded-2xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
                 narrowView === "map" ? "max-xl:invisible" : ""
               }`}
             >
@@ -998,7 +999,7 @@ export default function MapPage() {
                 </div>
               </div>
 
-              <div className="h-full space-y-2 overflow-y-auto pr-2">
+              <div className="h-full space-y-2 overflow-y-auto rounded-b-2xl pr-2">
                 {loading ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
                     <LoaderCircle className="h-4 w-4 animate-spin text-sky-600" />
@@ -1092,7 +1093,7 @@ export default function MapPage() {
             </div>
 
             <div
-              className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-xl:absolute max-xl:inset-0 xl:h-full ${
+              className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-xl:absolute max-xl:inset-0 xl:h-full ${
                 narrowView === "list" ? "max-xl:invisible" : ""
               }`}
             >
