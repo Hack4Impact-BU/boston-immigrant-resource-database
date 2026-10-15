@@ -132,6 +132,7 @@ function buildProviderPopup(
   services: ServiceWithProvider[],
   onSelectService: (serviceId: string) => void,
   maxHeight: number,
+  width: number,
 ): HTMLElement {
   const summary = provider
     ? buildProviderSummaryBase(provider)
@@ -160,7 +161,7 @@ function buildProviderPopup(
   // Long lists (many services) scroll inside the pop-up instead of growing past the map.
   const scroller = createPopupElement("div", `max-height:${maxHeight}px;overflow-y:auto;`);
   scroller.append(summary);
-  const content = createPopupElement("div", "width:280px;max-width:100%;");
+  const content = createPopupElement("div", `width:${width}px;max-width:100%;`);
   content.append(scroller);
   return content;
 }
@@ -520,8 +521,11 @@ export default function MapPage() {
               // Sized to the map as it is when the pop-up opens: the content box plus Leaflet's padding and arrow (about 60px)
               // must fit inside the map, which is shorter than the window because the search and filters sit above it.
               Math.min(480, Math.max(160, map.getSize().y - 64)),
+              // 280px wide where there's room. On a narrow phone the pop-up shrinks to fit inside the map: Leaflet adds about
+              // 47px of its own padding around the content, plus a few pixels it keeps clear of the map's edge.
+              Math.max(200, Math.min(280, map.getSize().x - 58)),
             ),
-          { minWidth: 280, maxWidth: 300 },
+          { minWidth: 200, maxWidth: 300 },
         );
 
         markerLayer.addLayer(marker);
@@ -705,9 +709,9 @@ export default function MapPage() {
     <div className="flex min-h-dvh items-stretch bg-slate-100 p-0 m-0">
       <Sidebar isOpen={true} activePage="Search Services" />
 
-      <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-3 py-2 text-slate-800">
-        <section className="mx-auto flex h-[calc(100dvh-1rem-4.5rem)] w-full max-w-400 flex-col gap-3 overflow-hidden rounded-[28px] bg-[#f8fafc] px-4 py-4 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] md:h-[calc(100dvh-1rem)]">
-          <div className="relative z-30 space-y-3 border-b border-slate-200 pb-3">
+      <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-2 py-2 text-slate-800 [--mobile-header-offset:4rem] sm:px-3">
+        <section className="mx-auto flex h-[calc(100dvh-4.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden rounded-[28px] bg-[#f8fafc] px-3 py-3 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
+          <div className="relative z-30 space-y-2 border-b border-slate-200 pb-2 sm:space-y-3 sm:pb-3">
             <div className="flex items-center justify-between gap-2">
               <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
                 Search Services
@@ -753,7 +757,7 @@ export default function MapPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+            <div className="flex flex-col gap-2 sm:gap-3 xl:flex-row xl:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 xl:max-w-[560px]">
                 <Search size={16} className="shrink-0 text-slate-400" />
                 <input
@@ -774,7 +778,7 @@ export default function MapPage() {
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-2 xl:justify-end">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 xl:justify-end">
                 {filterButtons.map((filter) => {
                   const isOpen = openFilterMenu === filter.key;
                   const selectedCount = filter.value.length;
@@ -794,7 +798,7 @@ export default function MapPage() {
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3.5 sm:text-sm ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3.5 sm:text-sm ${
                           selectedCount === 0
                             ? "border-[#a8d0e6] bg-white text-slate-700"
                             : "border-sky-200 bg-[#f7fbff] text-sky-800"
@@ -892,7 +896,7 @@ export default function MapPage() {
                 narrowView === "map" ? "max-xl:invisible" : ""
               }`}
             >
-              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3">
                 <p className="min-w-0 truncate text-sm text-slate-500">
                   Showing {sortedFilteredServices.length} of {services.length}
                 </p>
@@ -987,7 +991,7 @@ export default function MapPage() {
                           setSelectedServiceId(service.id);
                           setPanelView("description");
                         }}
-                        className={`flex min-h-32 w-full border bg-white p-4 pb-3 text-left shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${
+                        className={`flex min-h-32 w-full border bg-white p-3 pb-2.5 text-left shadow-sm sm:p-4 sm:pb-3 transition-all duration-200 hover:shadow-md cursor-pointer ${
                           isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
                         }`}
                       >

@@ -170,12 +170,14 @@ body {
    collapse to zero here. A fixed mobile header bar (hamburger + logo)
    replaces it instead, so the same elements also need top padding to clear
    that header rather than sitting underneath it. Centralized so it applies
-   everywhere without editing each page's own classes individually. */
+   everywhere without editing each page's own classes individually.
+   The header is 3.5rem tall, so the 4.5rem default leaves a 1rem gap under it. A page that wants a different gap
+   sets --mobile-header-offset on that same element (e.g. the [--mobile-header-offset:4rem] class). */
 @media (max-width: 767px), (max-height: 499px) {
   .ml-55,
   .ml-52,
   .ml-\[260px\] {
     margin-left: 0 !important;
-    padding-top: 4.5rem !important;
+    padding-top: var(--mobile-header-offset, 4.5rem) !important;
   }
 }
