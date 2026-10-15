@@ -166,6 +166,48 @@ function buildProviderPopup(
   return content;
 }
 
+type NarrowView = "list" | "map";
+
+// The List / Map switch for screens too narrow to show both side by side. The labelled version is used from sm up. Phones get
+// an icon-only version so that it can share a row with the search box.
+function ViewToggle({
+  value,
+  onChange,
+  iconOnly = false,
+  className,
+}: {
+  value: NarrowView;
+  onChange: (view: NarrowView) => void;
+  iconOnly?: boolean;
+  className: string;
+}) {
+  return (
+    <div role="group" aria-label="View" className={className}>
+      {(
+        [
+          { view: "list", label: "List", Icon: List },
+          { view: "map", label: "Map", Icon: MapPin },
+        ] as const
+      ).map(({ view, label, Icon }) => (
+        <button
+          key={view}
+          type="button"
+          onClick={() => onChange(view)}
+          aria-pressed={value === view}
+          aria-label={iconOnly ? `${label} view` : undefined}
+          title={iconOnly ? `${label} view` : undefined}
+          className={`flex flex-1 items-center justify-center rounded-md transition-colors cursor-pointer md:flex-none ${
+            iconOnly ? "px-3 py-2" : "gap-1.5 px-4 py-2 text-sm font-medium"
+          } ${value === view ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+        >
+          <Icon size={16} aria-hidden="true" />
+          {iconOnly ? null : label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function MapPage() {
   const [search, setSearch] = useState("");
   const [providerFilter, setProviderFilter] = useState<string[]>([]);
@@ -711,39 +753,20 @@ export default function MapPage() {
 
       <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-2 py-2 text-slate-800 [--mobile-header-offset:4rem] sm:px-3">
         <section className="mx-auto flex h-[calc(100dvh-4.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden rounded-[28px] bg-[#f8fafc] px-3 py-3 shadow-[0_0_0_1px_rgba(229,231,235,0.9)] sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
-          <div className="relative z-30 space-y-2 border-b border-slate-200 pb-2 sm:space-y-3 sm:pb-3">
-            <div className="flex items-center justify-between gap-2">
+          <div className="relative z-30 space-y-2 border-slate-200 sm:space-y-3 sm:border-b sm:pb-3">
+            <div className="hidden items-center justify-between gap-2 sm:flex">
               <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
                 Search Services
               </h1>
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3 md:flex-none">
                 {/* List / Map switch for screens too narrow to show both (hidden from xl up, where they sit side by side).
-                    Full-width on a phone, compact beside the title from md up. */}
-                <div
-                  role="group"
-                  aria-label="View"
-                  className="flex min-w-0 flex-1 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm md:flex-none xl:hidden"
-                >
-                  {(
-                    [
-                      { view: "list", label: "List", Icon: List },
-                      { view: "map", label: "Map", Icon: MapPin },
-                    ] as const
-                  ).map(({ view, label, Icon }) => (
-                    <button
-                      key={view}
-                      type="button"
-                      onClick={() => setNarrowView(view)}
-                      aria-pressed={narrowView === view}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer md:flex-none ${
-                        narrowView === view ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                      }`}
-                    >
-                      <Icon size={16} aria-hidden="true" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                    Full-width below md, compact beside the title from md up. On a phone this row is hidden and an icon-only
+                    switch sits next to the search box instead. */}
+                <ViewToggle
+                  value={narrowView}
+                  onChange={setNarrowView}
+                  className="hidden min-w-0 flex-1 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:flex md:flex-none xl:hidden"
+                />
 
                 {hasActiveSearchOrFilters ? (
                   <button
@@ -758,24 +781,34 @@ export default function MapPage() {
             </div>
 
             <div className="flex flex-col gap-2 sm:gap-3 xl:flex-row xl:items-center">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 xl:max-w-[560px]">
-                <Search size={16} className="shrink-0 text-slate-400" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search services by name or keywords"
-                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+              {/* On a phone the List / Map switch shares a row with the search box, to its right. From sm up this wrapper is
+                  display: contents, so the search box is laid out exactly as it always was. */}
+              <div className="flex items-stretch gap-2 sm:contents">
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 xl:max-w-[560px]">
+                  <Search size={16} className="shrink-0 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search services by name or keywords"
+                    className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 max-sm:text-ellipsis"
+                  />
+                  {search ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                </div>
+                <ViewToggle
+                  value={narrowView}
+                  onChange={setNarrowView}
+                  iconOnly
+                  className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:hidden"
                 />
-                {search ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearch("")}
-                    className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                    aria-label="Clear search"
-                  >
-                    <X size={14} />
-                  </button>
-                ) : null}
               </div>
 
               <div className="flex flex-wrap gap-1.5 sm:gap-2 xl:justify-end">
@@ -879,6 +912,17 @@ export default function MapPage() {
                     </div>
                   );
                 })}
+
+                {/* Phones only: Clear All lives here because the row it normally sits in is hidden on a phone. */}
+                {hasActiveSearchOrFilters ? (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="ml-auto shrink-0 self-center text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer sm:hidden"
+                  >
+                    Clear All
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
