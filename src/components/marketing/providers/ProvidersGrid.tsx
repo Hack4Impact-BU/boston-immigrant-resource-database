@@ -50,8 +50,8 @@ function FilterDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
-          selected.length === 0 ? "border-slate-200 bg-white text-slate-700" : "border-sky-200 bg-sky-50 text-sky-800"
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3.5 sm:text-sm ${
+          selected.length === 0 ? "border-[#a8d0e6] bg-white text-slate-700" : "border-sky-200 bg-sky-50 text-sky-800"
         }`}
       >
         <span className="truncate">{buttonLabel}</span>
@@ -322,14 +322,16 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         ) : null}
       </div>
 
-      <div className="relative mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm sm:max-w-md">
+      {/* On a phone: search box and the icon-only view switch share the first row, and the filters sit on the row below
+          (the DOM order is search, filters, switch, so `order` rearranges it). From sm up it is one row, in DOM order. */}
+      <div className="relative mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 sm:flex sm:items-center sm:gap-3">
+        <div className="order-1 flex min-w-0 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:order-none sm:max-w-md sm:flex-1 sm:px-3.5">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             placeholder="Search by name, address, service type, or description"
-            className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 max-sm:text-ellipsis"
           />
           {searchText ? (
             <button
@@ -343,7 +345,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="order-3 col-span-2 flex flex-wrap gap-1.5 sm:order-none sm:col-auto sm:gap-2">
           <FilterDropdown
             label="Languages"
             options={languageOptions}
@@ -363,12 +365,12 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           />
         </div>
 
-        {/* One control for how the results are shown. On a phone it's a full-width, labeled row of large buttons;
-            from sm up it shrinks to compact icon-only buttons at the right (the labels stay for screen readers). */}
+        {/* One control for how the results are shown. Icon-only at every size (the labels are in aria-label/title). On a phone it
+            sits to the right of the search box; from sm up it sits at the right end of the row. */}
         <div
           role="group"
           aria-label="View"
-          className="flex w-full items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:ml-auto sm:inline-flex sm:w-auto sm:shrink-0"
+          className="order-2 flex shrink-0 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm sm:order-none sm:ml-auto"
         >
           {(
             [
@@ -385,12 +387,11 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
               aria-label={`${label} view`}
               title={`${label} view`}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer sm:flex-none sm:p-2",
+                "flex items-center justify-center rounded-md px-3 py-2 transition-colors cursor-pointer sm:p-2",
                 viewMode === mode ? "bg-sky-50 text-sky-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
               )}
             >
               <Icon size={16} aria-hidden="true" />
-              <span className="sm:sr-only">{label}</span>
             </button>
           ))}
         </div>
@@ -398,13 +399,19 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
 
       {viewMode === "map" ? (
         // The map takes the place of the cards; the search and filters above stay live and drive the pins.
-        <div className="mt-6">
+        <div className="mt-3 sm:mt-6">
           <ProvidersMap providers={filteredProviders} />
         </div>
       ) : (
         // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
         // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
-        <div className={viewMode === "grid" ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" : "mt-6 grid grid-cols-1 gap-3"}>
+        <div
+          className={
+            viewMode === "grid"
+              ? "mt-3 grid grid-cols-1 gap-2 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
+              : "mt-3 grid grid-cols-1 gap-2 sm:mt-6 sm:gap-3"
+          }
+        >
           {filteredProviders.map((provider) =>
             viewMode === "grid" ? (
               <ProviderCard key={provider.id} provider={provider} />

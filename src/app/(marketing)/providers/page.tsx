@@ -6,6 +6,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import ProvidersGrid from "@/components/marketing/providers/ProvidersGrid";
 import { getAllProviders } from "@/app/api/airtable";
 import { getUserRole } from "@/lib/airtable";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function ProvidersPage() {
     <div className="flex min-h-screen items-stretch bg-slate-100">
       <Sidebar isOpen={true} activePage="Providers" />
 
-      <main className="ml-55 flex-1 px-6 py-8">
+      <main className="ml-55 flex-1 px-2 py-2 [--mobile-header-offset:4rem] sm:px-6 sm:py-8">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between">
             <h1 className="hidden text-2xl font-semibold tracking-tight text-slate-900 md:block">Providers</h1>
@@ -33,7 +34,9 @@ export default async function ProvidersPage() {
             ) : null}
           </div>
 
-          <div className="mt-4">
+          {/* Below md the title is hidden, so for anyone but an admin (who still sees the Add Provider button) the row above is empty
+              and gets no space under it. */}
+          <div className={cn("md:mt-4", userRole === "Admin" ? "mt-2" : "mt-0")}>
             <ProvidersGrid providers={sortedProviders} />
           </div>
         </div>
