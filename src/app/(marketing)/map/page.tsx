@@ -1035,7 +1035,7 @@ export default function MapPage() {
                           setSelectedServiceId(service.id);
                           setPanelView("description");
                         }}
-                        className={`flex min-h-32 w-full border bg-white p-3 pb-2.5 text-left shadow-sm sm:p-4 sm:pb-3 transition-all duration-200 hover:shadow-md cursor-pointer ${
+                        className={`flex w-full border bg-white p-3 pb-2.5 text-left shadow-sm sm:min-h-32 sm:p-4 sm:pb-3 transition-all duration-200 hover:shadow-md cursor-pointer ${
                           isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
                         }`}
                       >
@@ -1069,8 +1069,9 @@ export default function MapPage() {
                             </div>
 
                             {/* The "Updated…" text sits at the card's bottom-right, on the languages line when it fits there and on its
-                                own right-aligned line when it doesn't. mt-auto + pt-3 keeps it at the bottom of a taller card. */}
-                            <div className="mt-auto pt-3 text-[0.72rem] text-slate-500">
+                                own right-aligned line when it doesn't. mt-auto keeps it at the bottom of a taller card (from sm up, where cards
+                                have a minimum height); on a phone cards are exactly as tall as their content. */}
+                            <div className="mt-auto pt-1.5 text-[0.72rem] text-slate-500 sm:pt-3">
                               <p className="truncate">
                                 {location}
                               </p>
