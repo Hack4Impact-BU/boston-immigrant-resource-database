@@ -19,7 +19,9 @@ export default async function ProvidersPage() {
     <div className="flex min-h-screen items-stretch bg-slate-100">
       <Sidebar isOpen={true} activePage="Providers" />
 
-      <main className="ml-55 flex-1 px-2 py-2 [--mobile-header-offset:4rem] sm:px-6 sm:py-8">
+      {/* Phones (below sm) get a 16px margin on every side. The gap under the fixed header is the shared 4.5rem offset, which is 16px
+          below the 3.5rem header, so it needs no override there. From sm up the layout is as it was. */}
+      <main className="ml-55 flex-1 px-4 pb-4 sm:px-6 sm:py-8 sm:[--mobile-header-offset:4rem]">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between">
             <h1 className="hidden text-2xl font-semibold tracking-tight text-slate-900 md:block">Providers</h1>

@@ -104,8 +104,8 @@ function buildProviderSummary(provider: Provider): HTMLElement {
 
 // Providers that share a location (e.g. several organizations in one building) would otherwise be pins stacked
 // exactly on top of each other, hiding all but one. They share a single pin whose popup lists each of them.
-function buildPopupContent(group: Provider[]): HTMLElement {
-  const content = createElement("div", "width:280px;max-width:100%;");
+function buildPopupContent(group: Provider[], width: number): HTMLElement {
+  const content = createElement("div", `width:${width}px;max-width:100%;`);
 
   if (group.length > 1) {
     content.append(createElement("div", "margin-bottom:8px;font-family:Arial, sans-serif;font-size:11px;font-weight:700;color:#64748b;", `${group.length} organizations at this location`));
@@ -287,7 +287,12 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
         alt: names,
       });
 
-      marker.bindPopup(buildPopupContent(group.providers), { minWidth: 280, maxWidth: 300 });
+      marker.bindPopup(
+        // Built when the pop-up opens, so it can follow the map's width: 280px where there's room, narrower on a small phone.
+        // (Leaflet adds about 47px of its own padding around the content, plus a few pixels it keeps clear of the map's edge.)
+        () => buildPopupContent(group.providers, Math.max(200, Math.min(280, map.getSize().x - 58))),
+        { minWidth: 200, maxWidth: 300 },
+      );
       layer.addLayer(marker);
     }
 
