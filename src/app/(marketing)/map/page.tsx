@@ -1114,7 +1114,7 @@ export default function MapPage() {
                             href={`mailto:${selectedService.provider_email}`}
                             className="inline-flex items-center justify-center rounded-md bg-[#4c8cc9] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3d77b6]"
                           >
-                            Contact
+                            Email
                           </a>
                           {selectedService?.link ? 
                           <a
