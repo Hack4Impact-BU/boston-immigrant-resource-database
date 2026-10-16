@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icon.png',
     shortcut: '/icon.png',
+    // What iOS uses for "Add to Home Screen" (it ignores the manifest's icons).
+    apple: '/icons/pwa/apple-touch-icon.png',
   },
 };
 
