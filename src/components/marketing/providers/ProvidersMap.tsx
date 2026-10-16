@@ -104,17 +104,17 @@ function buildProviderSummary(provider: Provider): HTMLElement {
 
 // Providers that share a location (e.g. several organizations in one building) would otherwise be pins stacked
 // exactly on top of each other, hiding all but one. They share a single pin whose popup lists each of them.
-function buildPopupContent(group: Provider[], width: number): HTMLElement {
+function buildPopupContent(group: Provider[], width: number, maxHeight: number): HTMLElement {
   const content = createElement("div", `width:${width}px;max-width:100%;`);
 
   if (group.length > 1) {
     content.append(createElement("div", "margin-bottom:8px;font-family:Arial, sans-serif;font-size:11px;font-weight:700;color:#64748b;", `${group.length} organizations at this location`));
   }
 
-  // Content taller than this scrolls inside the pop-up. It scales with the screen (so a provider with a long description,
-  // contact details and many service types isn't cut off before its "View full profile" link) but never drops below 300px,
-  // and 60vh keeps the pop-up comfortably inside the map, which is at least 70vh tall.
-  const list = createElement("div", "max-height:clamp(300px,60vh,480px);overflow-y:auto;");
+  // Content taller than this scrolls inside the pop-up. The cap follows the map's height when the pop-up opens (see where it is
+  // bound), so a provider with a long description, contact details and many service types isn't cut off before its
+  // "View full profile" link, and the pop-up never outgrows the map.
+  const list = createElement("div", `max-height:${maxHeight}px;overflow-y:auto;`);
   group.forEach((provider, index) => {
     const summary = buildProviderSummary(provider);
     if (index > 0) {
@@ -290,7 +290,13 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
       marker.bindPopup(
         // Built when the pop-up opens, so it can follow the map's width: 280px where there's room, narrower on a small phone.
         // (Leaflet adds about 47px of its own padding around the content, plus a few pixels it keeps clear of the map's edge.)
-        () => buildPopupContent(group.providers, Math.max(200, Math.min(280, map.getSize().x - 58))),
+        // Its height is capped the same way: the content box plus Leaflet's padding and arrow (about 60px) must fit inside the map.
+        () =>
+          buildPopupContent(
+            group.providers,
+            Math.max(200, Math.min(280, map.getSize().x - 58)),
+            Math.min(480, Math.max(160, map.getSize().y - 64)),
+          ),
         { minWidth: 200, maxWidth: 300 },
       );
       layer.addLayer(marker);
@@ -329,7 +335,7 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
 
   return (
     // `isolate` keeps Leaflet's internal z-indexes (up to 1000) inside the map, so the filter drop-downs above it always stay on top.
-    <div className="relative isolate h-[70vh] min-h-[420px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+    <div className="relative isolate h-full min-h-[420px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
       <div ref={containerRef} className="h-full w-full" role="region" aria-label="Map of organizations" />
 
       {message ? (

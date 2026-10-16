@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "lucide-react";
 
@@ -241,6 +241,13 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({ languages: [], serviceTypes: [] });
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // The results scroll inside their own area (the controls above stay put), so when the search, a filter or the view changes,
+  // start again from the top of the new results instead of wherever the old list happened to be scrolled to.
+  useEffect(() => {
+    scrollAreaRef.current?.scrollTo({ top: 0 });
+  }, [searchText, activeFilters, viewMode]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -304,8 +311,8 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         <p className="text-sm text-slate-600">
           {hasActiveSearchOrFilters
             ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
@@ -324,7 +331,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
 
       {/* On a phone: search box and the icon-only view switch share the first row, and the filters sit on the row below
           (the DOM order is search, filters, switch, so `order` rearranges it). From sm up it is one row, in DOM order. */}
-      <div className="relative mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 sm:flex sm:items-center sm:gap-3">
+      <div className="relative z-30 mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 sm:flex sm:items-center sm:gap-3">
         <div className="order-1 flex min-w-0 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:order-none sm:max-w-md sm:flex-1 sm:px-3.5">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input
@@ -397,30 +404,51 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         </div>
       </div>
 
-      {viewMode === "map" ? (
-        // The map takes the place of the cards; the search and filters above stay live and drive the pins.
-        <div className="mt-3 sm:mt-6">
-          <ProvidersMap providers={filteredProviders} />
-        </div>
-      ) : (
-        // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
-        // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
-        <div
-          className={
-            viewMode === "grid"
-              ? "mt-3 grid grid-cols-1 gap-2 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
-              : "mt-3 grid grid-cols-1 gap-2 sm:mt-6 sm:gap-3"
-          }
-        >
-          {filteredProviders.map((provider) =>
-            viewMode === "grid" ? (
-              <ProviderCard key={provider.id} provider={provider} />
-            ) : (
-              <ProviderRow key={provider.id} provider={provider} />
-            ),
-          )}
-        </div>
-      )}
+      {/* The only part that scrolls. For the cards it is a bordered white panel (the same look as the list panel on Search Services), so
+          cards scrolling out of the top read as going behind a window edge, not as being cut off. The padding gives the cards' shadows
+          room, and starts the panel where the first card used to start (mt-3 and sm:mt-6 are the gaps the list had before). The map
+          has its own outline, so it only gets a small margin. A scrolling box clips everything inside it to its rounded corners.
+          `relative` matters: without it, absolutely positioned content inside (like the sr-only "Phone:" and "Email:" labels in the
+          list rows) isn't clipped by this box and stretches the whole page's scrollable area instead. */}
+      <div
+        ref={scrollAreaRef}
+        className={cn(
+          "relative min-h-0 flex-1 overflow-y-auto",
+          viewMode === "map"
+            ? "-mx-1 mt-2 px-1 py-1 sm:mt-5"
+            : "mt-3 rounded-2xl border border-slate-200 p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-6 sm:p-3",
+        )}
+      >
+        {viewMode === "map" ? (
+          // The map takes the place of the cards and fills the space; the search and filters above stay live and drive the pins.
+          <div className="h-full">
+            <ProvidersMap providers={filteredProviders} />
+          </div>
+        ) : filteredProviders.length === 0 ? (
+          // Without this the panel would just be an empty box.
+          <p className="px-2 py-8 text-center text-sm text-slate-500">
+            {providers.length === 0 ? "There are no organizations in the directory yet." : "No organizations match your search or filters."}
+          </p>
+        ) : (
+          // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
+          // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
+                : "grid grid-cols-1 gap-2 sm:gap-3"
+            }
+          >
+            {filteredProviders.map((provider) =>
+              viewMode === "grid" ? (
+                <ProviderCard key={provider.id} provider={provider} />
+              ) : (
+                <ProviderRow key={provider.id} provider={provider} />
+              ),
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
