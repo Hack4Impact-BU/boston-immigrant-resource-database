@@ -751,9 +751,14 @@ export default function MapPage() {
     <div className="flex min-h-dvh items-stretch bg-slate-100 p-0 m-0">
       <Sidebar isOpen={true} activePage="Search Services" />
 
-      <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-2 py-2 text-slate-800 [--mobile-header-offset:4rem] sm:px-3">
-        {/* Layout only (the page's height and maximum width). It has no background, border or corners of its own. */}
-        <section className="mx-auto flex h-[calc(100dvh-4.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
+      {/* Phones (below sm) get a 16px margin on every side. The gap under the fixed header is the shared 4.5rem offset (16px below the
+          3.5rem header), so it needs no override there; from sm up the margins are as they were. */}
+      <main className="ml-55 flex min-h-dvh flex-1 overflow-hidden bg-[#f2f4f7] px-4 pb-4 text-slate-800 sm:px-3 sm:py-2 sm:[--mobile-header-offset:4rem]">
+        {/* Layout only (the page's height and maximum width). It has no background, border or corners of its own.
+            The height is the screen minus whatever the page spends above and below the content: on a phone that's the 4.5rem
+            header offset plus 1rem of bottom padding (5.5rem), from sm up the 4rem offset plus 0.5rem (4.5rem), and from md
+            just the 1rem of padding. If those margins change, change this to match, or the page will scroll or leave a gap. */}
+        <section className="mx-auto flex h-[calc(100dvh-5.5rem)] w-full max-w-400 flex-col gap-2 overflow-hidden sm:h-[calc(100dvh-4.5rem)] sm:gap-3 sm:px-4 sm:py-4 md:h-[calc(100dvh-1rem)]">
           <div className="relative z-30 space-y-2 border-slate-200 sm:space-y-3 sm:border-b sm:pb-3">
             <div className="hidden items-center justify-between gap-2 sm:flex">
               <h1 className="hidden text-2xl font-semibold tracking-tight text-[#4c8cc9] md:block">
