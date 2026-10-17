@@ -404,9 +404,10 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         </div>
       </div>
 
-      {/* The only part that scrolls. For the cards it is a bordered white panel (the same look as the list panel on Search Services), so
-          cards scrolling out of the top read as going behind a window edge, not as being cut off. The padding gives the cards' shadows
-          room, and starts the panel where the first card used to start (mt-3 and sm:mt-6 are the gaps the list had before). The map
+      {/* The only part that scrolls. For the cards it is an outlined panel with no fill (a 1px border, plus a very soft shadow that only
+          shows outside the edge), so cards scrolling out of the top read as going behind a window edge, not as being cut off. The
+          padding gives the cards' shadows room, and starts the panel where the first card used to start (mt-3 and sm:mt-6 are the
+          gaps the list had before; the empty-state message below sits on the page's gray, so its text is slate-600). The map
           has its own outline, so it only gets a small margin. A scrolling box clips everything inside it to its rounded corners.
           `relative` matters: without it, absolutely positioned content inside (like the sr-only "Phone:" and "Email:" labels in the
           list rows) isn't clipped by this box and stretches the whole page's scrollable area instead. */}
@@ -426,7 +427,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           </div>
         ) : filteredProviders.length === 0 ? (
           // Without this the panel would just be an empty box.
-          <p className="px-2 py-8 text-center text-sm text-slate-500">
+          <p className="px-2 py-8 text-center text-sm text-slate-600">
             {providers.length === 0 ? "There are no organizations in the directory yet." : "No organizations match your search or filters."}
           </p>
         ) : (
