@@ -6,18 +6,15 @@ import { Globe, Mail, MapPin, Pencil, Phone, Plus } from "lucide-react";
 import Sidebar from "@/components/marketing/Sidebar";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
-import { getUserProviderId, getUserRole } from "@/lib/airtable";
+import { getTableSchema, getUserProviderId, getUserRole } from "@/lib/airtable";
+import { getReadableTextColor } from "@/lib/colors";
 import { formatRelativeUpdateDate } from "@/lib/dates";
 import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_STYLES: Record<string, string> = {
-  Open: "bg-green-100 text-green-800",
-  Waitlist: "bg-amber-100 text-amber-800",
-  "Contact Provider": "bg-emerald-100 text-emerald-800",
-  Full: "bg-rose-100 text-rose-800",
-};
+// What Search Services shows for a status that has no color in Airtable.
+const STATUS_FALLBACK_COLOR = "#cbd5e1";
 
 // Same look as the Email and Register buttons in Service Details on Search Services.
 const SERVICE_ACTION_BUTTON_CLASS =
@@ -48,10 +45,14 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
     notFound();
   }
 
-  const [allServices, ownerUserId] = await Promise.all([
+  const [allServices, ownerUserId, servicesSchema] = await Promise.all([
     getAllServices(),
     auth().then(({ userId }) => userId),
+    getTableSchema("Services"),
   ]);
+  // The colors Airtable has set for each Status option: the same source the Search Services page reads (through
+  // /api/service-status-colors), so a status looks the same in both places. Empty if Airtable can't be reached.
+  const statusColors = servicesSchema.find((field) => field.name === "Status")?.optionColors ?? {};
   const providerServices = allServices.filter(
     (service) => service.provider === provider.id || service.provider_record_ID === provider.id
   );
@@ -241,6 +242,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 const contactEmail = provider.email || service.provider_email;
                 const registerUrl = getHttpUrl(service.link);
                 const hasActions = Boolean(contactEmail || registerUrl || canEditThisProvider);
+                const statusColor = statusColors[service.status] || STATUS_FALLBACK_COLOR;
 
                 // A card with buttons is a two-column grid. Row 1 is the service's name, with its status and updated date on the line
                 // below, and the buttons at the top right on every screen size. Row 2 is the types and description: on a phone it runs
@@ -258,9 +260,8 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                       <h3 className="text-sm font-semibold text-slate-900">{service.name}</h3>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                            STATUS_STYLES[service.status] ?? "bg-slate-100 text-slate-700"
-                          }`}
+                          className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: statusColor, color: getReadableTextColor(statusColor) }}
                         >
                           {service.status}
                         </span>
