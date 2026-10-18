@@ -5,14 +5,18 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { getProviderContext, getServicesForCurrentProvider } from "@/features/services/manage/provider-context";
 import { ProviderPicker } from "@/components/services/ProviderPicker";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
+import { getTableSchema } from "@/lib/airtable";
+import { getReadableTextColor } from "@/lib/colors";
 import { formatRelativeUpdateDate } from "@/lib/dates";
 
-const STATUS_STYLES: Record<string, string> = {
-  Open: "bg-green-100 text-green-800",
-  Waitlist: "bg-amber-100 text-amber-800",
-  "Contact Provider": "bg-emerald-100 text-emerald-800",
-  Full: "bg-rose-100 text-rose-800",
-};
+// What Search Services shows for a status that has no color in Airtable.
+const STATUS_FALLBACK_COLOR = "#cbd5e1";
+
+// A status pill's colors: the one Airtable has set for that Status option (or the fallback) and text that is readable on it.
+function statusPillStyle(color: string | undefined) {
+  const backgroundColor = color || STATUS_FALLBACK_COLOR;
+  return { backgroundColor, color: getReadableTextColor(backgroundColor) };
+}
 
 export default async function ManageServicesPage() {
   const { userRole, linkedProvider, allProviders, serviceTypes, languages } = await getProviderContext();
@@ -36,7 +40,13 @@ export default async function ManageServicesPage() {
     );
   }
 
-  const services = await getServicesForCurrentProvider(linkedProvider?.id ?? null);
+  const [services, servicesSchema] = await Promise.all([
+    getServicesForCurrentProvider(linkedProvider?.id ?? null),
+    getTableSchema("Services"),
+  ]);
+  // The colors Airtable has set for each Status option: the same source the Search Services and Provider Details pages use, so a
+  // status looks the same everywhere. Empty if Airtable can't be reached.
+  const statusColors = servicesSchema.find((field) => field.name === "Status")?.optionColors ?? {};
 
   return (
     <div className="flex min-h-screen items-stretch bg-slate-100">
@@ -75,17 +85,16 @@ export default async function ManageServicesPage() {
                       className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm"
                     >
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h2 className="truncate text-sm font-semibold text-slate-900">{service.name}</h2>
+                        <h2 className="truncate text-sm font-semibold text-slate-900">{service.name}</h2>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span
-                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                              STATUS_STYLES[service.status] ?? "bg-slate-100 text-slate-700"
-                            }`}
+                            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={statusPillStyle(statusColors[service.status])}
                           >
                             {service.status}
                           </span>
+                          <p className="text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
                         </div>
-                        <p className="mt-1 text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
                         {service.service_types ? (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {service.service_types.split(", ").map((serviceType) => (
