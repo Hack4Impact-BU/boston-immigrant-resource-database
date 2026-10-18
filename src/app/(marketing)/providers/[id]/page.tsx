@@ -249,6 +249,10 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 // the full width of the card, and from sm up it stays in the left column, because the buttons then span both rows.
                 // (Row 2 is 1fr so that extra height from tall buttons, such as Edit and Delete under Email and Register, lands there
                 // and never opens a gap under the name.) Without buttons the card is just these blocks stacked, as it always was.
+                // Edit and Delete sit right under Email and Register on a phone. From sm up the buttons column is as tall as the card
+                // and the Edit/Delete row is pushed to the bottom of it (mt-auto), so it ends at the bottom right of the card, as far
+                // from Email and Register as the card allows. A card with no spare room keeps them just below, and with no Email or
+                // Register they are the whole column, so they sit at the bottom right too.
                 return (
                   <div
                     key={service.id}
@@ -292,7 +296,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                     ) : null}
 
                     {hasActions ? (
-                      <div className="col-start-2 row-start-1 flex shrink-0 flex-col items-end gap-2 self-start sm:row-span-2">
+                      <div className="col-start-2 row-start-1 flex shrink-0 flex-col items-end gap-2 self-start sm:row-span-2 sm:self-stretch">
                         {contactEmail || registerUrl ? (
                           <div className="flex justify-end gap-2">
                             {contactEmail ? (
@@ -318,7 +322,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                           </div>
                         ) : null}
                         {canEditThisProvider ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 sm:mt-auto">
                             <Link
                               href={`/services/manage/${service.id}/edit`}
                               className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
