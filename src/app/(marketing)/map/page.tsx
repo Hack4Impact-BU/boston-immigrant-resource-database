@@ -773,16 +773,6 @@ export default function MapPage() {
                   onChange={setNarrowView}
                   className="hidden min-w-0 flex-1 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm sm:flex md:flex-none xl:hidden"
                 />
-
-                {hasActiveSearchOrFilters ? (
-                  <button
-                    type="button"
-                    onClick={handleClearAll}
-                    className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
-                  >
-                    Clear All
-                  </button>
-                ) : null}
               </div>
             </div>
 
@@ -818,7 +808,7 @@ export default function MapPage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5 sm:gap-2 xl:justify-end">
-                {filterButtons.map((filter) => {
+                {filterButtons.map((filter, index) => {
                   const isOpen = openFilterMenu === filter.key;
                   const selectedCount = filter.value.length;
                   const buttonLabel =
@@ -832,7 +822,7 @@ export default function MapPage() {
                     ? filter.options.filter((option) => option.toLowerCase().includes(searchText.trim().toLowerCase()))
                     : filter.options;
 
-                  return (
+                  const chip = (
                     <div key={filter.key} className="min-w-0 sm:relative sm:z-50" data-filter-menu-root>
                       <button
                         type="button"
@@ -917,18 +907,28 @@ export default function MapPage() {
                       ) : null}
                     </div>
                   );
-                })}
 
-                {/* Phones only: Clear All lives here because the row it normally sits in is hidden on a phone. */}
-                {hasActiveSearchOrFilters ? (
-                  <button
-                    type="button"
-                    onClick={handleClearAll}
-                    className="ml-auto shrink-0 self-center text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer sm:hidden"
-                  >
-                    Clear All
-                  </button>
-                ) : null}
+                  // Clear All belongs to the right of the filters on every screen size, since it clears them (and the search). It goes
+                  // in a group with the last filter, so when the chips wrap onto another line the two wrap together and Clear All is
+                  // never left on a line of its own, away from them. The group is there whether or not Clear All is showing, so the
+                  // last filter isn't remounted (which would reset its open drop-down) when the button appears.
+                  return index === filterButtons.length - 1 ? (
+                    <div key={filter.key} className="flex items-center gap-1.5 sm:gap-2">
+                      {chip}
+                      {hasActiveSearchOrFilters ? (
+                        <button
+                          type="button"
+                          onClick={handleClearAll}
+                          className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+                        >
+                          Clear All
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    chip
+                  );
+                })}
               </div>
             </div>
           </div>
