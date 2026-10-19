@@ -80,9 +80,11 @@ export default async function ManageServicesPage() {
                   </div>
                 ) : (
                   services.map((service) => (
+                    // Edit and Delete sit at the bottom right of the card: beside the text on a wide screen, and in a footer row of
+                    // their own below it on a phone (a column, with the buttons self-end), the same as on the Provider Details page.
                     <div
                       key={service.id}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm"
+                      className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm sm:flex-row sm:justify-between sm:gap-4"
                     >
                       <div className="min-w-0">
                         <h2 className="truncate text-sm font-semibold text-slate-900">{service.name}</h2>
@@ -114,7 +116,7 @@ export default async function ManageServicesPage() {
                         ) : null}
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2 self-end">
                         <Link
                           href={`/services/manage/${service.id}/edit`}
                           className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
