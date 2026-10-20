@@ -935,7 +935,7 @@ export default function MapPage() {
                 than display:none. That keeps both laid out at their real size, so the map still fits its pins and the
                 list keeps its scroll position when the user switches back and forth. */}
             <div
-              className={`flex min-h-0 min-w-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
+              className={`flex min-h-0 min-w-0 flex-col rounded-2xl border border-[#a8d0e6] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] max-xl:absolute max-xl:inset-0 ${
                 narrowView === "map" ? "max-xl:invisible" : ""
               }`}
             >
@@ -1091,7 +1091,7 @@ export default function MapPage() {
             </div>
 
             <div
-              className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-xl:absolute max-xl:inset-0 xl:h-full ${
+              className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#a8d0e6] bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-xl:absolute max-xl:inset-0 xl:h-full ${
                 narrowView === "list" ? "max-xl:invisible" : ""
               }`}
             >

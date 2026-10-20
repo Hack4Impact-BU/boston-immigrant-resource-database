@@ -312,19 +312,11 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <p className="text-sm text-slate-600">
-          {hasActiveSearchOrFilters
-            ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
-            : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
-        </p>
-      </div>
-
       {/* Below lg: the search box and the icon-only view switch share the first row, and the filters (with Clear All) sit on the row
           below (the DOM order is search, filters, switch, so `order` rearranges it). From lg up it is one row, in DOM order. One row
           needs about 900px beside the sidebar, which is why it doesn't start any sooner: any narrower and the search box is squeezed
           to almost nothing, and more so when Clear All appears next to the filters. */}
-      <div className="relative z-30 mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 lg:flex lg:items-center lg:gap-3">
+      <div className="relative z-30 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 lg:flex lg:items-center lg:gap-3">
         <div className="order-1 flex min-w-0 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 lg:order-none lg:max-w-md lg:flex-1">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input
@@ -410,11 +402,19 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         </div>
       </div>
 
-      {/* The only part that scrolls. For the cards it is an outlined panel with no fill (a 1px border, plus a very soft shadow that only
-          shows outside the edge), so cards scrolling out of the top read as going behind a window edge, not as being cut off. The
-          padding gives the cards' shadows room, and starts the panel where the first card used to start (mt-3 and sm:mt-6 are the
-          gaps the list had before; the empty-state message below sits on the page's gray, so its text is slate-600). The map
-          has its own outline, so it only gets a small margin. A scrolling box clips everything inside it to its rounded corners.
+      {/* How many organizations are showing, just above the results (like the count on Search Services), so it reads as being about
+          the list below the search and filters. */}
+      <p className="mt-3 shrink-0 text-sm text-slate-600 sm:mt-4">
+        {hasActiveSearchOrFilters
+          ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
+          : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
+      </p>
+
+      {/* The only part that scrolls. For the cards it is an outlined panel with no fill (a 1px light-blue border, like the search box and
+          filters, plus a very soft shadow that only shows outside the edge), so cards scrolling out of the top read as going behind
+          a window edge, not as being cut off. The padding gives the cards' shadows room. The panel sits right under the count above
+          it (the empty-state message below sits on the page's gray, so its text is slate-600). The map has its own outline, so it
+          only gets a small margin. A scrolling box clips everything inside it to its rounded corners.
           `relative` matters: without it, absolutely positioned content inside (like the sr-only "Phone:" and "Email:" labels in the
           list rows) isn't clipped by this box and stretches the whole page's scrollable area instead. */}
       <div
@@ -422,8 +422,8 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         className={cn(
           "relative min-h-0 flex-1 overflow-y-auto",
           viewMode === "map"
-            ? "-mx-1 mt-2 px-1 py-1 sm:mt-5"
-            : "mt-3 rounded-2xl border border-slate-200 p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-6 sm:p-3",
+            ? "-mx-1 mt-0.5 px-1 py-1 sm:mt-1"
+            : "mt-1.5 rounded-2xl border border-[#a8d0e6] p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-2 sm:p-3",
         )}
       >
         {viewMode === "map" ? (

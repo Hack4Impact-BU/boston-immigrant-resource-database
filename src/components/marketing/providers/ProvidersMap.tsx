@@ -335,7 +335,7 @@ export default function ProvidersMap({ providers }: { providers: Provider[] }) {
 
   return (
     // `isolate` keeps Leaflet's internal z-indexes (up to 1000) inside the map, so the filter drop-downs above it always stay on top.
-    <div className="relative isolate h-full min-h-[420px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+    <div className="relative isolate h-full min-h-[420px] overflow-hidden rounded-2xl border border-[#a8d0e6] bg-slate-100 shadow-sm">
       <div ref={containerRef} className="h-full w-full" role="region" aria-label="Map of organizations" />
 
       {message ? (
