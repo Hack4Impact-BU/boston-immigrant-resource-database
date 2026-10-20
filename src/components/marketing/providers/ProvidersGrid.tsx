@@ -318,21 +318,14 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
             : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
         </p>
-        {hasActiveSearchOrFilters ? (
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="ml-auto text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
-          >
-            Clear All
-          </button>
-        ) : null}
       </div>
 
-      {/* On a phone: search box and the icon-only view switch share the first row, and the filters sit on the row below
-          (the DOM order is search, filters, switch, so `order` rearranges it). From sm up it is one row, in DOM order. */}
-      <div className="relative z-30 mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 sm:flex sm:items-center sm:gap-3">
-        <div className="order-1 flex min-w-0 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:order-none sm:max-w-md sm:flex-1 sm:px-3.5">
+      {/* Below lg: the search box and the icon-only view switch share the first row, and the filters (with Clear All) sit on the row
+          below (the DOM order is search, filters, switch, so `order` rearranges it). From lg up it is one row, in DOM order. One row
+          needs about 900px beside the sidebar, which is why it doesn't start any sooner: any narrower and the search box is squeezed
+          to almost nothing, and more so when Clear All appears next to the filters. */}
+      <div className="relative z-30 mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 sm:mt-4 lg:flex lg:items-center lg:gap-3">
+        <div className="order-1 flex min-w-0 items-center gap-2 rounded-lg border border-[#a8d0e6] bg-white px-3 py-2 shadow-sm sm:px-3.5 lg:order-none lg:max-w-md lg:flex-1">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input
             value={searchText}
@@ -352,7 +345,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           ) : null}
         </div>
 
-        <div className="order-3 col-span-2 flex flex-wrap gap-1.5 sm:order-none sm:col-auto sm:gap-2">
+        <div className="order-3 col-span-2 flex flex-wrap gap-1.5 sm:gap-2 lg:order-none lg:col-auto">
           <FilterDropdown
             label="Languages"
             options={languageOptions}
@@ -361,15 +354,30 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             isOpen={openFilterKey === "languages"}
             onToggle={() => setOpenFilterKey((current) => (current === "languages" ? null : "languages"))}
           />
-          <FilterDropdown
-            label="Service Types"
-            options={serviceTypeOptions}
-            selected={activeFilters.serviceTypes}
-            onChange={(values) => setActiveFilters((previous) => ({ ...previous, serviceTypes: values }))}
-            isOpen={openFilterKey === "serviceTypes"}
-            onToggle={() => setOpenFilterKey((current) => (current === "serviceTypes" ? null : "serviceTypes"))}
-            align="right"
-          />
+          {/* Clear All goes to the right of the filters on every screen size, since it clears them (and the search). It shares a group
+              with the last filter, so if the filters wrap the two wrap together and Clear All is never left on a line of its own. The
+              group is there whether or not Clear All is showing, so the filter isn't remounted (which would reset its open
+              drop-down) when the button appears. */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <FilterDropdown
+              label="Service Types"
+              options={serviceTypeOptions}
+              selected={activeFilters.serviceTypes}
+              onChange={(values) => setActiveFilters((previous) => ({ ...previous, serviceTypes: values }))}
+              isOpen={openFilterKey === "serviceTypes"}
+              onToggle={() => setOpenFilterKey((current) => (current === "serviceTypes" ? null : "serviceTypes"))}
+              align="right"
+            />
+            {hasActiveSearchOrFilters ? (
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+              >
+                Clear All
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {/* One control for how the results are shown. Icon-only at every size (the labels are in aria-label/title). On a phone it
@@ -377,7 +385,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
         <div
           role="group"
           aria-label="View"
-          className="order-2 flex shrink-0 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm sm:order-none sm:ml-auto"
+          className="order-2 flex shrink-0 items-center rounded-lg border border-[#a8d0e6] bg-white p-0.5 shadow-sm lg:order-none lg:ml-auto"
         >
           {(
             [
