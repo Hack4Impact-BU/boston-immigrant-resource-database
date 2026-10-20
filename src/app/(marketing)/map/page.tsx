@@ -807,8 +807,8 @@ export default function MapPage() {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-1.5 sm:gap-2 xl:justify-end">
-                {filterButtons.map((filter, index) => {
+              <div className="flex flex-wrap gap-1.5 self-start sm:gap-2 xl:self-auto xl:justify-end">
+                {filterButtons.map((filter) => {
                   const isOpen = openFilterMenu === filter.key;
                   const selectedCount = filter.value.length;
                   const buttonLabel =
@@ -822,7 +822,7 @@ export default function MapPage() {
                     ? filter.options.filter((option) => option.toLowerCase().includes(searchText.trim().toLowerCase()))
                     : filter.options;
 
-                  const chip = (
+                  return (
                     <div key={filter.key} className="min-w-0 sm:relative sm:z-50" data-filter-menu-root>
                       <button
                         type="button"
@@ -907,28 +907,21 @@ export default function MapPage() {
                       ) : null}
                     </div>
                   );
-
-                  // Clear All belongs to the right of the filters on every screen size, since it clears them (and the search). It goes
-                  // in a group with the last filter, so when the chips wrap onto another line the two wrap together and Clear All is
-                  // never left on a line of its own, away from them. The group is there whether or not Clear All is showing, so the
-                  // last filter isn't remounted (which would reset its open drop-down) when the button appears.
-                  return index === filterButtons.length - 1 ? (
-                    <div key={filter.key} className="flex items-center gap-1.5 sm:gap-2">
-                      {chip}
-                      {hasActiveSearchOrFilters ? (
-                        <button
-                          type="button"
-                          onClick={handleClearAll}
-                          className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
-                        >
-                          Clear All
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : (
-                    chip
-                  );
                 })}
+
+                {/* Clear All sits to the right of the filters on every screen size, since it clears them (and the search). It is pushed
+                    to the right (ml-auto) inside a row that is only as wide as its contents (self-start), so there is nothing to push
+                    into while everything fits on one line, and it sits right beside the last filter. When the row has to wrap, it is
+                    full width, and Clear All goes to the right edge, on a line of its own if the filters filled the last one. */}
+                {hasActiveSearchOrFilters ? (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="ml-auto shrink-0 self-center text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

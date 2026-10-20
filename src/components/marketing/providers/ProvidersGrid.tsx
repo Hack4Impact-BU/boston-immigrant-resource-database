@@ -345,7 +345,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           ) : null}
         </div>
 
-        <div className="order-3 col-span-2 flex flex-wrap gap-1.5 sm:gap-2 lg:order-none lg:col-auto">
+        <div className="order-3 col-span-2 flex flex-wrap gap-1.5 justify-self-start sm:gap-2 lg:order-none lg:col-auto">
           <FilterDropdown
             label="Languages"
             options={languageOptions}
@@ -354,30 +354,28 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             isOpen={openFilterKey === "languages"}
             onToggle={() => setOpenFilterKey((current) => (current === "languages" ? null : "languages"))}
           />
-          {/* Clear All goes to the right of the filters on every screen size, since it clears them (and the search). It shares a group
-              with the last filter, so if the filters wrap the two wrap together and Clear All is never left on a line of its own. The
-              group is there whether or not Clear All is showing, so the filter isn't remounted (which would reset its open
-              drop-down) when the button appears. */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <FilterDropdown
-              label="Service Types"
-              options={serviceTypeOptions}
-              selected={activeFilters.serviceTypes}
-              onChange={(values) => setActiveFilters((previous) => ({ ...previous, serviceTypes: values }))}
-              isOpen={openFilterKey === "serviceTypes"}
-              onToggle={() => setOpenFilterKey((current) => (current === "serviceTypes" ? null : "serviceTypes"))}
-              align="right"
-            />
-            {hasActiveSearchOrFilters ? (
-              <button
-                type="button"
-                onClick={handleClearAll}
-                className="shrink-0 text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
-              >
-                Clear All
-              </button>
-            ) : null}
-          </div>
+          <FilterDropdown
+            label="Service Types"
+            options={serviceTypeOptions}
+            selected={activeFilters.serviceTypes}
+            onChange={(values) => setActiveFilters((previous) => ({ ...previous, serviceTypes: values }))}
+            isOpen={openFilterKey === "serviceTypes"}
+            onToggle={() => setOpenFilterKey((current) => (current === "serviceTypes" ? null : "serviceTypes"))}
+            align="right"
+          />
+          {/* Clear All sits to the right of the filters on every screen size, since it clears them (and the search). It is pushed to
+              the right (ml-auto) inside a row that is only as wide as its contents (justify-self-start), so there is nothing to push
+              into while everything fits on one line, and it sits right beside the last filter. When the row has to wrap, it is full
+              width, and Clear All goes to the right edge, on a line of its own if the filters filled the last one. */}
+          {hasActiveSearchOrFilters ? (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="ml-auto shrink-0 self-center text-sm font-medium text-slate-500 underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700 cursor-pointer"
+            >
+              Clear All
+            </button>
+          ) : null}
         </div>
 
         {/* One control for how the results are shown. Icon-only at every size (the labels are in aria-label/title). On a phone it
