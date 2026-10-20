@@ -410,51 +410,59 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
       </p>
 
-      {/* The only part that scrolls. For the cards it is an outlined panel with no fill (a 1px light-blue border, like the search box and
-          filters, plus a very soft shadow that only shows outside the edge), so cards scrolling out of the top read as going behind
-          a window edge, not as being cut off. The padding gives the cards' shadows room. The panel sits right under the count above
-          it (the empty-state message below sits on the page's gray, so its text is slate-600). The map has its own outline, so it
-          only gets a small margin. A scrolling box clips everything inside it to its rounded corners.
-          `relative` matters: without it, absolutely positioned content inside (like the sr-only "Phone:" and "Email:" labels in the
-          list rows) isn't clipped by this box and stretches the whole page's scrollable area instead. */}
+      {/* The only part that scrolls, in a frame. For the cards the frame is an outlined panel with no fill (a 1px light-blue border, like
+          the search box and filters, plus a very soft shadow that only shows outside the edge), so cards scrolling out of the top
+          read as going behind a window edge, not as being cut off. The panel sits right under the count above it. The map has its
+          own outline, so its frame only gets a small margin.
+          The border and rounded corners are on the frame, not on the scrolling box inside it, on purpose: a browser draws a scroll
+          bar as a plain rectangle that isn't clipped to the rounded corners of the box it scrolls, so with the border on the
+          scrolling box the scroll bar covered the curve of the border at the top and bottom right. The frame has overflow-hidden,
+          which clips the scroll bar (and the cards) to the inner curve of the border.
+          `relative` on the scrolling box matters: without it, absolutely positioned content inside (like the sr-only "Phone:" and
+          "Email:" labels in the list rows) isn't clipped by it and stretches the whole page's scrollable area instead. The padding
+          gives the cards' shadows room. (The empty-state message sits on the page's gray, so its text is slate-600.) */}
       <div
-        ref={scrollAreaRef}
         className={cn(
-          "relative min-h-0 flex-1 overflow-y-auto",
+          "flex min-h-0 flex-1 flex-col",
           viewMode === "map"
-            ? "-mx-1 mt-0.5 px-1 py-1 sm:mt-1"
-            : "mt-1.5 rounded-2xl border border-[#a8d0e6] p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-2 sm:p-3",
+            ? "-mx-1 mt-0.5 sm:mt-1"
+            : "mt-1.5 overflow-hidden rounded-2xl border border-[#a8d0e6] shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-2",
         )}
       >
-        {viewMode === "map" ? (
-          // The map takes the place of the cards and fills the space; the search and filters above stay live and drive the pins.
-          <div className="h-full">
-            <ProvidersMap providers={filteredProviders} />
-          </div>
-        ) : filteredProviders.length === 0 ? (
-          // Without this the panel would just be an empty box.
-          <p className="px-2 py-8 text-center text-sm text-slate-600">
-            {providers.length === 0 ? "There are no organizations in the directory yet." : "No organizations match your search or filters."}
-          </p>
-        ) : (
-          // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
-          // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
-                : "grid grid-cols-1 gap-2 sm:gap-3"
-            }
-          >
-            {filteredProviders.map((provider) =>
-              viewMode === "grid" ? (
-                <ProviderCard key={provider.id} provider={provider} />
-              ) : (
-                <ProviderRow key={provider.id} provider={provider} />
-              ),
-            )}
-          </div>
-        )}
+        <div
+          ref={scrollAreaRef}
+          className={cn("relative min-h-0 flex-1 overflow-y-auto", viewMode === "map" ? "px-1 py-1" : "p-2 sm:p-3")}
+        >
+          {viewMode === "map" ? (
+            // The map takes the place of the cards and fills the space; the search and filters above stay live and drive the pins.
+            <div className="h-full">
+              <ProvidersMap providers={filteredProviders} />
+            </div>
+          ) : filteredProviders.length === 0 ? (
+            // Without this the panel would just be an empty box.
+            <p className="px-2 py-8 text-center text-sm text-slate-600">
+              {providers.length === 0 ? "There are no organizations in the directory yet." : "No organizations match your search or filters."}
+            </p>
+          ) : (
+            // The list is a one-column grid, not a flex column, on purpose: a grid's minmax(0, 1fr) track stops a row's
+            // non-wrapping content (such as a long languages line) from widening the whole page on a narrow phone.
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
+                  : "grid grid-cols-1 gap-2 sm:gap-3"
+              }
+            >
+              {filteredProviders.map((provider) =>
+                viewMode === "grid" ? (
+                  <ProviderCard key={provider.id} provider={provider} />
+                ) : (
+                  <ProviderRow key={provider.id} provider={provider} />
+                ),
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
