@@ -1304,21 +1304,27 @@ export default function MapPage() {
                   </div>
                 ) : null}
 
-                <div className={isDescriptionView ? "hidden" : "flex-1 min-h-0 px-0 py-0"}>
-                  <div className="mx-auto flex h-full max-w-3xl min-h-0 flex-col justify-center px-0 py-0">
-                    <div className="relative h-full w-full overflow-hidden xl:h-[90%] rounded-[10px] border border-slate-200 bg-slate-50 shadow-sm">
-                      <div ref={mapContainerRef} className="absolute inset-0 w-full" />
+                {/* The map fills the whole card, edge to edge, at every window size: the card's own border and rounded corners (it clips
+                    what is inside it) are the map's outline, so the map needs no frame, width limit or margin of its own. The one
+                    exception is Leaflet's credit line in the bottom-right corner, which it places flush against the corner, where
+                    the card's rounded corner would cut off its last letters, so it gets a small inset. */}
+                <div
+                  className={
+                    isDescriptionView
+                      ? "hidden"
+                      : "relative min-h-0 flex-1 bg-slate-50 [&_.leaflet-bottom.leaflet-right]:mb-1.5 [&_.leaflet-bottom.leaflet-right]:mr-1.5"
+                  }
+                >
+                  <div ref={mapContainerRef} className="absolute inset-0 w-full" />
 
-                      {!loading && !error && !filteredServices.some((service) => providerCoordinates[getProviderRecordId(service)]) ? (
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/70 px-6 text-center">
-                          <div className="max-w-sm rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-sm">
-                            The map is waiting for provider locations to resolve. If a location is missing,
-                            the service still appears in the list.
-                          </div>
-                        </div>
-                      ) : null}
+                  {!loading && !error && !filteredServices.some((service) => providerCoordinates[getProviderRecordId(service)]) ? (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/70 px-6 text-center">
+                      <div className="max-w-sm rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-sm">
+                        The map is waiting for provider locations to resolve. If a location is missing,
+                        the service still appears in the list.
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </div>
             </div>
