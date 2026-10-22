@@ -142,6 +142,9 @@ const PROVIDER_LINK_CLASSES =
   "flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md";
 
 // Logo + name + address. Shared by both layouts so they can't drift apart.
+// Text sizes: 16px name, 13px address and contact, 14px description (in the card and row below), 13px languages. They were 14px,
+// 12px and 12px, which is small for the older readers this site is for. The faint slate-400 languages text also fell short of the
+// 4.5:1 contrast WCAG asks for (about 2.6:1); slate-500 passes (4.8:1).
 function ProviderIdentity({
   provider,
   className,
@@ -165,22 +168,22 @@ function ProviderIdentity({
       </div>
 
       <div className="min-w-0">
-        <h2 className="break-words text-sm font-semibold text-slate-900">{provider.name}</h2>
-        <p className={listLayout ? "mt-1 break-words text-xs text-slate-500" : "truncate text-xs text-slate-500"}>{provider.address || "Location not listed"}</p>
+        <h2 className="break-words text-base font-semibold text-slate-900">{provider.name}</h2>
+        <p className={listLayout ? "mt-1 break-words text-[13px] text-slate-500" : "truncate text-[13px] text-slate-500"}>{provider.address || "Location not listed"}</p>
 
         {/* Plain text, not mailto:/tel: links — the whole row is already a <Link>, and a link can't contain a link. */}
         {showContact && (phone || email) ? (
-          <div className="mt-1 flex flex-col gap-0.5 text-xs text-slate-500">
+          <div className="mt-1 flex flex-col gap-0.5 text-[13px] text-slate-500">
             {phone ? (
               <p className="flex items-start gap-1.5">
-                <Phone size={12} className="mt-0.5 shrink-0 text-slate-400" />
+                <Phone size={13} className="mt-0.5 shrink-0 text-slate-400" />
                 <span className="sr-only">Phone:</span>
                 <span className="min-w-0 break-words">{phone}</span>
               </p>
             ) : null}
             {email ? (
               <p className="flex items-start gap-1.5">
-                <Mail size={12} className="mt-0.5 shrink-0 text-slate-400" />
+                <Mail size={13} className="mt-0.5 shrink-0 text-slate-400" />
                 <span className="sr-only">Email:</span>
                 <span className="min-w-0 break-words">
                   <BreakableEmail value={email} />
@@ -200,12 +203,13 @@ function ProviderCard({ provider }: { provider: Provider }) {
     <Link href={`/providers/${provider.id}`} className={PROVIDER_LINK_CLASSES}>
       <ProviderIdentity provider={provider} />
 
+      {/* Cut off after 5 lines, not 4: at 14px, four lines cut off far more of the description on the narrower cards of a smaller window. */}
       {provider.description ? (
-        <p className="mt-3 line-clamp-4 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
+        <p className="mt-3 line-clamp-5 whitespace-pre-line text-sm leading-[22px] text-slate-600">{provider.description}</p>
       ) : null}
 
       {provider.language_support.length > 0 ? (
-        <p className="mt-3 truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
+        <p className="mt-3 truncate text-[13px] text-slate-500">{provider.language_support.join(" · ")}</p>
       ) : null}
     </Link>
   );
@@ -214,6 +218,9 @@ function ProviderCard({ provider }: { provider: Provider }) {
 // List view: one full-width row per provider. Same information as the card, but on wide screens
 // the description sits beside the name instead of underneath it, so far more of it is visible
 // before it's truncated. Below lg it stacks like a single full-width card.
+// The description is capped at 56ch, which is about 70 characters per line (a "ch" is the width of a zero, a little wider than the
+// average letter): beside the name it would otherwise run the whole rest of the row, over 150 characters per line on a wide screen,
+// which is too long to read comfortably.
 function ProviderRow({ provider }: { provider: Provider }) {
   const hasDetails = Boolean(provider.description) || provider.language_support.length > 0;
 
@@ -224,11 +231,11 @@ function ProviderRow({ provider }: { provider: Provider }) {
       {hasDetails ? (
         <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 lg:mt-0">
           {provider.description ? (
-            <p className="line-clamp-6 whitespace-pre-line text-xs leading-5 text-slate-600">{provider.description}</p>
+            <p className="line-clamp-6 max-w-[56ch] whitespace-pre-line text-sm leading-[22px] text-slate-600">{provider.description}</p>
           ) : null}
 
           {provider.language_support.length > 0 ? (
-            <p className="truncate text-xs text-slate-400">{provider.language_support.join(" · ")}</p>
+            <p className="truncate text-[13px] text-slate-500">{provider.language_support.join(" · ")}</p>
           ) : null}
         </div>
       ) : null}

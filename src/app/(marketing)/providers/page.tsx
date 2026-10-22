@@ -24,7 +24,9 @@ export default async function ProvidersPage() {
       <main className="ml-55 flex-1 px-4 pb-4 sm:px-6 sm:py-8 sm:[--mobile-header-offset:4rem]">
         {/* The page is exactly one screen tall (h-dvh above, h-full here, whatever the margins are), so it never scrolls itself: the
             search, filters and view switch stay put and only the results scroll, inside ProvidersGrid. */}
-        <div className="mx-auto flex h-full max-w-5xl flex-col">
+        {/* 1280px: wide enough for three provider cards of about 400px, which is what the 14px text in them wants (the descriptions are
+            cut off after 4 lines, and narrower cards cut off more of them), but no wider, so lines of text don't get too long. */}
+        <div className="mx-auto flex h-full max-w-7xl flex-col">
           <div className="flex shrink-0 items-center justify-between">
             <h1 className="hidden text-2xl font-semibold tracking-tight text-slate-900 md:block">Providers</h1>
             {userRole === "Admin" ? (
