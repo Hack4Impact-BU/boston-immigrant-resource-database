@@ -1099,9 +1099,16 @@ export default function MapPage() {
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (
                   // `visible` because this panel is invisible while the list is showing, and the details open from the list too.
-                  <div className="visible fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
-                    <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1">
-                      <div className="border-b border-slate-200 pb-4">
+                  <div className="@container visible fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
+                    {/* One column about 34rem wide: the description in it reads about 70 characters per line (it was over 90 at the old 48rem
+                        width, and 80 is the most WCAG recommends). When the panel is wide enough (60rem and up, a container query on the
+                        panel itself) and the details are inside the card next to the list (xl and up), the map moves into a second column
+                        beside the facts and the description, so the extra width is used for more things side by side, not for longer
+                        lines. Below xl the details are a full-screen overlay, and the sidebar covers its left 14rem, so a wider layout there
+                        would only put more of it behind the sidebar. The header spans both columns, and the sections stay in the same
+                        order in the page either way. */}
+                    <div className="mx-auto flex max-w-[34rem] flex-col gap-6 pr-1 xl:@[60rem]:grid xl:@[60rem]:max-w-5xl xl:@[60rem]:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] xl:@[60rem]:items-start xl:@[60rem]:gap-x-10">
+                      <div className="border-b border-slate-200 pb-4 xl:@[60rem]:col-span-2">
                         <div className="flex flex-wrap justify-end gap-2">
                           <a
                             href={`mailto:${selectedService.provider_email}`}
@@ -1184,58 +1191,60 @@ export default function MapPage() {
                         </div>
                       </div>
 
-                      <section>
-                        <h3 className="text-lg font-semibold tracking-tight text-slate-900">Service Details</h3>
-                        <div className="mt-3 space-y-3 text-sm text-slate-700">
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 text-slate-400">◦</span>
-                            <span>
-                              <span className="font-bold">Location:</span>{" "}
-                              {selectedServiceGoogleMapsUrl ? (
-                                <a
-                                  href={selectedServiceGoogleMapsUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
-                                >
-                                  {selectedServiceLocation}
-                                </a>
-                              ) : (
-                                selectedServiceLocation
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 text-slate-400">◦</span>
-                            <span><span className="font-bold">Languages:</span> {selectedServiceLanguages}</span>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 text-slate-400">◦</span>
-                            <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-                              <span className="font-bold">Service Types:</span>
-                              {selectedService.service_types
-                                ? selectedService.service_types.split(", ").map((serviceType) => (
-                                    <span
-                                      key={serviceType}
-                                      className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
-                                    >
-                                      {serviceType}
-                                    </span>
-                                  ))
-                                : null}
+                      <div className="contents xl:@[60rem]:flex xl:@[60rem]:flex-col xl:@[60rem]:gap-6">
+                        <section>
+                          <h3 className="text-lg font-semibold tracking-tight text-slate-900">Service Details</h3>
+                          <div className="mt-3 space-y-3 text-sm text-slate-700">
+                            <div className="flex items-start gap-3">
+                              <span className="mt-0.5 text-slate-400">◦</span>
+                              <span>
+                                <span className="font-bold">Location:</span>{" "}
+                                {selectedServiceGoogleMapsUrl ? (
+                                  <a
+                                    href={selectedServiceGoogleMapsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="underline decoration-slate-300 hover:text-sky-700 hover:decoration-sky-700"
+                                  >
+                                    {selectedServiceLocation}
+                                  </a>
+                                ) : (
+                                  selectedServiceLocation
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <span className="mt-0.5 text-slate-400">◦</span>
+                              <span><span className="font-bold">Languages:</span> {selectedServiceLanguages}</span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <span className="mt-0.5 text-slate-400">◦</span>
+                              <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                                <span className="font-bold">Service Types:</span>
+                                {selectedService.service_types
+                                  ? selectedService.service_types.split(", ").map((serviceType) => (
+                                      <span
+                                        key={serviceType}
+                                        className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                                      >
+                                        {serviceType}
+                                      </span>
+                                    ))
+                                  : null}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </section>
+                        </section>
 
-                      <section className="border-t border-slate-200 pt-4">
-                        <h3 className="text-lg font-semibold tracking-tight text-slate-900">About the Service</h3>
-                        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                          <p className="whitespace-pre-line text-sm leading-7 text-slate-700">{selectedServiceDescription}</p>
-                        </div>
-                      </section>
+                        <section className="border-t border-slate-200 pt-4">
+                          <h3 className="text-lg font-semibold tracking-tight text-slate-900">About the Service</h3>
+                          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                            <p className="whitespace-pre-line text-sm leading-7 text-slate-700">{selectedServiceDescription}</p>
+                          </div>
+                        </section>
+                      </div>
 
-                      <section className="border-t border-slate-200 pt-4">
+                      <section className="border-t border-slate-200 pt-4 xl:@[60rem]:border-t-0 xl:@[60rem]:pt-0">
                         <h3 className="text-lg font-semibold tracking-tight text-slate-900">Location Details</h3>
                         <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
                           {selectedServiceMapEmbedUrl ? (
