@@ -1099,7 +1099,9 @@ export default function MapPage() {
               <div className="flex min-h-0 flex-1 flex-col bg-white">
                 {isDescriptionView && selectedService ? (
                   // `visible` because this panel is invisible while the list is showing, and the details open from the list too.
-                  <div className="@container visible fixed inset-x-0 top-14 bottom-0 z-[55] overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
+                  // From md up the sidebar (w-55, always showing there) sits on top of this overlay, so the overlay starts at the sidebar's
+                  // right edge (md:left-55) instead of the window's, or the left 220px of the details would be hidden behind it.
+                  <div className="@container visible fixed inset-x-0 top-14 bottom-0 z-[55] md:left-55 overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
                     {/* One column about 34rem wide: the description in it reads about 70 characters per line (it was over 90 at the old 48rem
                         width, and 80 is the most WCAG recommends). When the panel is wide enough (60rem and up, a container query on the
                         panel itself) and the details are inside the card next to the list (xl and up), the map moves into a second column
