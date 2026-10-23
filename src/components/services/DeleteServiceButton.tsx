@@ -33,13 +33,15 @@ export function DeleteServiceButton({ serviceId, serviceName }: DeleteServiceBut
 
   if (isConfirming) {
     return (
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="text-xs text-slate-600">Delete {serviceName}?</span>
+      // The row can wrap, and the question can wrap within 16rem, because the service name is in it: a long name on a single line
+      // pushed the Confirm and Cancel buttons out past the edge of the card.
+      <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5">
+        <span className="min-w-0 max-w-[16rem] break-words text-right text-[13px] text-slate-600">Delete {serviceName}?</span>
         <button
           type="button"
           onClick={handleConfirmDelete}
           disabled={isDeleting}
-          className="rounded-md bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-red-600 px-2.5 py-1.5 text-[13px] font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isDeleting ? "Deleting..." : "Confirm"}
         </button>
@@ -47,7 +49,7 @@ export function DeleteServiceButton({ serviceId, serviceName }: DeleteServiceBut
           type="button"
           onClick={() => setIsConfirming(false)}
           disabled={isDeleting}
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
         >
           Cancel
         </button>
@@ -57,7 +59,7 @@ export function DeleteServiceButton({ serviceId, serviceName }: DeleteServiceBut
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      {errorMessage && <span className="text-xs text-red-600">{errorMessage}</span>}
+      {errorMessage && <span className="text-[13px] text-red-600">{errorMessage}</span>}
       <button
         type="button"
         onClick={() => setIsConfirming(true)}

@@ -244,6 +244,13 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 const hasActions = Boolean(contactEmail || registerUrl || canEditThisProvider);
                 const statusColor = statusColors[service.status] || STATUS_FALLBACK_COLOR;
 
+                // Text sizes follow the cards on the Providers page: 16px name, 14px description (on a 22px line), 13px for the status, the
+                // updated date and the buttons, and 12px for the type tags. They were 14, 12, 12 and 10.4px, which is small for the older
+                // readers this site is for, and the date was in slate-400, which falls short of the 4.5:1 contrast WCAG asks for (about
+                // 2.6:1; slate-500 is 4.8:1). The description runs the whole width of its column, right up to the buttons (with a 24px
+                // gap from sm up), so there is no blank space beside it. The price is that a card with only an Email button has a wider text
+                // column, and longer lines, than one with Email and Register.
+                //
                 // A card with buttons is a two-column grid. Row 1 is the service's name, with its status and updated date on the line
                 // below, and the buttons at the top right on every screen size. Row 2 is the types and description: on a phone it runs
                 // the full width of the card, and from sm up it stays in the left column, because the buttons then span both rows.
@@ -258,30 +265,30 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                   <div
                     key={service.id}
                     className={`rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm ${
-                      hasActions ? "grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] gap-x-3 sm:gap-x-4" : ""
+                      hasActions ? "grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] gap-x-3 sm:gap-x-6" : ""
                     }`}
                   >
                     <div className="col-start-1 row-start-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-slate-900">{service.name}</h3>
+                      <h3 className="text-base font-semibold text-slate-900">{service.name}</h3>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span
-                          className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                          className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-medium"
                           style={{ backgroundColor: statusColor, color: getReadableTextColor(statusColor) }}
                         >
                           {service.status}
                         </span>
-                        <p className="text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
+                        <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
                       </div>
                     </div>
 
                     {service.service_types || service.description ? (
                       <div className="col-span-2 row-start-2 min-w-0 sm:col-span-1">
                         {service.service_types ? (
-                          <div className="mt-1.5 flex flex-wrap gap-1">
+                          <div className="mt-2 flex flex-wrap gap-1.5">
                             {service.service_types.split(", ").map((serviceType) => (
                               <span
                                 key={serviceType}
-                                className="rounded-full bg-sky-50 px-2 py-0.5 text-[0.65rem] font-medium text-sky-700"
+                                className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700"
                               >
                                 {serviceType}
                               </span>
@@ -289,7 +296,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                           </div>
                         ) : null}
                         {service.description ? (
-                          <p className="mt-1.5 whitespace-pre-line text-xs leading-5 text-slate-600">
+                          <p className="mt-2 whitespace-pre-line text-sm leading-[22px] text-slate-600">
                             {service.description}
                           </p>
                         ) : null}
@@ -326,7 +333,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                           <div className="flex items-center gap-2 max-sm:col-span-full max-sm:row-start-3 max-sm:mt-3 max-sm:justify-self-end sm:mt-auto">
                             <Link
                               href={`/services/manage/${service.id}/edit`}
-                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
                             >
                               Edit
                             </Link>
