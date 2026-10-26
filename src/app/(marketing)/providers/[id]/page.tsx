@@ -76,9 +76,11 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
     <div className="flex min-h-screen items-stretch bg-slate-100">
       <Sidebar isOpen={true} activePage="Providers" />
 
-      <main className="ml-55 flex-1 px-6 py-8">
+      {/* min-w-0: a flex item can't shrink below its widest content by default, so one long line (a web address, say) made the whole
+          page wider than the screen. 16px of padding on a phone, like Search Services, and 24px from sm up. */}
+      <main className="ml-55 min-w-0 flex-1 px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <Link href="/providers" className="text-xs font-medium text-slate-500 hover:text-slate-700">
               ← All Providers
             </Link>
@@ -94,9 +96,12 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             ) : null}
           </div>
 
-          <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            {/* A grid, not a row. On a phone the logo is small and sits beside the name, and the contact lines run the full width of the card
+                underneath, so a long email or web address has room (and wraps anywhere if it still doesn't fit). From sm up the logo is
+                large, at the left across both rows, with the name and the contact lines in the column beside it, as before. */}
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] items-start gap-x-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white sm:row-span-2 sm:h-36 sm:w-36">
                 {/* eslint-disable-next-line @next/next/no-img-element -- provider logos are arbitrary external Airtable attachment URLs */}
                 <img
                   src={provider.logo || "/icons/Just_BIRD_logo_blue.png"}
@@ -105,55 +110,53 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 />
               </div>
 
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl font-semibold tracking-tight text-slate-900">{provider.name}</h1>
+              <h1 className="min-w-0 self-center break-words text-xl font-semibold tracking-tight text-slate-900 sm:self-start">{provider.name}</h1>
 
-                <div className="mt-3 space-y-2">
-                  {provider.address ? (
-                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                      <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                      {provider.google_maps_link ? (
-                        <a href={provider.google_maps_link} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
-                          {provider.address}
-                        </a>
-                      ) : (
-                        <span>{provider.address}</span>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {(provider.primary_phone_number || provider.secondary_phone_number) ? (
-                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                      <Phone size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                      <span>
-                        {[provider.primary_phone_number, provider.secondary_phone_number].filter(Boolean).join(" · ")}
-                      </span>
-                    </div>
-                  ) : null}
-
-                  {provider.email ? (
-                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                      <Mail size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                      <a href={`mailto:${provider.email}`} className="hover:text-sky-700 hover:underline">
-                        {provider.email}
+              <div className="col-span-2 mt-4 space-y-2 sm:col-span-1 sm:col-start-2 sm:mt-3">
+                {provider.address ? (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                    {provider.google_maps_link ? (
+                      <a href={provider.google_maps_link} target="_blank" rel="noopener noreferrer" className="[overflow-wrap:anywhere] hover:text-sky-700 hover:underline">
+                        {provider.address}
                       </a>
-                    </div>
-                  ) : null}
+                    ) : (
+                      <span className="[overflow-wrap:anywhere]">{provider.address}</span>
+                    )}
+                  </div>
+                ) : null}
 
-                  {provider.website ? (
-                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                      <Globe size={16} className="mt-0.5 shrink-0 text-slate-400" />
-                      <a href={provider.website} target="_blank" rel="noopener noreferrer" className="hover:text-sky-700 hover:underline">
-                        {provider.website}
-                      </a>
-                    </div>
-                  ) : null}
-                </div>
+                {(provider.primary_phone_number || provider.secondary_phone_number) ? (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <Phone size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                    <span className="[overflow-wrap:anywhere]">
+                      {[provider.primary_phone_number, provider.secondary_phone_number].filter(Boolean).join(" · ")}
+                    </span>
+                  </div>
+                ) : null}
+
+                {provider.email ? (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <Mail size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                    <a href={`mailto:${provider.email}`} className="[overflow-wrap:anywhere] hover:text-sky-700 hover:underline">
+                      {provider.email}
+                    </a>
+                  </div>
+                ) : null}
+
+                {provider.website ? (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <Globe size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                    <a href={provider.website} target="_blank" rel="noopener noreferrer" className="[overflow-wrap:anywhere] hover:text-sky-700 hover:underline">
+                      {provider.website}
+                    </a>
+                  </div>
+                ) : null}
               </div>
             </div>
 
             {provider.language_support.length > 0 ? (
-              <p className="mt-5 text-xs text-slate-500">{provider.language_support.join(" · ")}</p>
+              <p className="mt-5 break-words text-xs text-slate-500">{provider.language_support.join(" · ")}</p>
             ) : null}
 
             {provider.service_types ? (
@@ -161,7 +164,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 {provider.service_types.split(", ").map((serviceType) => (
                   <span
                     key={serviceType}
-                    className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                    className="max-w-full rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
                   >
                     {serviceType}
                   </span>
@@ -170,12 +173,12 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
             ) : null}
 
             {provider.description ? (
-              <p className="mt-5 whitespace-pre-line border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
+              <p className="mt-5 whitespace-pre-line break-words border-t border-slate-100 pt-5 text-sm leading-6 text-slate-700">{provider.description}</p>
             ) : null}
           </div>
 
           {providerMapEmbedUrl ? (
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
               <h2 className="text-lg font-semibold tracking-tight text-slate-900">Location</h2>
               <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
                 <iframe
@@ -269,7 +272,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                     }`}
                   >
                     <div className="col-start-1 row-start-1 min-w-0">
-                      <h3 className="text-base font-semibold text-slate-900">{service.name}</h3>
+                      <h3 className="break-words text-base font-semibold text-slate-900">{service.name}</h3>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span
                           className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-medium"
@@ -288,7 +291,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                             {service.service_types.split(", ").map((serviceType) => (
                               <span
                                 key={serviceType}
-                                className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700"
+                                className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
                               >
                                 {serviceType}
                               </span>
@@ -296,7 +299,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                           </div>
                         ) : null}
                         {service.description ? (
-                          <p className="mt-2 whitespace-pre-line text-sm leading-[22px] text-slate-600">
+                          <p className="mt-2 whitespace-pre-line break-words text-sm leading-[22px] text-slate-600">
                             {service.description}
                           </p>
                         ) : null}
