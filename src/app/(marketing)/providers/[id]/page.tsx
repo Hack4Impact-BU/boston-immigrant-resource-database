@@ -244,107 +244,104 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 // The provider's own email, which is what Email does in Service Details; falls back to the one stored on the service.
                 const contactEmail = provider.email || service.provider_email;
                 const registerUrl = getHttpUrl(service.link);
-                const hasActions = Boolean(contactEmail || registerUrl || canEditThisProvider);
                 const statusColor = statusColors[service.status] || STATUS_FALLBACK_COLOR;
 
                 // Text sizes follow the cards on the Providers page: 16px name, 14px description (on a 22px line), 13px for the status, the
                 // updated date and the buttons, and 12px for the type tags. They were 14, 12, 12 and 10.4px, which is small for the older
                 // readers this site is for, and the date was in slate-400, which falls short of the 4.5:1 contrast WCAG asks for (about
-                // 2.6:1; slate-500 is 4.8:1). The description runs the whole width of its column, right up to the buttons (with a 24px
-                // gap from sm up), so there is no blank space beside it. The price is that a card with only an Email button has a wider text
-                // column, and longer lines, than one with Email and Register.
+                // 2.6:1; slate-500 is 4.8:1). The description runs as wide as the card allows (see below), so there is no blank space beside it.
                 //
-                // A card with buttons is a two-column grid. Row 1 is the service's name, with its status and updated date on the line
-                // below, and the buttons at the top right on every screen size. Row 2 is the types and description: on a phone it runs
-                // the full width of the card, and from sm up it stays in the left column, because the buttons then span both rows.
-                // (Row 2 is 1fr so that extra height from tall buttons, such as Edit and Delete under Email and Register, lands there
-                // and never opens a gap under the name.) Without buttons the card is just these blocks stacked, as it always was.
-                // On a phone the buttons column is display: contents, so Email and Register stay at the top right of row 1 and the
-                // Edit/Delete row becomes a footer of its own in row 3, right-aligned under the description. From sm up the column is
-                // a real one, as tall as the card, and the Edit/Delete row is pushed to the bottom of it (mt-auto), so it ends at the
-                // bottom right of the card, as far from Email and Register as the card allows. A card with no spare room keeps them
-                // just below, and with no Email or Register they are the whole column, so they sit at the bottom right too.
-                return (
-                  <div
-                    key={service.id}
-                    className={`rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm ${
-                      hasActions ? "grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] gap-x-3 sm:gap-x-6" : ""
-                    }`}
-                  >
-                    <div className="col-start-1 row-start-1 min-w-0">
-                      <h3 className="break-words text-base font-semibold text-slate-900">{service.name}</h3>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span
-                          className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-medium"
-                          style={{ backgroundColor: statusColor, color: getReadableTextColor(statusColor) }}
+                // The card is rows, not a two-column grid, so that each row can use its own width. Row 1 is the service's name, with its
+                // status and updated date on the line below, and Email and Register at the top right. Row 2 is the types, the full width
+                // of the card. Row 3 is the description, with Edit and Delete at its bottom right: the description runs right up to them
+                // (24px away from sm up), and above and beside them it runs under Email and Register, where a column of buttons used to
+                // leave blank space. Without Edit and Delete (when the visitor can't edit this provider) it runs the full width of the
+                // card. A service with no description has Edit and Delete on the row of types instead, and with neither they get a row
+                // of their own. On a phone the rows simply stack, and Edit and Delete are a footer, right-aligned under the description.
+                // The price of the wider description is longer lines than WCAG recommends at Level AAA (80 characters).
+                const hasTypes = Boolean(service.service_types);
+                const hasDescription = Boolean(service.description);
+                const emailRegisterButtons =
+                  contactEmail || registerUrl ? (
+                    <div className="flex shrink-0 justify-end gap-2">
+                      {contactEmail ? (
+                        <a
+                          href={`mailto:${contactEmail}`}
+                          aria-label={`Email about ${service.name}`}
+                          className={SERVICE_ACTION_BUTTON_CLASS}
                         >
-                          {service.status}
-                        </span>
-                        <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                          Email
+                        </a>
+                      ) : null}
+                      {registerUrl ? (
+                        <a
+                          href={registerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Register for ${service.name}`}
+                          className={SERVICE_ACTION_BUTTON_CLASS}
+                        >
+                          Register
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null;
+                const editDeleteButtons = canEditThisProvider ? (
+                  <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
+                    <Link
+                      href={`/services/manage/${service.id}/edit`}
+                      className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
+                  </div>
+                ) : null;
+
+                return (
+                  <div key={service.id} className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
+                    <div className="flex items-start justify-between gap-x-3 sm:gap-x-6">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-base font-semibold text-slate-900">{service.name}</h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span
+                            className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-medium"
+                            style={{ backgroundColor: statusColor, color: getReadableTextColor(statusColor) }}
+                          >
+                            {service.status}
+                          </span>
+                          <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                        </div>
                       </div>
+                      {emailRegisterButtons}
                     </div>
 
-                    {service.service_types || service.description ? (
-                      <div className="col-span-2 row-start-2 min-w-0 sm:col-span-1">
-                        {service.service_types ? (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {service.service_types.split(", ").map((serviceType) => (
-                              <span
-                                key={serviceType}
-                                className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
-                              >
-                                {serviceType}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                        {service.description ? (
-                          <p className="mt-2 whitespace-pre-line break-words text-sm leading-[22px] text-slate-600">
-                            {service.description}
-                          </p>
-                        ) : null}
+                    {hasTypes ? (
+                      <div className="mt-2 flex items-end gap-x-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-y-3 sm:gap-x-6">
+                        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          {service.service_types.split(", ").map((serviceType) => (
+                            <span
+                              key={serviceType}
+                              className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
+                            >
+                              {serviceType}
+                            </span>
+                          ))}
+                        </div>
+                        {!hasDescription ? editDeleteButtons : null}
                       </div>
                     ) : null}
 
-                    {hasActions ? (
-                      <div className="max-sm:contents sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:flex sm:shrink-0 sm:flex-col sm:items-end sm:gap-2 sm:self-stretch">
-                        {contactEmail || registerUrl ? (
-                          <div className="flex justify-end gap-2 max-sm:col-start-2 max-sm:row-start-1 max-sm:self-start">
-                            {contactEmail ? (
-                              <a
-                                href={`mailto:${contactEmail}`}
-                                aria-label={`Email about ${service.name}`}
-                                className={SERVICE_ACTION_BUTTON_CLASS}
-                              >
-                                Email
-                              </a>
-                            ) : null}
-                            {registerUrl ? (
-                              <a
-                                href={registerUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Register for ${service.name}`}
-                                className={SERVICE_ACTION_BUTTON_CLASS}
-                              >
-                                Register
-                              </a>
-                            ) : null}
-                          </div>
-                        ) : null}
-                        {canEditThisProvider ? (
-                          <div className="flex items-center gap-2 max-sm:col-span-full max-sm:row-start-3 max-sm:mt-3 max-sm:justify-self-end sm:mt-auto">
-                            <Link
-                              href={`/services/manage/${service.id}/edit`}
-                              className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
-                            >
-                              Edit
-                            </Link>
-                            <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
-                          </div>
-                        ) : null}
+                    {hasDescription ? (
+                      <div className="mt-2 flex items-end gap-x-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-y-3 sm:gap-x-6">
+                        <p className="min-w-0 flex-1 whitespace-pre-line break-words text-sm leading-[22px] text-slate-600">
+                          {service.description}
+                        </p>
+                        {editDeleteButtons}
                       </div>
                     ) : null}
+
+                    {!hasTypes && !hasDescription && editDeleteButtons ? <div className="mt-3 flex justify-end">{editDeleteButtons}</div> : null}
                   </div>
                 );
               })
