@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
+import { DropdownPanel } from "@/components/marketing/DropdownPanel";
 import { ChevronDown, List, LoaderCircle, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { buildProviderSummaryBase, createElement as createPopupElement } from "@/components/marketing/map-popup-dom";
@@ -840,8 +841,10 @@ export default function MapPage() {
                       </button>
 
                       {isOpen ? (
-                        <div
-                          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:w-max sm:min-w-60 sm:max-w-[calc(100vw-2rem)] ${
+                        <DropdownPanel
+                          preferredSide={filter.key === "serviceType" || filter.key === "status" ? "right" : "left"}
+                          placementKey={buttonLabel}
+                          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:w-max sm:min-w-60 sm:max-w-96 ${
                             filter.key === "serviceType" || filter.key === "status" ? "sm:left-auto sm:right-0" : "sm:left-0 sm:right-auto"
                           }`}
                         >
@@ -903,7 +906,7 @@ export default function MapPage() {
                               })
                             )}
                           </div>
-                        </div>
+                        </DropdownPanel>
                       ) : null}
                     </div>
                   );

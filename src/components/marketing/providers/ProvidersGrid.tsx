@@ -7,6 +7,7 @@ import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "l
 import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
 import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { Input } from "@/components/ui/input";
+import { DropdownPanel } from "@/components/marketing/DropdownPanel";
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
@@ -59,8 +60,10 @@ function FilterDropdown({
       </button>
 
       {isOpen ? (
-        <div
-          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:w-max sm:min-w-60 sm:max-w-[calc(100vw-2rem)] ${
+        <DropdownPanel
+          preferredSide={align}
+          placementKey={buttonLabel}
+          className={`absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)] sm:w-max sm:min-w-60 sm:max-w-96 ${
             align === "right" ? "sm:left-auto sm:right-0" : "sm:left-0 sm:right-auto"
           }`}
         >
@@ -106,18 +109,18 @@ function FilterDropdown({
                 return (
                   <label
                     key={option}
-                    className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                    className={`flex w-full cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                       isActive ? "bg-sky-50 text-sky-800" : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="h-4 w-4 shrink-0 cursor-pointer" />
-                    <span className="truncate">{option}</span>
+                    <input type="checkbox" checked={isActive} onChange={() => toggleOption(option)} className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer" />
+                    <span className="min-w-0 break-words">{option}</span>
                   </label>
                 );
               })
             )}
           </div>
-        </div>
+        </DropdownPanel>
       ) : null}
     </div>
   );
