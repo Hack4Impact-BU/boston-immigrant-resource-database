@@ -26,7 +26,7 @@ export default async function ManageServicesPage() {
       <div className="flex min-h-screen items-stretch bg-slate-100">
         <Sidebar isOpen={true} activePage="Manage My Services" />
 
-        <main className="ml-55 flex-1 px-6 py-8">
+        <main className="ml-55 min-w-0 flex-1 px-4 py-8 sm:px-6">
           <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
             <h1 className="text-lg font-semibold text-slate-900">Not available for your account</h1>
             <p className="mt-2 text-sm text-slate-600">
@@ -52,21 +52,23 @@ export default async function ManageServicesPage() {
     <div className="flex min-h-screen items-stretch bg-slate-100">
       <Sidebar isOpen={true} activePage="Manage My Services" />
 
-      <main className="ml-55 flex-1 px-6 py-8">
+      <main className="ml-55 min-w-0 flex-1 px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-3xl">
           {!linkedProvider ? (
             <ProviderPicker allProviders={allProviders} serviceTypes={serviceTypes} languages={languages} />
           ) : (
             <>
-              <div className="flex items-center justify-between">
-                <div>
+              {/* min-w-0 on the page, and the name here allowed to wrap: a flex item can't shrink below its widest content by default, so
+                  one long line made the whole page wider than the screen, with Add Service off the edge of it. */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
                   <h1 className="text-2xl font-semibold tracking-tight text-slate-900">My Services</h1>
-                  <p className="mt-1 text-sm text-slate-600">Managing services for {linkedProvider.name}</p>
+                  <p className="mt-1 break-words text-sm text-slate-600">Managing services for {linkedProvider.name}</p>
                 </div>
 
                 <Link
                   href="/services/manage/new"
-                  className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700"
                 >
                   <Plus size={16} />
                   Add Service
@@ -79,54 +81,77 @@ export default async function ManageServicesPage() {
                     You haven&apos;t added any services yet.
                   </div>
                 ) : (
-                  services.map((service) => (
-                    // Edit and Delete sit at the bottom right of the card: beside the text on a wide screen, and in a footer row of
-                    // their own below it on a phone (a column, with the buttons self-end), the same as on the Provider Details page.
-                    <div
-                      key={service.id}
-                      className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm sm:flex-row sm:justify-between sm:gap-4"
-                    >
-                      <div className="min-w-0">
-                        <h2 className="truncate text-sm font-semibold text-slate-900">{service.name}</h2>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span
-                            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-                            style={statusPillStyle(statusColors[service.status])}
-                          >
-                            {service.status}
-                          </span>
-                          <p className="text-xs text-slate-400">{formatRelativeUpdateDate(service.last_modified)}</p>
-                        </div>
-                        {service.service_types ? (
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {service.service_types.split(", ").map((serviceType) => (
-                              <span
-                                key={serviceType}
-                                className="rounded-full bg-sky-50 px-2 py-0.5 text-[0.65rem] font-medium text-sky-700"
-                              >
-                                {serviceType}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                        {service.description ? (
-                          <p className="mt-1.5 whitespace-pre-line text-xs leading-5 text-slate-600">
-                            {service.description}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-2 self-end">
+                  services.map((service) => {
+                    const hasTypes = Boolean(service.service_types);
+                    const hasDescription = Boolean(service.description);
+                    const editDeleteButtons = (
+                      <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
                         <Link
                           href={`/services/manage/${service.id}/edit`}
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
                         >
                           Edit
                         </Link>
                         <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
                       </div>
-                    </div>
-                  ))
+                    );
+
+                    // The same card as the Service cards on the Provider Details page (there is no Email or Register here, since these
+                    // are the provider's own services). Text sizes: 16px name, 14px description (on a 22px line), 13px for the status, the
+                    // updated date and the buttons, and 12px for the type tags. They were 14, 12, 12 and 10.4px, which is small for the
+                    // older readers this site is for, and the date was in slate-400, which falls short of the 4.5:1 contrast WCAG asks for
+                    // (about 2.6:1; slate-500 is 4.8:1). The name wraps, instead of being cut off with an ellipsis, so it can be read in
+                    // full (and a long one can no longer widen the page).
+                    //
+                    // The card is rows, so that each row can use its own width. Row 1 is the service's name, with its status and updated
+                    // date on the line below. Row 2 is the types. Row 3 is the description, with Edit and Delete at its bottom right: the
+                    // description runs right up to them (24px away from sm up). A service with no description has Edit and Delete on the
+                    // row of types instead, and with neither they get a row of their own. On a phone the rows simply stack, and Edit and
+                    // Delete are a footer, right-aligned under the description.
+                    return (
+                      <div key={service.id} className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
+                        <div className="min-w-0">
+                          <h2 className="break-words text-base font-semibold text-slate-900">{service.name}</h2>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span
+                              className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-medium"
+                              style={statusPillStyle(statusColors[service.status])}
+                            >
+                              {service.status}
+                            </span>
+                            <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                          </div>
+                        </div>
+
+                        {hasTypes ? (
+                          <div className="mt-2 flex items-end gap-x-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-y-3 sm:gap-x-6">
+                            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                              {service.service_types.split(", ").map((serviceType) => (
+                                <span
+                                  key={serviceType}
+                                  className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
+                                >
+                                  {serviceType}
+                                </span>
+                              ))}
+                            </div>
+                            {!hasDescription ? editDeleteButtons : null}
+                          </div>
+                        ) : null}
+
+                        {hasDescription ? (
+                          <div className="mt-2 flex items-end gap-x-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-y-3 sm:gap-x-6">
+                            <p className="min-w-0 flex-1 whitespace-pre-line break-words text-sm leading-[22px] text-slate-600">
+                              {service.description}
+                            </p>
+                            {editDeleteButtons}
+                          </div>
+                        ) : null}
+
+                        {!hasTypes && !hasDescription ? <div className="mt-3 flex justify-end">{editDeleteButtons}</div> : null}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </>
