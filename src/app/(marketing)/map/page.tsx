@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { SelectAllButton, canSelectMore } from "@/components/ui/select-all-button";
 import { formatRelativeUpdateDate } from "@/lib/dates";
 import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
+import { getCustomHistoryValue, updateSearchParams, useUrlList, useUrlText, useUrlValue } from "@/lib/url-state";
 
 type Provider = {
   id: string;
@@ -210,49 +212,45 @@ function ViewToggle({
   );
 }
 
-export default function MapPage() {
-  const [search, setSearch] = useState("");
-  const [providerFilter, setProviderFilter] = useState<string[]>([]);
-  const [languageFilter, setLanguageFilter] = useState<string[]>([]);
-  const [serviceTypeFilter, setServiceTypeFilter] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+const SORT_OPTIONS = [
+  "providerName-asc",
+  "providerName-desc",
+  "serviceName-asc",
+  "serviceName-desc",
+  "lastUpdated-asc",
+  "lastUpdated-desc",
+  "status-asc",
+  "status-desc",
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number];
 
-  const hasActiveSearchOrFilters =
-    search.trim().length > 0 ||
-    providerFilter.length > 0 ||
-    languageFilter.length > 0 ||
-    serviceTypeFilter.length > 0 ||
-    statusFilter.length > 0;
+const NARROW_VIEWS = ["list", "map"] as const;
 
-  function handleClearAll() {
-    setSearch("");
-    setProviderFilter([]);
-    setLanguageFilter([]);
-    setServiceTypeFilter([]);
-    setStatusFilter([]);
-  }
+// Opening a service's details adds a history entry (so that Back closes them), and leaves this in its state. That is how Close can
+// tell, even after the page has been reloaded, whether to go Back, or whether the page was opened with the details already showing
+// (from a shared link, say), when going Back would leave the page.
+const SERVICE_DETAILS_HISTORY_KEY = "serviceDetailsOpenedHere";
+
+// The search, the filters, the sort, the list/map view and the service whose details are open are all kept in the address
+// (?q=...&language=...&sort=...&view=map&service=...), so that this page can be bookmarked or shared, and Back brings it back as it was.
+// Changing the search, a filter, the sort or the view replaces the current history entry, so Back still leaves the page in one step.
+// Opening a service's details adds one, so Back closes them.
+function MapPageContent() {
+  const { text: search, setText: setSearch, commit: commitSearch, reset: resetSearch, clear: clearSearch } = useUrlText("q");
 
   const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | "sort" | null>(null);
-  const [sortOption, setSortOption] = useState<
-    | "providerName-asc"
-    | "providerName-desc"
-    | "serviceName-asc"
-    | "serviceName-desc"
-    | "lastUpdated-asc"
-    | "lastUpdated-desc"
-    | "status-asc"
-    | "status-desc"
-  >("lastUpdated-desc");
+  const [sortOption, setSortOption] = useUrlValue<SortOption>("sort", SORT_OPTIONS, "lastUpdated-desc");
   const [filterSearchText, setFilterSearchText] = useState<Record<string, string>>({});
   const [providers, setProviders] = useState<Provider[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  const [panelView, setPanelView] = useState<"map" | "description">("map");
+  const searchParams = useSearchParams();
+  const selectedServiceId = searchParams.get("service");
+  const panelView: "map" | "description" = selectedServiceId ? "description" : "map";
   // Below the xl breakpoint the list and the map don't fit side by side, so only one shows at a time and this picks which.
   // From xl up both always show and this has no effect.
-  const [narrowView, setNarrowView] = useState<"list" | "map">("list");
+  const [narrowView, setNarrowView] = useUrlValue<NarrowView>("view", NARROW_VIEWS, "list");
   const [statusColors, setStatusColors] = useState<Record<string, string>>({});
   const [providerCoordinates, setProviderCoordinates] = useState<Record<string, Coordinates | null>>({});
   const [mapReady, setMapReady] = useState(false);
@@ -359,6 +357,28 @@ export default function MapPage() {
     return Array.from(uniqueServiceTypes).sort((left, right) => left.localeCompare(right));
   }, [services]);
 
+  // Anything in the address that isn't one of the options (from a bookmark made before one was removed, or typed in) is ignored.
+  const [providerFilter, setProviderFilter] = useUrlList("provider", providerOptions);
+  const [languageFilter, setLanguageFilter] = useUrlList("language", languageOptions);
+  const [serviceTypeFilter, setServiceTypeFilter] = useUrlList("serviceType", serviceTypeOptions);
+  const [statusFilter, setStatusFilter] = useUrlList("status", statusOptions);
+
+  const hasActiveSearchOrFilters =
+    search.trim().length > 0 ||
+    providerFilter.length > 0 ||
+    languageFilter.length > 0 ||
+    serviceTypeFilter.length > 0 ||
+    statusFilter.length > 0;
+
+  function handleClearAll() {
+    resetSearch();
+    updateSearchParams((params) => {
+      for (const name of ["q", "provider", "language", "serviceType", "status"]) {
+        params.delete(name);
+      }
+    });
+  }
+
   const servicesWithProviders = useMemo<ServiceWithProvider[]>(() => {
     return services.map((service) => ({
       ...service,
@@ -429,12 +449,36 @@ export default function MapPage() {
     return filteredServices.find((service) => service.id === selectedServiceId) ?? null;
   }, [filteredServices, selectedServiceId]);
 
-  useEffect(() => {
-    if (selectedServiceId && !selectedService) {
-      setSelectedServiceId(null);
-      setPanelView("map");
+  // Opening a service's details adds a history entry, so that Back closes them. Going from one service to another while they are
+  // open replaces it, so Back still closes them in one step.
+  const openService = useCallback((serviceId: string) => {
+    const detailsAreOpen = new URLSearchParams(window.location.search).has("service");
+
+    updateSearchParams(
+      (params) => params.set("service", serviceId),
+      detailsAreOpen ? {} : { push: true, state: { [SERVICE_DETAILS_HISTORY_KEY]: true } },
+    );
+  }, []);
+
+  // If this page added the history entry the details are in, closing them goes Back, which leaves no entry behind that would only
+  // reopen them with Forward. Otherwise (the page was opened with them showing) going Back would leave the page, so the service is
+  // taken out of the address instead.
+  const closeService = useCallback(() => {
+    if (getCustomHistoryValue(SERVICE_DETAILS_HISTORY_KEY)) {
+      window.history.back();
+      return;
     }
-  }, [selectedService, selectedServiceId]);
+
+    updateSearchParams((params) => params.delete("service"));
+  }, []);
+
+  // A service in the address that isn't in the results can't be shown, so it is taken out of the address. (Not before the data has
+  // loaded: until then there are no results at all, and a link to a service would lose it.)
+  useEffect(() => {
+    if (!loading && selectedServiceId && !selectedService) {
+      updateSearchParams((params) => params.delete("service"));
+    }
+  }, [loading, selectedService, selectedServiceId]);
 
   useEffect(() => {
     if (openFilterMenu === null) {
@@ -555,10 +599,7 @@ export default function MapPage() {
             buildProviderPopup(
               provider,
               services,
-              (serviceId) => {
-                setSelectedServiceId(serviceId);
-                setPanelView("description");
-              },
+              openService,
               // Sized to the map as it is when the pop-up opens: the content box plus Leaflet's padding and arrow (about 60px)
               // must fit inside the map, which is shorter than the window because the search and filters sit above it.
               Math.min(480, Math.max(160, map.getSize().y - 64)),
@@ -588,7 +629,7 @@ export default function MapPage() {
       const bounds = L.latLngBounds(markers.map((entry) => [entry.coordinates.lat, entry.coordinates.lng] as [number, number]));
       map.fitBounds(bounds.pad(0.18), { animate: true });
     })();
-  }, [filteredServices, mapReady, providerCoordinates]);
+  }, [filteredServices, mapReady, openService, providerCoordinates]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -666,34 +707,6 @@ export default function MapPage() {
   const selectedServiceProvider = selectedService?.providerDetails?.name || "Provider unavailable";
   const isDescriptionView = panelView === "description" && Boolean(selectedService);
 
-
-  useEffect(() => {
-    setProviderFilter((current) => {
-      const stillValid = current.filter((value) => providerOptions.includes(value));
-      return stillValid.length === current.length ? current : stillValid;
-    });
-  }, [providerOptions]);
-
-  useEffect(() => {
-    setLanguageFilter((current) => {
-      const stillValid = current.filter((value) => languageOptions.includes(value));
-      return stillValid.length === current.length ? current : stillValid;
-    });
-  }, [languageOptions]);
-
-  useEffect(() => {
-    setServiceTypeFilter((current) => {
-      const stillValid = current.filter((value) => serviceTypeOptions.includes(value));
-      return stillValid.length === current.length ? current : stillValid;
-    });
-  }, [serviceTypeOptions]);
-
-  useEffect(() => {
-    setStatusFilter((current) => {
-      const stillValid = current.filter((value) => statusOptions.includes(value));
-      return stillValid.length === current.length ? current : stillValid;
-    });
-  }, [statusOptions]);
 
   function toggleFilterValue(setter: (updater: (current: string[]) => string[]) => void, option: string) {
     setter((current) => (current.includes(option) ? current.filter((value) => value !== option) : [...current, option]));
@@ -784,13 +797,14 @@ export default function MapPage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
+                    onBlur={commitSearch}
                     placeholder="Search services by name or keywords"
                     className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 max-sm:text-ellipsis"
                   />
                   {search ? (
                     <button
                       type="button"
-                      onClick={() => setSearch("")}
+                      onClick={clearSearch}
                       className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                       aria-label="Clear search"
                     >
@@ -1031,10 +1045,7 @@ export default function MapPage() {
                       <button
                         key={service.id}
                         type="button"
-                        onClick={() => {
-                          setSelectedServiceId(service.id);
-                          setPanelView("description");
-                        }}
+                        onClick={() => openService(service.id)}
                         className={`flex w-full border bg-white p-3 pb-2.5 text-left shadow-sm sm:min-h-32 sm:p-4 sm:pb-3 transition-all duration-200 hover:shadow-md cursor-pointer ${
                           isSelected ? "border-sky-200 bg-[#f7fbff] ring-1 ring-sky-100" : "border-slate-200"
                         }`}
@@ -1131,10 +1142,7 @@ export default function MapPage() {
                           
                           <button
                             type="button"
-                            onClick={() => {
-                              setPanelView("map")
-                              setSelectedServiceId(null);
-                            }}
+                            onClick={closeService}
                             className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer"
                           >
                             <span className="xl:hidden">{narrowView === "map" ? "Back To Map" : "Back To List"}</span>
@@ -1344,5 +1352,26 @@ export default function MapPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+// useSearchParams needs a Suspense boundary on a page that is built ahead of time. This is what shows until the page has loaded, the
+// sidebar and a spinner, so that nothing jumps when it does.
+function MapPageFallback() {
+  return (
+    <div className="flex min-h-dvh items-stretch bg-slate-100 p-0 m-0">
+      <Sidebar isOpen={true} activePage="Search Services" />
+      <main className="ml-55 flex min-h-dvh flex-1 items-center justify-center bg-[#f2f4f7]">
+        <LoaderCircle className="animate-spin text-slate-400" aria-label="Loading" />
+      </main>
+    </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<MapPageFallback />}>
+      <MapPageContent />
+    </Suspense>
   );
 }

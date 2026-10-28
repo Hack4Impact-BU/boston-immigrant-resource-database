@@ -6,6 +6,7 @@ import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "l
 
 import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
 import { splitServiceTypes } from "@/components/marketing/providers/service-types";
+import { updateSearchParams, useUrlList, useUrlText, useUrlValue } from "@/lib/url-state";
 import { Input } from "@/components/ui/input";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
 import { SelectAllButton } from "@/components/ui/select-all-button";
@@ -14,7 +15,8 @@ import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
 
 type FilterKey = "languages" | "serviceTypes";
-type ViewMode = "grid" | "list" | "map";
+const VIEW_MODES = ["grid", "list", "map"] as const;
+type ViewMode = (typeof VIEW_MODES)[number];
 
 function FilterDropdown({
   label,
@@ -248,17 +250,13 @@ function ProviderRow({ provider }: { provider: Provider }) {
 }
 
 export default function ProvidersGrid({ providers }: { providers: Provider[] }) {
-  const [searchText, setSearchText] = useState("");
-  const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({ languages: [], serviceTypes: [] });
+  // The search, the filters and the view are kept in the address (?q=...&language=...&serviceType=...&view=map), so that this page can
+  // be bookmarked or shared, and Back (from a provider's page, say) brings it back as it was. Changing them replaces the current history
+  // entry instead of adding one, so Back still leaves the page in one step.
+  const { text: searchText, setText: setSearchText, commit: commitSearchText, reset: resetSearchText, clear: clearSearchText } = useUrlText("q");
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useUrlValue<ViewMode>("view", VIEW_MODES, "grid");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  // The results scroll inside their own area (the controls above stay put), so when the search, a filter or the view changes,
-  // start again from the top of the new results instead of wherever the old list happened to be scrolled to.
-  useEffect(() => {
-    scrollAreaRef.current?.scrollTo({ top: 0 });
-  }, [searchText, activeFilters, viewMode]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -290,6 +288,20 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
     return Array.from(distinct).sort((a, b) => a.localeCompare(b));
   }, [providers]);
 
+  // Anything in the address that isn't one of the options (a bookmark from before one was removed) is ignored.
+  const [selectedLanguages, setSelectedLanguages] = useUrlList("language", languageOptions);
+  const [selectedServiceTypes, setSelectedServiceTypes] = useUrlList("serviceType", serviceTypeOptions);
+  const activeFilters = useMemo<Record<FilterKey, string[]>>(
+    () => ({ languages: selectedLanguages, serviceTypes: selectedServiceTypes }),
+    [selectedLanguages, selectedServiceTypes],
+  );
+
+  // The results scroll inside their own area (the controls above stay put), so when the search, a filter or the view changes,
+  // start again from the top of the new results instead of wherever the old list happened to be scrolled to.
+  useEffect(() => {
+    scrollAreaRef.current?.scrollTo({ top: 0 });
+  }, [searchText, activeFilters, viewMode]);
+
   const filteredProviders = useMemo(() => {
     const query = searchText.trim().toLowerCase();
 
@@ -314,8 +326,12 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
   const hasActiveSearchOrFilters = Boolean(searchText) || activeFilters.languages.length > 0 || activeFilters.serviceTypes.length > 0;
 
   function handleClearAll() {
-    setSearchText("");
-    setActiveFilters({ languages: [], serviceTypes: [] });
+    resetSearchText();
+    updateSearchParams((params) => {
+      params.delete("q");
+      params.delete("language");
+      params.delete("serviceType");
+    });
   }
 
   return (
@@ -330,13 +346,14 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           <input
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
+            onBlur={commitSearchText}
             placeholder="Search by name, address, service type, or description"
             className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 max-sm:text-ellipsis"
           />
           {searchText ? (
             <button
               type="button"
-              onClick={() => setSearchText("")}
+              onClick={clearSearchText}
               className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               aria-label="Clear search"
             >
@@ -350,7 +367,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             label="Languages"
             options={languageOptions}
             selected={activeFilters.languages}
-            onChange={(values) => setActiveFilters((previous) => ({ ...previous, languages: values }))}
+            onChange={(values) => setSelectedLanguages(values)}
             isOpen={openFilterKey === "languages"}
             onToggle={() => setOpenFilterKey((current) => (current === "languages" ? null : "languages"))}
           />
@@ -358,7 +375,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
             label="Service Types"
             options={serviceTypeOptions}
             selected={activeFilters.serviceTypes}
-            onChange={(values) => setActiveFilters((previous) => ({ ...previous, serviceTypes: values }))}
+            onChange={(values) => setSelectedServiceTypes(values)}
             isOpen={openFilterKey === "serviceTypes"}
             onToggle={() => setOpenFilterKey((current) => (current === "serviceTypes" ? null : "serviceTypes"))}
             align="right"
