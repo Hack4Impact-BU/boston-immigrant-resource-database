@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
+import { matchesLanguageFilter } from "@/lib/language-filter";
 import { ChevronDown, List, LoaderCircle, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { buildProviderSummaryBase, createElement as createPopupElement } from "@/components/marketing/map-popup-dom";
@@ -375,10 +376,7 @@ export default function MapPage() {
         .map((value) => value.trim())
         .filter(Boolean);
       const matchesProvider = providerFilter.length === 0 || providerFilter.includes(providerName);
-      const matchesLanguage =
-        languageFilter.length === 0 ||
-        languageFilter.some((language) => serviceLanguages.includes(language)) ||
-        serviceLanguages.includes("All Languages");
+      const matchesLanguage = matchesLanguageFilter(languageFilter, serviceLanguages);
       const matchesServiceType =
         serviceTypeFilter.length === 0 || serviceTypeFilter.some((type) => serviceTypes.includes(type));
       const matchesStatus = statusFilter.length === 0 || statusFilter.includes(service.status);

@@ -9,6 +9,7 @@ import { splitServiceTypes } from "@/components/marketing/providers/service-type
 import { Input } from "@/components/ui/input";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
 import { SelectAllButton } from "@/components/ui/select-all-button";
+import { matchesLanguageFilter } from "@/lib/language-filter";
 import { cn } from "@/lib/utils";
 import type { Provider } from "@/app/api/airtable";
 
@@ -293,10 +294,7 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
     const query = searchText.trim().toLowerCase();
 
     return providers.filter((provider) => {
-      if (activeFilters.languages.length > 0) {
-        const matchesLanguage = activeFilters.languages.some((language) => provider.language_support.includes(language));
-        if (!matchesLanguage) return false;
-      }
+      if (!matchesLanguageFilter(activeFilters.languages, provider.language_support)) return false;
 
       if (activeFilters.serviceTypes.length > 0) {
         const providerServiceTypes = splitServiceTypes(provider.service_types);
