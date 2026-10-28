@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { RedirectIfSignedIn } from "@/features/auth/redirect-if-signed-in";
 import { LoginForm } from "@/features/auth/login/login-form";
 
 export default function Login() {
     return (
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f7fb] px-6 py-12">
+            <RedirectIfSignedIn />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(72,128,199,0.12),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(93,174,255,0.12),transparent_30%)]" />
             <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-white/70 to-transparent" />
 

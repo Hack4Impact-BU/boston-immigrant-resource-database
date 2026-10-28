@@ -2,9 +2,14 @@
 
 import { useSignIn } from "@clerk/nextjs/legacy";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const AFTER_SIGN_IN_PATH = "/map";
+import { isSessionExistsError } from "@/features/auth/auth-helpers";
+
+import { AFTER_SIGN_IN_PATH, setLoginFormBusy } from "../after-sign-in";
+
+// How long the form stays busy once someone is on their way to the next page, in case that page never opens.
+const FORM_RELEASE_DELAY_MS = 15_000;
 
 const SIGN_IN_ERROR_MESSAGES = {
 	loading: "Sign in is still loading. Please try again in a moment.",
@@ -111,6 +116,16 @@ export function useClerkSignIn() {
 	const [verificationFactor, setVerificationFactor] = useState<VerificationFactor>();
 	const [isSigningIn, setIsSigningIn] = useState(false);
 	const isSigningInRef = useRef(false);
+	const isLeavingRef = useRef(false);
+	const releaseTimerRef = useRef<number | undefined>(undefined);
+
+	useEffect(
+		() => () => {
+			window.clearTimeout(releaseTimerRef.current);
+			setLoginFormBusy(false);
+		},
+		[],
+	);
 
 	function getLoadedClerk() {
 		if (!isLoaded || !setActive || !signIn) {
@@ -127,13 +142,54 @@ export function useClerkSignIn() {
 
 		isSigningInRef.current = true;
 		setIsSigningIn(true);
+		setLoginFormBusy(true);
 
 		return true;
 	}
 
 	function endSigningInAction() {
+		// Once someone is on their way to the next page the form stays busy. The page takes a moment to open (the middleware looks up
+		// their access first), and pressing Sign In again in that moment only gets "You're already signed in." from Clerk.
+		if (isLeavingRef.current) {
+			return;
+		}
+
 		isSigningInRef.current = false;
 		setIsSigningIn(false);
+		setLoginFormBusy(false);
+	}
+
+	// Sends a signed-in person on to the next page, and keeps the form busy until it opens.
+	function goToAfterSignInPage() {
+		isLeavingRef.current = true;
+		isSigningInRef.current = true;
+		setIsSigningIn(true);
+		setLoginFormBusy(true);
+
+		window.clearTimeout(releaseTimerRef.current);
+		releaseTimerRef.current = window.setTimeout(() => {
+			isLeavingRef.current = false;
+			endSigningInAction();
+		}, FORM_RELEASE_DELAY_MS);
+
+		router.replace(AFTER_SIGN_IN_PATH);
+		router.refresh();
+	}
+
+	// Clerk refuses to sign anyone in when this browser already has a signed-in session, and says "You're already signed in.". That
+	// happens when the sign-in page was left open (or came back with the Back button) after signing in, in this tab or another one, or
+	// when Sign In is pressed again while the next page is still opening. The person is signed in, so what they need is the next page
+	// and not that message.
+	async function forwardIfAlreadySignedIn<T>(action: () => Promise<T>) {
+		try {
+			return await action();
+		} catch (error) {
+			if (!isSessionExistsError(error)) {
+				throw error;
+			}
+
+			goToAfterSignInPage();
+		}
 	}
 
 	async function sendVerificationCode(factor: VerificationFactor) {
@@ -161,8 +217,7 @@ export function useClerkSignIn() {
 		}
 
 		await setActive({ session: sessionId });
-		router.push(AFTER_SIGN_IN_PATH);
-		router.refresh();
+		goToAfterSignInPage();
 	}
 
 	async function startVerificationStep(factors: AvailableSecondFactor[] | null | undefined) {
@@ -370,13 +425,13 @@ export function useClerkSignIn() {
 		isPasswordResetCodeVerified,
 		isSigningIn,
 		passwordResetFactor,
-		requestPasswordResetCode,
-		resendClientTrustCode,
-		resendPasswordResetCode,
-		resetPassword,
+		requestPasswordResetCode: (identifier: string) => forwardIfAlreadySignedIn(() => requestPasswordResetCode(identifier)),
+		resendClientTrustCode: () => forwardIfAlreadySignedIn(resendClientTrustCode),
+		resendPasswordResetCode: () => forwardIfAlreadySignedIn(resendPasswordResetCode),
+		resetPassword: (input: ResetPasswordInput) => forwardIfAlreadySignedIn(() => resetPassword(input)),
 		restartSignIn,
-		signInWithPassword,
-		verifyPasswordResetCode,
-		verifyClientTrustCode,
+		signInWithPassword: (input: SignInWithPasswordInput) => forwardIfAlreadySignedIn(() => signInWithPassword(input)),
+		verifyPasswordResetCode: (code: string) => forwardIfAlreadySignedIn(() => verifyPasswordResetCode(code)),
+		verifyClientTrustCode: (code: string) => forwardIfAlreadySignedIn(() => verifyClientTrustCode(code)),
 	};
 }
