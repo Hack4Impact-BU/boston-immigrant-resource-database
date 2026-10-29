@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Globe, Mail, MapPin, Pencil, Phone, Plus } from "lucide-react";
 
 import Sidebar from "@/components/marketing/Sidebar";
+import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getTableSchema, getUserProviderId, getUserRole } from "@/lib/airtable";
@@ -19,6 +20,22 @@ const STATUS_FALLBACK_COLOR = "#cbd5e1";
 // Same look as the Email and Register buttons in Service Details on Search Services.
 const SERVICE_ACTION_BUTTON_CLASS =
   "inline-flex items-center justify-center rounded-md bg-[#4c8cc9] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3d77b6]";
+
+// The service types on this page are links. A provider's own go to the Providers page, with that service type chosen in its filter.
+// A service's go to Search Services, with it chosen there: a provider's service types and its services' are separate fields in
+// Airtable, so a service can have a type its provider doesn't list, and the Providers page has no filter for a type that no provider
+// lists. Search Services builds its filter from the services, so it always has the type. (prefetch is off: there can be dozens of
+// these on a page, and each would otherwise have the page it goes to prefetched.)
+const SERVICE_TYPE_LINK_CLASS =
+  "max-w-full rounded-full bg-sky-50 text-xs font-medium text-sky-700 transition-colors [overflow-wrap:anywhere] hover:bg-sky-100 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600";
+
+function getProvidersWithServiceTypeHref(serviceType: string) {
+  return `/providers?${new URLSearchParams({ serviceType }).toString()}`;
+}
+
+function getServicesWithServiceTypeHref(serviceType: string) {
+  return `/map?${new URLSearchParams({ serviceType }).toString()}`;
+}
 
 // A registration link only counts if it is a real web address (http or https). Anything else that ends up in the Link field (no
 // "https://", another kind of link, stray text) is ignored instead of becoming a button that goes nowhere.
@@ -67,6 +84,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
   // one doesn't clear the other) must not see this button either.
   const canWrite = viewerRole === "Provider" || viewerRole === "Admin";
   const canEditThisProvider = canWrite && (linkedProviderId === provider.id || viewerRole === "Admin");
+  const providerServiceTypes = splitServiceTypes(provider.service_types);
   const providerMapEmbedUrl =
     provider.latitude != null && provider.longitude != null
       ? buildOpenStreetMapEmbedUrl(provider.latitude, provider.longitude)
@@ -159,15 +177,18 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
               <p className="mt-5 break-words text-xs text-slate-500">{provider.language_support.join(" · ")}</p>
             ) : null}
 
-            {provider.service_types ? (
+            {providerServiceTypes.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {provider.service_types.split(", ").map((serviceType) => (
-                  <span
+                {providerServiceTypes.map((serviceType) => (
+                  <Link
                     key={serviceType}
-                    className="max-w-full rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
+                    href={getProvidersWithServiceTypeHref(serviceType)}
+                    prefetch={false}
+                    title="Show all providers with this service type"
+                    className={`${SERVICE_TYPE_LINK_CLASS} px-2.5 py-1`}
                   >
                     {serviceType}
-                  </span>
+                  </Link>
                 ))}
               </div>
             ) : null}
@@ -259,7 +280,8 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                 // card. A service with no description has Edit and Delete on the row of types instead, and with neither they get a row
                 // of their own. On a phone the rows simply stack, and Edit and Delete are a footer, right-aligned under the description.
                 // The price of the wider description is longer lines than WCAG recommends at Level AAA (80 characters).
-                const hasTypes = Boolean(service.service_types);
+                const serviceTypes = splitServiceTypes(service.service_types);
+                const hasTypes = serviceTypes.length > 0;
                 const hasDescription = Boolean(service.description);
                 const emailRegisterButtons =
                   contactEmail || registerUrl ? (
@@ -319,13 +341,16 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                     {hasTypes ? (
                       <div className="mt-2 flex items-end gap-x-3 max-sm:flex-col max-sm:items-stretch max-sm:gap-y-3 sm:gap-x-6">
                         <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          {service.service_types.split(", ").map((serviceType) => (
-                            <span
+                          {serviceTypes.map((serviceType) => (
+                            <Link
                               key={serviceType}
-                              className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
+                              href={getServicesWithServiceTypeHref(serviceType)}
+                              prefetch={false}
+                              title="Show all services with this service type"
+                              className={`${SERVICE_TYPE_LINK_CLASS} px-2.5 py-0.5`}
                             >
                               {serviceType}
-                            </span>
+                            </Link>
                           ))}
                         </div>
                         {!hasDescription ? editDeleteButtons : null}
