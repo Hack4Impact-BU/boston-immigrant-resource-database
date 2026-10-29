@@ -85,11 +85,15 @@ export function useUrlValue<T extends string>(name: string, allowed: readonly T[
  */
 export function useUrlList(name: string, validOptions?: readonly string[]) {
   const searchParams = useSearchParams();
-  const fromAddress = useMemo(() => searchParams.getAll(name), [name, searchParams]);
-  const values = useMemo(
-    () => (validOptions ? fromAddress.filter((value) => validOptions.includes(value)) : fromAddress),
-    [fromAddress, validOptions],
-  );
+  const fromAddress = searchParams.getAll(name);
+  const chosen = validOptions ? fromAddress.filter((value) => validOptions.includes(value)) : fromAddress;
+
+  // The same list, as the same array, for as long as what is in it is the same. Next hands out new search parameters whenever anything
+  // in the address changes (opening a service's details, say), so the list read out of them would be a new array every time, and
+  // anything that depends on it (the results, and with them the markers on the map, which are fitted again each time those change)
+  // would be redone for a change that had nothing to do with it.
+  const contents = JSON.stringify(chosen);
+  const values = useMemo(() => JSON.parse(contents) as string[], [contents]);
 
   const setValues = useCallback(
     (next: string[] | ((current: string[]) => string[])) => {

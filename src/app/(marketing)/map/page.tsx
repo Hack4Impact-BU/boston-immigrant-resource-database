@@ -257,6 +257,8 @@ function MapPageContent() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerLayerRef = useRef<LayerGroup | null>(null);
+  // Fitting the map to its markers, put off until the map has a size to fit them into (see the effect that draws the markers).
+  const pendingFitRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -571,6 +573,7 @@ function MapPageContent() {
     const visibleLocations = Array.from(locationsByProvider.values());
 
     markerLayer.clearLayers();
+    pendingFitRef.current = null;
 
     (async () => {
       const leafletModule = (await import("leaflet")) as typeof import("leaflet");
@@ -619,15 +622,32 @@ function MapPageContent() {
         return;
       }
 
-      if (markers.length === 1) {
-        map.setView([markers[0].coordinates.lat, markers[0].coordinates.lng], 12, {
-          animate: true,
-        });
+      const fitToMarkers = () => {
+        // Leaflet remembers the size the map had when it was last measured, which is 0 if that was while it was hidden (the details
+        // being open, say), and fits into that size, however big the map is now. So it measures it again first.
+        map.invalidateSize({ animate: false, pan: false });
+
+        if (markers.length === 1) {
+          map.setView([markers[0].coordinates.lat, markers[0].coordinates.lng], 12, {
+            animate: true,
+          });
+          return;
+        }
+
+        const bounds = L.latLngBounds(markers.map((entry) => [entry.coordinates.lat, entry.coordinates.lng] as [number, number]));
+        map.fitBounds(bounds.pad(0.18), { animate: true });
+      };
+
+      // While the service details are open the map is hidden, and has no size. Fitting the markers into no size zooms all the way out,
+      // to the whole world, and that is how the map would look when the details are closed again. So when the map can't be seen, the
+      // fit waits until it can (the effect on isDescriptionView below does it).
+      const container = map.getContainer();
+      if (!container.clientWidth || !container.clientHeight) {
+        pendingFitRef.current = fitToMarkers;
         return;
       }
 
-      const bounds = L.latLngBounds(markers.map((entry) => [entry.coordinates.lat, entry.coordinates.lng] as [number, number]));
-      map.fitBounds(bounds.pad(0.18), { animate: true });
+      fitToMarkers();
     })();
   }, [filteredServices, mapReady, openService, providerCoordinates]);
 
@@ -747,17 +767,22 @@ function MapPageContent() {
     },
   ];
 
+  // When the map shows again (the details closed), it needs to measure itself, and then do any fit that had to wait for that.
   useEffect(() => {
-    if (panelView !== "map" || !mapRef.current) {
+    if (isDescriptionView || !mapRef.current) {
       return;
     }
 
     const frameId = window.requestAnimationFrame(() => {
       mapRef.current?.invalidateSize();
+
+      const pendingFit = pendingFitRef.current;
+      pendingFitRef.current = null;
+      pendingFit?.();
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [panelView]);
+  }, [isDescriptionView]);
 
   return (
     <div className="flex min-h-dvh items-stretch bg-slate-100 p-0 m-0">
