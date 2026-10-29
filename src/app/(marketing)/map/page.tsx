@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
 import { PrintLogo, PrintPreview, PrintPreviewButton } from "@/components/marketing/print/PrintPreview";
+import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { matchesLanguageFilter } from "@/lib/language-filter";
 import { ChevronDown, List, LoaderCircle, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -310,6 +311,17 @@ function ServicePrintItem({
 // (from a shared link, say), when going Back would leave the page.
 const SERVICE_DETAILS_HISTORY_KEY = "serviceDetailsOpenedHere";
 
+// What changes in the address to show every service that offers one service type (a service type clicked in a service's details):
+// that is the only service type chosen, and the search, the other filters and the service whose details are open are taken out, so
+// that nothing is left to hide the other services that offer it. The sort and the list/map view stay as they are, like they do for Clear All.
+function showOnlyServiceType(params: URLSearchParams, serviceType: string) {
+  for (const name of ["q", "provider", "language", "status", "service"]) {
+    params.delete(name);
+  }
+
+  params.set("serviceType", serviceType);
+}
+
 // The search, the filters, the sort, the list/map view and the service whose details are open are all kept in the address
 // (?q=...&language=...&sort=...&view=map&service=...), so that this page can be bookmarked or shared, and Back brings it back as it was.
 // Changing the search, a filter, the sort or the view replaces the current history entry, so Back still leaves the page in one step.
@@ -326,6 +338,8 @@ function MapPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const resultsListRef = useRef<HTMLDivElement>(null);
   const selectedServiceId = searchParams.get("service");
   const panelView: "map" | "description" = selectedServiceId ? "description" : "map";
   // Below the xl breakpoint the list and the map don't fit side by side, so only one shows at a time and this picks which.
@@ -561,6 +575,36 @@ function MapPageContent() {
 
     updateSearchParams((params) => params.delete("service"));
   }, []);
+
+  // Clicking a service type in a service's details shows every service that offers it (see showOnlyServiceType), whichever of the list
+  // and the map the page was showing. It adds a history entry, as a link to another page would, so Back brings the details and the search
+  // and filters that were there back, and the search and filters it cleared are never lost. The results start from their top.
+  const showServicesOfServiceType = useCallback(
+    (serviceType: string) => {
+      resetSearch();
+      updateSearchParams((params) => showOnlyServiceType(params, serviceType), { push: true });
+      resultsListRef.current?.scrollTo({ top: 0 });
+    },
+    [resetSearch],
+  );
+
+  // The service types are links to the same page, so that a new tab can be opened on one (Ctrl/Cmd+click, middle click, or the context
+  // menu). A plain click is handled here instead, without loading the page again.
+  function getServiceTypeHref(serviceType: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    showOnlyServiceType(params, serviceType);
+
+    return `${pathname}?${params.toString()}`;
+  }
+
+  function handleServiceTypeClick(event: MouseEvent<HTMLAnchorElement>, serviceType: string) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    event.preventDefault();
+    showServicesOfServiceType(serviceType);
+  }
 
   // A service in the address that isn't in the results can't be shown, so it is taken out of the address. (Not before the data has
   // loaded: until then there are no results at all, and a link to a service would lose it.)
@@ -1126,7 +1170,7 @@ function MapPageContent() {
                 </div>
               </div>
 
-              <div className="h-full space-y-2 overflow-y-auto rounded-b-2xl pr-2">
+              <div ref={resultsListRef} className="h-full space-y-2 overflow-y-auto rounded-b-2xl pr-2">
                 {loading ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
                     <LoaderCircle className="h-4 w-4 animate-spin text-sky-600" />
@@ -1346,16 +1390,18 @@ function MapPageContent() {
                               <span className="mt-0.5 text-slate-400">◦</span>
                               <div className="min-w-0 flex flex-wrap items-center gap-1.5">
                                 <span className="font-bold">Service Types:</span>
-                                {selectedService.service_types
-                                  ? selectedService.service_types.split(", ").map((serviceType) => (
-                                      <span
-                                        key={serviceType}
-                                        className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
-                                      >
-                                        {serviceType}
-                                      </span>
-                                    ))
-                                  : null}
+                                {/* Each one shows every service that offers it (the filters are replaced by it): see showServicesOfServiceType. */}
+                                {splitServiceTypes(selectedService.service_types).map((serviceType) => (
+                                  <a
+                                    key={serviceType}
+                                    href={getServiceTypeHref(serviceType)}
+                                    onClick={(event) => handleServiceTypeClick(event, serviceType)}
+                                    title="Show all services with this service type"
+                                    className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                                  >
+                                    {serviceType}
+                                  </a>
+                                ))}
                               </div>
                             </div>
                           </div>
