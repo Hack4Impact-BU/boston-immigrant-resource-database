@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "lucide-react";
 
@@ -224,27 +224,138 @@ function ProviderCard({ provider }: { provider: Provider }) {
 // List view: one full-width row per provider. Same information as the card, but on wide screens
 // the description sits beside the name instead of underneath it, so far more of it is visible
 // before it's truncated. Below lg it stacks like a single full-width card.
-// The description is capped at 56ch, which is about 70 characters per line (a "ch" is the width of a zero, a little wider than the
-// average letter): beside the name it would otherwise run the whole rest of the row, over 150 characters per line on a wide screen,
-// which is too long to read comfortably.
+// How many service types a row shows, in the wide layout, before the rest become "+N more".
+const LIST_ROW_SERVICE_TYPES_SHOWN = 4;
+
+// In the wide layout the description shows as many lines as the row has height for, but never fewer than the six it always had,
+// nor more than twelve. The row is as tall as its tallest column, and when that is the languages and service types, or the name and
+// contact, the description would otherwise stop short of the bottom with empty space under it. A line is 22px (leading-[22px]),
+// and the wide layout starts at 68rem (the @[68rem] below).
+const DESCRIPTION_MIN_LINES = 6;
+const DESCRIPTION_MAX_LINES = 12;
+const DESCRIPTION_LINE_HEIGHT_PX = 22;
+const WIDE_ROW_REM = 68;
+
+// Sets --description-lines on a row of the list (the row's grid), which the description's line-clamp reads in the wide layout.
+// CSS can't work that out: it can limit a description to a number of lines, or to a height, but not to the number of lines that fit a
+// height that something else decides. It re-measures when the row, or the columns that decide its height, change size (the window
+// is resized, the name wraps differently, the font loads). The description never decides the height itself, when it has more lines
+// than fit: it shows no more than there is room for, so setting this can't make the row taller, and there is no loop.
+function useFittedDescriptionLines(rowRef: RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!row) {
+      return;
+    }
+
+    const identity = row.firstElementChild instanceof HTMLElement ? row.firstElementChild : null;
+    const sideDetails = row.querySelector<HTMLElement>("[data-row-side]");
+
+    function fit() {
+      if (!row) {
+        return;
+      }
+
+      const remInPixels = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+
+      // Narrower than the wide layout the description has the languages under it, and the clamp stays at six lines.
+      if (row.clientWidth < WIDE_ROW_REM * remInPixels) {
+        row.style.removeProperty("--description-lines");
+        return;
+      }
+
+      const roomInPixels = Math.max(identity?.offsetHeight ?? 0, sideDetails?.offsetHeight ?? 0);
+      const lines = Math.min(DESCRIPTION_MAX_LINES, Math.max(DESCRIPTION_MIN_LINES, Math.floor(roomInPixels / DESCRIPTION_LINE_HEIGHT_PX)));
+
+      row.style.setProperty("--description-lines", String(lines));
+    }
+
+    fit();
+
+    const observer = new ResizeObserver(fit);
+    observer.observe(row);
+    if (identity) observer.observe(identity);
+    if (sideDetails) observer.observe(sideDetails);
+
+    return () => observer.disconnect();
+  }, [rowRef]);
+}
+
+// A row of the list. The description is capped at 56ch, which is about 70 characters per line (a "ch" is the width of a zero, a little
+// wider than the average letter): beside the name it would otherwise run the whole rest of the row, over 150 characters per line on a
+// wide screen, which is too long to read comfortably. But a wide row would then be left with a lot of empty space after it, so when the
+// row is wide enough (it asks the row, not the window: the sidebar takes some of the window), the languages go to a column of their
+// own beside the description, with the provider's service types under them, and the row is in three columns:
+//
+//   name and contact  |  description  |  languages and service types
+//
+// Narrower than that nothing changes: the name and contact, then the description with the languages under it, and below 40rem the
+// whole row stacked. The service types only show in the wide layout (the first few of them, then "+N more"), where there is room for
+// them without making the row much taller, and the description there grows to the height of the row (see useFittedDescriptionLines).
 function ProviderRow({ provider }: { provider: Provider }) {
-  const hasDetails = Boolean(provider.description) || provider.language_support.length > 0;
+  const rowRef = useRef<HTMLDivElement>(null);
+  useFittedDescriptionLines(rowRef);
+
+  const serviceTypes = Array.from(new Set(splitServiceTypes(provider.service_types)));
+  const shownServiceTypes = serviceTypes.slice(0, LIST_ROW_SERVICE_TYPES_SHOWN);
+  const hiddenServiceTypeCount = serviceTypes.length - shownServiceTypes.length;
+  const hasLanguages = provider.language_support.length > 0;
+  const hasSideDetails = hasLanguages || serviceTypes.length > 0;
+  const columnLabel = "hidden text-[11px] font-semibold uppercase tracking-wide text-slate-500 @[68rem]:block";
 
   return (
-    <Link href={`/providers/${provider.id}`} className={cn(PROVIDER_LINK_CLASSES, "lg:flex-row lg:items-start lg:gap-6")}>
-      <ProviderIdentity provider={provider} className="lg:w-72 lg:shrink-0" listLayout showContact />
+    <Link href={`/providers/${provider.id}`} className={cn(PROVIDER_LINK_CLASSES, "@container")}>
+      <div
+        ref={rowRef}
+        className="grid grid-cols-1 gap-x-6 gap-y-3 @[40rem]:grid-cols-[18rem_minmax(0,1fr)] @[68rem]:grid-cols-[18rem_minmax(0,56ch)_minmax(15rem,1fr)]"
+      >
+        <ProviderIdentity provider={provider} className="self-start" listLayout showContact />
 
-      {hasDetails ? (
-        <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 lg:mt-0">
-          {provider.description ? (
-            <p className="line-clamp-6 max-w-[56ch] whitespace-pre-line text-sm leading-[22px] text-slate-600">{provider.description}</p>
-          ) : null}
+        {provider.description || hasSideDetails ? (
+          // One column of its own up to the wide layout, and from there its two parts are columns of the row (display: contents).
+          <div className="flex min-w-0 flex-col gap-2 @[68rem]:contents">
+            {/* self-start in the wide layout, where the description is a column of the row: a grid item stretches to the height of the row, and
+                a box taller than its six lines shows the lines after the ellipsis that line-clamp cuts it off at. */}
+            {provider.description ? (
+              <p className="line-clamp-6 max-w-[56ch] whitespace-pre-line text-sm leading-[22px] text-slate-600 @[68rem]:self-start @[68rem]:[-webkit-line-clamp:var(--description-lines,6)]">
+                {provider.description}
+              </p>
+            ) : null}
 
-          {provider.language_support.length > 0 ? (
-            <p className="truncate text-[13px] text-slate-500">{provider.language_support.join(" · ")}</p>
-          ) : null}
-        </div>
-      ) : null}
+            {/* self-start in the wide layout: a grid item stretches to the height of the row, and what useFittedDescriptionLines needs is
+                this column's own height. */}
+            {hasSideDetails ? (
+              <div data-row-side className="min-w-0 @[68rem]:col-start-3 @[68rem]:max-w-lg @[68rem]:self-start">
+                {hasLanguages ? (
+                  <div>
+                    <p className={columnLabel}>Languages</p>
+                    <p className="truncate text-[13px] text-slate-500 @[68rem]:mt-0.5 @[68rem]:overflow-visible @[68rem]:whitespace-normal @[68rem]:leading-5 @[68rem]:text-slate-600">
+                      {provider.language_support.join(" · ")}
+                    </p>
+                  </div>
+                ) : null}
+
+                {serviceTypes.length > 0 ? (
+                  <div className="hidden @[68rem]:mt-3 @[68rem]:block">
+                    <p className={columnLabel}>Services</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {shownServiceTypes.map((serviceType) => (
+                        <span
+                          key={serviceType}
+                          className="max-w-full rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 [overflow-wrap:anywhere]"
+                        >
+                          {serviceType}
+                        </span>
+                      ))}
+                      {hiddenServiceTypeCount > 0 ? <span className="px-1 py-0.5 text-xs text-slate-500">+{hiddenServiceTypeCount} more</span> : null}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </Link>
   );
 }
