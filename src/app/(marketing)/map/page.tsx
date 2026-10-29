@@ -1228,14 +1228,14 @@ function MapPageContent() {
                   // From md up the sidebar (w-55, always showing there) sits on top of this overlay, so the overlay starts at the sidebar's
                   // right edge (md:left-55) instead of the window's, or the left 220px of the details would be hidden behind it.
                   <div className="@container visible fixed inset-x-0 top-14 bottom-0 z-[55] md:left-55 overflow-y-auto overscroll-contain rounded-t-2xl bg-white px-4 py-4 xl:static xl:inset-auto xl:z-auto xl:h-full xl:shrink-0 xl:rounded-none xl:border-b xl:border-slate-200 lg:px-6">
-                    {/* One column about 34rem wide: the description in it reads about 70 characters per line (it was over 90 at the old 48rem
-                        width, and 80 is the most WCAG recommends). When the panel is wide enough (60rem and up, a container query on the
-                        panel itself) and the details are inside the card next to the list (xl and up), the map moves into a second column
-                        beside the facts and the description, so the extra width is used for more things side by side, not for longer
-                        lines. Below xl the details are a full-screen overlay, and the sidebar covers its left 14rem, so a wider layout there
-                        would only put more of it behind the sidebar. The header spans both columns, and the sections stay in the same
-                        order in the page either way. */}
-                    <div className="mx-auto flex max-w-[34rem] flex-col gap-6 pr-1 xl:@[60rem]:grid xl:@[60rem]:max-w-5xl xl:@[60rem]:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] xl:@[60rem]:items-start xl:@[60rem]:gap-x-10">
+                    {/* One column as wide as the content of Provider Details (max-w-3xl, the same), so that the two pages line up. The description
+                        in it runs up to about 110 characters per line, like the one on Provider Details, which is longer than the 80 WCAG recommends
+                        at Level AAA. When the panel is wide enough (60rem and up, a container query on the panel itself) and the details are inside
+                        the card next to the list (xl and up), the map moves into a second column beside the facts and the description (34rem wide,
+                        up to about 80 characters per line), so the extra width is used for more things side by side, not for longer lines. Below xl
+                        the details are a full-screen overlay, and the sidebar covers its left 14rem, so a wider layout there would only put more of
+                        it behind the sidebar. The header spans both columns, and the sections stay in the same order in the page either way. */}
+                    <div className="mx-auto flex max-w-3xl flex-col gap-6 pr-1 xl:@[60rem]:grid xl:@[60rem]:max-w-5xl xl:@[60rem]:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] xl:@[60rem]:items-start xl:@[60rem]:gap-x-10">
                       <div className="border-b border-slate-200 pb-4 xl:@[60rem]:col-span-2">
                         <div className="flex flex-wrap justify-end gap-2">
                           <a
