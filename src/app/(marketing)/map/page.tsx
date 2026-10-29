@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import Sidebar from "@/components/marketing/Sidebar";
 import { DropdownPanel } from "@/components/marketing/DropdownPanel";
+import { PrintLogo, PrintPreview, PrintPreviewButton } from "@/components/marketing/print/PrintPreview";
 import { matchesLanguageFilter } from "@/lib/language-filter";
 import { ChevronDown, List, LoaderCircle, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -224,7 +225,85 @@ const SORT_OPTIONS = [
 ] as const;
 type SortOption = (typeof SORT_OPTIONS)[number];
 
+// The sort menu's options, in the order the menu lists them (which is not the order of SORT_OPTIONS).
+const SORT_MENU_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "providerName-asc", label: "Provider Name (A → Z)" },
+  { value: "providerName-desc", label: "Provider Name (Z → A)" },
+  { value: "serviceName-asc", label: "Service Name (A → Z)" },
+  { value: "serviceName-desc", label: "Service Name (Z → A)" },
+  { value: "lastUpdated-desc", label: "Last Updated (Newest First)" },
+  { value: "lastUpdated-asc", label: "Last Updated (Oldest First)" },
+  { value: "status-asc", label: "Status (Most Available First)" },
+  { value: "status-desc", label: "Status (Least Available First)" },
+];
+
 const NARROW_VIEWS = ["list", "map"] as const;
+
+// A service card, for paper (see PrintPreview): what the card shows (the provider, the logo, the name, the status, where, the languages,
+// when it was updated), plus the whole description and the service types, which the card leaves out, and how to get in touch, since on paper
+// there is nothing to click. The date is the date itself, not "3 days ago", which would be wrong by the time anyone read it.
+function ServicePrintItem({
+  service,
+  languageFilter,
+  statusColors,
+}: {
+  service: ServiceWithProvider;
+  languageFilter: string[];
+  statusColors: Record<string, string>;
+}) {
+  const provider = service.providerDetails;
+  const languageList = provider?.language_support ?? [];
+  // The languages that were filtered by first, as on the card.
+  const languages = [...languageList.filter((language) => languageFilter.includes(language)), ...languageList.filter((language) => !languageFilter.includes(language))];
+  const serviceTypes = service.service_types
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const statusColor = statusColors[service.status] || "#cbd5e1";
+  const updated = service.last_modified ? new Date(service.last_modified) : null;
+  const updatedText = updated && !Number.isNaN(updated.getTime()) ? updated.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : null;
+  const contact = [updatedText ? `Updated ${updatedText}` : null, service.provider_email ? `Email: ${service.provider_email}` : null, service.link ? `Register: ${service.link}` : null].filter(Boolean);
+
+  return (
+    <li className="break-inside-avoid border-b border-slate-300 py-3 first:pt-0 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <PrintLogo src={provider?.logo} />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="break-words text-[15px] font-semibold leading-5">{service.name}</h2>
+              <p className="font-medium text-slate-800">{provider?.name ?? "Provider unavailable"}</p>
+            </div>
+
+            {service.status ? (
+              <span
+                className="shrink-0 rounded-sm px-1.5 py-0.5 text-[11px] font-medium"
+                style={{ backgroundColor: statusColor, color: getReadableTextColor(statusColor), WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
+              >
+                {service.status}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-0.5 break-words text-slate-700">{provider?.address || "Location unavailable"}</p>
+          {languages.length > 0 ? (
+            <p className="text-slate-700">
+              <span className="font-medium">Languages:</span> {languages.join(" · ")}
+            </p>
+          ) : null}
+          {serviceTypes.length > 0 ? (
+            <p className="break-words text-slate-700">
+              <span className="font-medium">Service types:</span> {serviceTypes.join(", ")}
+            </p>
+          ) : null}
+          {service.description ? <p className="mt-1 whitespace-pre-line break-words">{service.description}</p> : null}
+          {contact.length > 0 ? <p className="mt-1 break-all text-[12px] text-slate-600">{contact.join(" · ")}</p> : null}
+        </div>
+      </div>
+    </li>
+  );
+}
 
 // Opening a service's details adds a history entry (so that Back closes them), and leaves this in its state. That is how Close can
 // tell, even after the page has been reloaded, whether to go Back, or whether the page was opened with the details already showing
@@ -239,6 +318,7 @@ function MapPageContent() {
   const { text: search, setText: setSearch, commit: commitSearch, reset: resetSearch, clear: clearSearch } = useUrlText("q");
 
   const [openFilterMenu, setOpenFilterMenu] = useState<"provider" | "language" | "serviceType" | "status" | "sort" | null>(null);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   const [sortOption, setSortOption] = useUrlValue<SortOption>("sort", SORT_OPTIONS, "lastUpdated-desc");
   const [filterSearchText, setFilterSearchText] = useState<Record<string, string>>({});
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -446,6 +526,14 @@ function MapPageContent() {
 
     return sorted;
   }, [filteredServices, sortOption]);
+
+  // The items of the printout (see PrintPreview), made from a copy of the results that React brings up to date when it has a moment, so that
+  // typing in the search, or choosing a filter, doesn't wait for them.
+  const deferredServices = useDeferredValue(sortedFilteredServices);
+  const printItems = useMemo(
+    () => deferredServices.map((service) => <ServicePrintItem key={service.id} service={service} languageFilter={languageFilter} statusColors={statusColors} />),
+    [deferredServices, languageFilter, statusColors],
+  );
 
   const selectedService = useMemo(() => {
     return filteredServices.find((service) => service.id === selectedServiceId) ?? null;
@@ -980,22 +1068,23 @@ function MapPageContent() {
               }`}
             >
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3">
-                <p className="min-w-0 truncate text-sm text-slate-500">
+                {/* shrink-0: the count keeps all its words (the Sort chip's text is what gives way when there isn't room). */}
+                <p className="shrink-0 whitespace-nowrap text-sm text-slate-500">
                   Showing {sortedFilteredServices.length} of {services.length}
                 </p>
 
+                {/* Prints the services showing (the search and filters applied), in the order they are in. Icon-only, at every width:
+                    there is little room here beside the Sort chip. */}
+                <PrintPreviewButton
+                  onClick={() => setIsPrintPreviewOpen(true)}
+                  disabled={loading || sortedFilteredServices.length === 0}
+                  iconOnly
+                  className="ml-auto"
+                />
+
                 <div className="relative z-50 min-w-0 shrink" data-filter-menu-root>
                   {(() => {
-                    const sortOptions: { value: typeof sortOption; label: string }[] = [
-                      { value: "providerName-asc", label: "Provider Name (A → Z)" },
-                      { value: "providerName-desc", label: "Provider Name (Z → A)" },
-                      { value: "serviceName-asc", label: "Service Name (A → Z)" },
-                      { value: "serviceName-desc", label: "Service Name (Z → A)" },
-                      { value: "lastUpdated-desc", label: "Last Updated (Newest First)" },
-                      { value: "lastUpdated-asc", label: "Last Updated (Oldest First)" },
-                      { value: "status-asc", label: "Status (Most Available First)" },
-                      { value: "status-desc", label: "Status (Least Available First)" },
-                    ];
+                    const sortOptions = SORT_MENU_OPTIONS;
                     const isOpen = openFilterMenu === "sort";
                     const currentLabel = sortOptions.find((option) => option.value === sortOption)?.label ?? "Sort";
 
@@ -1376,6 +1465,27 @@ function MapPageContent() {
           </div>
         </section>
       </main>
+
+      <PrintPreview
+        isOpen={isPrintPreviewOpen}
+        onClose={() => setIsPrintPreviewOpen(false)}
+        title="Services"
+        filters={[
+          { label: "Search", value: search },
+          { label: "Provider", value: providerFilter.join(", ") },
+          { label: "Languages", value: languageFilter.join(", ") },
+          { label: "Service types", value: serviceTypeFilter.join(", ") },
+          { label: "Status", value: statusFilter.join(", ") },
+          { label: "Sorted by", value: SORT_MENU_OPTIONS.find((option) => option.value === sortOption)?.label ?? "" },
+        ]}
+        countText={
+          hasActiveSearchOrFilters
+            ? `${sortedFilteredServices.length} of ${services.length} services`
+            : `${sortedFilteredServices.length} service${sortedFilteredServices.length === 1 ? "" : "s"}`
+        }
+      >
+        {printItems}
+      </PrintPreview>
     </div>
   );
 }

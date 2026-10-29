@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Fragment, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { ChevronDown, LayoutGrid, List, Mail, MapPin, Phone, Search, X } from "lucide-react";
 
+import { PrintLogo, PrintPreview, PrintPreviewButton } from "@/components/marketing/print/PrintPreview";
 import ProvidersMap from "@/components/marketing/providers/ProvidersMap";
 import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { updateSearchParams, useUrlList, useUrlText, useUrlValue } from "@/lib/url-state";
@@ -360,12 +361,55 @@ function ProviderRow({ provider }: { provider: Provider }) {
   );
 }
 
+// The List format, for paper (see PrintPreview): the same two columns as a row of the list (who they are and how to reach them on the
+// left, what they do on the right), with the whole description. The logo is there, small, as in the list. The website and the service
+// types, which the list row leaves out, are here too: on paper there is nothing to click.
+function ProviderPrintRow({ provider }: { provider: Provider }) {
+  const phone = provider.primary_phone_number?.trim();
+  const email = provider.email?.trim();
+  const website = provider.website?.trim();
+  const serviceTypes = splitServiceTypes(provider.service_types);
+
+  return (
+    <li className="break-inside-avoid border-b border-slate-300 py-3 first:pt-0 last:border-b-0">
+      <div className="grid grid-cols-1 gap-x-5 gap-y-1.5 sm:grid-cols-[2.9in_minmax(0,1fr)]">
+        <div className="flex items-start gap-3">
+          <PrintLogo src={provider.logo} />
+
+          <div className="min-w-0 flex-1">
+            <h2 className="break-words text-[15px] font-semibold leading-5">{provider.name}</h2>
+            <p className="mt-0.5 break-words text-slate-700">{provider.address || "Location not listed"}</p>
+            {phone ? <p className="break-words text-slate-700">Phone: {phone}</p> : null}
+            {email ? <p className="break-words text-slate-700">Email: {email}</p> : null}
+            {website ? <p className="break-all text-slate-700">Website: {website}</p> : null}
+          </div>
+        </div>
+
+        <div className="min-w-0 space-y-1">
+          {provider.description ? <p className="whitespace-pre-line break-words">{provider.description}</p> : null}
+          {provider.language_support.length > 0 ? (
+            <p className="text-slate-700">
+              <span className="font-medium">Languages:</span> {provider.language_support.join(" · ")}
+            </p>
+          ) : null}
+          {serviceTypes.length > 0 ? (
+            <p className="break-words text-slate-700">
+              <span className="font-medium">Services:</span> {serviceTypes.join(", ")}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 export default function ProvidersGrid({ providers }: { providers: Provider[] }) {
   // The search, the filters and the view are kept in the address (?q=...&language=...&serviceType=...&view=map), so that this page can
   // be bookmarked or shared, and Back (from a provider's page, say) brings it back as it was. Changing them replaces the current history
   // entry instead of adding one, so Back still leaves the page in one step.
   const { text: searchText, setText: setSearchText, commit: commitSearchText, reset: resetSearchText, clear: clearSearchText } = useUrlText("q");
   const [openFilterKey, setOpenFilterKey] = useState<FilterKey | null>(null);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   const [viewMode, setViewMode] = useUrlValue<ViewMode>("view", VIEW_MODES, "grid");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -433,6 +477,11 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
       return true;
     });
   }, [providers, activeFilters, searchText]);
+
+  // The rows of the printout (see PrintPreview), made from a copy of the results that React brings up to date when it has a moment, so that
+  // typing in the search, or choosing a filter, doesn't wait for them.
+  const deferredProviders = useDeferredValue(filteredProviders);
+  const printRows = useMemo(() => deferredProviders.map((provider) => <ProviderPrintRow key={provider.id} provider={provider} />), [deferredProviders]);
 
   const hasActiveSearchOrFilters = Boolean(searchText) || activeFilters.languages.length > 0 || activeFilters.serviceTypes.length > 0;
 
@@ -540,11 +589,16 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
 
       {/* How many organizations are showing, just above the results (like the count on Search Services), so it reads as being about
           the list below the search and filters. */}
-      <p className="mt-3 shrink-0 text-sm text-slate-600 sm:mt-4">
-        {hasActiveSearchOrFilters
-          ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
-          : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
-      </p>
+      <div className="mt-3 flex shrink-0 items-center justify-between gap-3 sm:mt-4">
+        <p className="min-w-0 text-sm text-slate-600">
+          {hasActiveSearchOrFilters
+            ? `Showing ${filteredProviders.length} of ${providers.length} organizations`
+            : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"} in the BIRD directory`}
+        </p>
+
+        {/* Prints whatever is showing (the search and filters applied), as a list, whichever view is on. */}
+        <PrintPreviewButton onClick={() => setIsPrintPreviewOpen(true)} disabled={filteredProviders.length === 0} />
+      </div>
 
       {/* The only part that scrolls, in a frame. For the cards the frame is an outlined panel with no fill (a 1px light-blue border, like
           the search box and filters, plus a very soft shadow that only shows outside the edge), so cards scrolling out of the top
@@ -600,6 +654,24 @@ export default function ProvidersGrid({ providers }: { providers: Provider[] }) 
           )}
         </div>
       </div>
+
+      <PrintPreview
+        isOpen={isPrintPreviewOpen}
+        onClose={() => setIsPrintPreviewOpen(false)}
+        title="Providers"
+        filters={[
+          { label: "Search", value: searchText },
+          { label: "Languages", value: activeFilters.languages.join(", ") },
+          { label: "Service types", value: activeFilters.serviceTypes.join(", ") },
+        ]}
+        countText={
+          hasActiveSearchOrFilters
+            ? `${filteredProviders.length} of ${providers.length} organizations`
+            : `${filteredProviders.length} organization${filteredProviders.length === 1 ? "" : "s"}`
+        }
+      >
+        {printRows}
+      </PrintPreview>
     </div>
   );
 }

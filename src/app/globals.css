@@ -181,3 +181,11 @@ body {
     padding-top: var(--mobile-header-offset, 4.5rem) !important;
   }
 }
+
+/* Printing: only the print preview (PrintPreview, marked with data-print-root) prints, as a plain document. Everything else on the page
+   (the sidebar, the search and filters, the box the list scrolls in) is left out, so the whole list prints and not just what shows. */
+@media print {
+  body > *:not([data-print-root]) {
+    display: none !important;
+  }
+}
