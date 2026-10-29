@@ -311,11 +311,13 @@ function ServicePrintItem({
 // (from a shared link, say), when going Back would leave the page.
 const SERVICE_DETAILS_HISTORY_KEY = "serviceDetailsOpenedHere";
 
-// What changes in the address to show every service that offers one service type (a service type clicked in a service's details):
-// that is the only service type chosen, and the search, the other filters and the service whose details are open are taken out, so
-// that nothing is left to hide the other services that offer it. The sort and the list/map view stay as they are, like they do for Clear All.
+// What changes in the address to show the services that offer one service type (a service type clicked in a service's details): that is
+// the only service type chosen, and the search, the Provider filter and the service whose details are open are taken out, since they are
+// about the service that was being looked at, and would hide the others that offer the type. The Languages and Status filters stay: they
+// say what the person needs (a language, services that are open), not what they were looking at. That service passes them (it was
+// showing), so it is still in the results, which can't come up empty. The sort and the list/map view stay too, like for Clear All.
 function showOnlyServiceType(params: URLSearchParams, serviceType: string) {
-  for (const name of ["q", "provider", "language", "status", "service"]) {
+  for (const name of ["q", "provider", "service"]) {
     params.delete(name);
   }
 
@@ -576,9 +578,9 @@ function MapPageContent() {
     updateSearchParams((params) => params.delete("service"));
   }, []);
 
-  // Clicking a service type in a service's details shows every service that offers it (see showOnlyServiceType), whichever of the list
-  // and the map the page was showing. It adds a history entry, as a link to another page would, so Back brings the details and the search
-  // and filters that were there back, and the search and filters it cleared are never lost. The results start from their top.
+  // Clicking a service type in a service's details shows the services that offer it (see showOnlyServiceType), whichever of the list and
+  // the map the page was showing. It adds a history entry, as a link to another page would, so Back brings the details and the search and
+  // filters that were there back, and what it cleared is never lost. The results start from their top.
   const showServicesOfServiceType = useCallback(
     (serviceType: string) => {
       resetSearch();
@@ -867,7 +869,7 @@ function MapPageContent() {
   const filterButtons = [
     {
       key: "provider" as const,
-      label: "Provider",
+      label: "Providers",
       value: providerFilter,
       options: providerOptions,
       onToggle: (option: string) => toggleFilterValue(setProviderFilter, option),
@@ -883,7 +885,7 @@ function MapPageContent() {
     },
     {
       key: "serviceType" as const,
-      label: "Service Type",
+      label: "Service Types",
       value: serviceTypeFilter,
       options: serviceTypeOptions,
       onToggle: (option: string) => toggleFilterValue(setServiceTypeFilter, option),
@@ -977,6 +979,9 @@ function MapPageContent() {
                 />
               </div>
 
+              {/* The buttons' side padding is 2px less than it was below xl (and up to 1279px wide), to make up for the labels "Providers" and
+                  "Service Types" being a letter longer: without that the four buttons no longer fit on one line at windows about 430px wide
+                  (the largest iPhones) and 768px wide (an iPad upright), and "Status" went onto a line of its own. */}
               <div className="flex flex-wrap gap-1.5 self-start sm:gap-2 xl:self-auto xl:justify-end">
                 {filterButtons.map((filter) => {
                   const isOpen = openFilterMenu === filter.key;
@@ -997,7 +1002,7 @@ function MapPageContent() {
                       <button
                         type="button"
                         onClick={() => setOpenFilterMenu(isOpen ? null : filter.key)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3.5 sm:text-sm ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-1.5 py-2 text-xs font-medium shadow-sm transition-colors cursor-pointer sm:px-3 sm:text-sm xl:px-3.5 ${
                           selectedCount === 0
                             ? "border-[#a8d0e6] bg-white text-slate-700"
                             : "border-sky-200 bg-[#f7fbff] text-sky-800"
@@ -1390,13 +1395,14 @@ function MapPageContent() {
                               <span className="mt-0.5 text-slate-400">◦</span>
                               <div className="min-w-0 flex flex-wrap items-center gap-1.5">
                                 <span className="font-bold">Service Types:</span>
-                                {/* Each one shows every service that offers it (the filters are replaced by it): see showServicesOfServiceType. */}
+                                {/* Each one shows the services that offer it (it replaces the service type filter, and clears the search and the Provider filter): see
+                                    showServicesOfServiceType. */}
                                 {splitServiceTypes(selectedService.service_types).map((serviceType) => (
                                   <a
                                     key={serviceType}
                                     href={getServiceTypeHref(serviceType)}
                                     onClick={(event) => handleServiceTypeClick(event, serviceType)}
-                                    title="Show all services with this service type"
+                                    title="Show services with this service type"
                                     className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
                                   >
                                     {serviceType}
@@ -1518,7 +1524,7 @@ function MapPageContent() {
         title="Services"
         filters={[
           { label: "Search", value: search },
-          { label: "Provider", value: providerFilter.join(", ") },
+          { label: "Providers", value: providerFilter.join(", ") },
           { label: "Languages", value: languageFilter.join(", ") },
           { label: "Service types", value: serviceTypeFilter.join(", ") },
           { label: "Status", value: statusFilter.join(", ") },
