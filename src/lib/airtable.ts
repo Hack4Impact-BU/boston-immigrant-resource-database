@@ -693,8 +693,16 @@ export async function createUser(input: CreateUserInput): Promise<CreateUserResu
 	return { id: record.id };
 }
 
+// Set once the missing Airtable configuration has been reported, so that it is said once per server instance and not on every request.
+let hasReportedMissingAirtableConfig = false;
+
 export async function getUserAccessStatus(clerkUserId: string): Promise<UserAccessStatus> {
 	if (!hasAirtableConfig()) {
+		if (!hasReportedMissingAirtableConfig) {
+			hasReportedMissingAirtableConfig = true;
+			console.error("getUserAccessStatus: Airtable is not configured (AIRTABLE_API_KEY and AIRTABLE_BASE_ID), so no user's access status can be looked up.");
+		}
+
 		return "no config";
 	}
 
@@ -707,7 +715,12 @@ export async function getUserAccessStatus(clerkUserId: string): Promise<UserAcce
 			.all();
 
 		return chooseUserAccessStatus(records);
-	} catch {
+	} catch (error) {
+		// The user is sent on as if their access could not be determined ("error"), and this is the only record of why. It is one line
+		// (String(error): Airtable's errors are not Error objects, and say "message(CODE)[Http code N]" this way), and it is only written
+		// when the lookup fails, not on every request, which is what the old console.log of the status in the middleware was.
+		console.error(`getUserAccessStatus: the Airtable lookup failed for Clerk user ${clerkUserId}: ${String(error)}`);
+
 		return "error";
 	}
 }
