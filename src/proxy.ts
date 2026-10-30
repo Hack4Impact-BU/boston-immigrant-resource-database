@@ -62,7 +62,6 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   const accessStatus = await getUserAccessStatus(userId)
-  console.log(accessStatus)
 
   if (accessStatus !== 'approved') {
     if (openToEveryonePaths.has(pathname)) {
