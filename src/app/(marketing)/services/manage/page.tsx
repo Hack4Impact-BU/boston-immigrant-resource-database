@@ -5,6 +5,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { getProviderContext, getServicesForCurrentProvider } from "@/features/services/manage/provider-context";
 import { ProviderPicker } from "@/components/services/ProviderPicker";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
+import { EditServiceLink } from "@/components/services/EditServiceLink";
 import { ServiceUpdatedStatus } from "@/components/services/ServiceUpdatedStatus";
 import { getTableSchema } from "@/lib/airtable";
 import { getReadableTextColor } from "@/lib/colors";
@@ -87,12 +88,7 @@ export default async function ManageServicesPage() {
                     const hasDescription = Boolean(service.description);
                     const editDeleteButtons = (
                       <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
-                        <Link
-                          href={`/services/manage/${service.id}/edit`}
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                          Edit
-                        </Link>
+                        <EditServiceLink serviceId={service.id} serviceName={service.name} />
                         <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
                       </div>
                     );

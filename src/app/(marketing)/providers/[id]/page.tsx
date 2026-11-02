@@ -6,6 +6,7 @@ import { Globe, Mail, MapPin, Pencil, Phone, Plus } from "lucide-react";
 import Sidebar from "@/components/marketing/Sidebar";
 import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
+import { EditServiceLink } from "@/components/services/EditServiceLink";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getTableSchema, getUserProviderId, getUserRole } from "@/lib/airtable";
 import { getReadableTextColor } from "@/lib/colors";
@@ -310,12 +311,7 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                   ) : null;
                 const editDeleteButtons = canEditThisProvider ? (
                   <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
-                    <Link
-                      href={`/services/manage/${service.id}/edit`}
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      Edit
-                    </Link>
+                    <EditServiceLink serviceId={service.id} serviceName={service.name} />
                     <DeleteServiceButton serviceId={service.id} serviceName={service.name} />
                   </div>
                 ) : null;

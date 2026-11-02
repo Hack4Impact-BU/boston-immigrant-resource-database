@@ -64,6 +64,7 @@ export function DeleteServiceButton({ serviceId, serviceName }: DeleteServiceBut
         type="button"
         onClick={() => setIsConfirming(true)}
         aria-label={`Delete ${serviceName}`}
+        title="Delete service"
         className="rounded-md border border-slate-300 p-1.5 text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
       >
         <Trash2 size={14} />
