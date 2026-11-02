@@ -76,6 +76,8 @@ export interface Service {
   service_type_ids: string[];
   provider_email: string;
   provider_record_ID: string;
+  // When the service was last updated: the later of when it was last changed and when its provider last confirmed it is up to date
+  // (see getLastUpdatedValue).
   last_modified?: string;
 }
 
@@ -128,9 +130,7 @@ function getAttachmentUrl(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function getLastModifiedValue(record: AirtableRecord<FieldSet>) {
-  const value = record.get("Last modified time") ?? record.get("Last Modified");
-
+function toIsoDateString(value: unknown) {
   if (value instanceof Date) {
     return value.toISOString();
   }
@@ -141,6 +141,33 @@ function getLastModifiedValue(record: AirtableRecord<FieldSet>) {
   }
 
   return "";
+}
+
+function getLastModifiedValue(record: AirtableRecord<FieldSet>) {
+  return toIsoDateString(record.get("Last modified time") ?? record.get("Last Modified"));
+}
+
+// A date and time field on the Services table that the app writes when a provider marks a service up to date (Airtable's own "Last
+// modified time" can't be written to, and doesn't change when something is saved without changing it).
+const LAST_CONFIRMED_FIELD = "Last Confirmed";
+
+// The date a service shows as "Updated ...": the later of when it was last changed and when its provider last confirmed it is up to
+// date. Without a "Last Confirmed" value (nothing confirmed yet, or no such field) it is just when it was last changed.
+function getLastUpdatedValue(record: AirtableRecord<FieldSet>) {
+  const lastModified = getLastModifiedValue(record);
+  const lastConfirmed = toIsoDateString(record.get(LAST_CONFIRMED_FIELD));
+  const lastModifiedTime = Date.parse(lastModified);
+  const lastConfirmedTime = Date.parse(lastConfirmed);
+
+  if (Number.isNaN(lastConfirmedTime)) {
+    return lastModified;
+  }
+
+  if (Number.isNaN(lastModifiedTime)) {
+    return lastConfirmed;
+  }
+
+  return lastConfirmedTime > lastModifiedTime ? lastConfirmed : lastModified;
 }
 
 function getDisplayFieldValue(record: AirtableRecord<FieldSet>, fieldNames: string[]) {
@@ -243,7 +270,7 @@ function toService(r: AirtableRecord<FieldSet>): Service {
     status: r.get("Status") as string,
     link: r.get("Link") as string | undefined,
     provider_record_ID: providerRecordId,
-    last_modified: getLastModifiedValue(r),
+    last_modified: getLastUpdatedValue(r),
   };
 }
 
@@ -420,6 +447,19 @@ export async function updateService(serviceId: string, input: ServiceUpdateInput
   }
 
   await base("Services").update(serviceId, fields, { typecast: true });
+}
+
+/** Records that a provider has checked a service and it is up to date: sets its "Last Confirmed" date and time to now, and returns it. */
+export async function confirmService(serviceId: string): Promise<string> {
+  if (!process.env.AIRTABLE_API_KEY) {
+    throw new Error("AIRTABLE_API_KEY is not set.");
+  }
+
+  const confirmedAt = new Date().toISOString();
+
+  await base("Services").update(serviceId, { [LAST_CONFIRMED_FIELD]: confirmedAt }, { typecast: true });
+
+  return confirmedAt;
 }
 
 export async function getServiceById(id: string): Promise<Service | null> {

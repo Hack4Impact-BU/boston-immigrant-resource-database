@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 import { requireNonEmptySelection, requireNonEmptyString } from "@/features/auth/auth-helpers";
-import { createService, deleteService, getServiceById, updateService, type Service } from "@/app/api/airtable";
+import { confirmService, createService, deleteService, getServiceById, updateService, type Service } from "@/app/api/airtable";
 import { getUserProviderId, getUserRole } from "@/lib/airtable";
 
 export type SaveServiceFormInput = {
@@ -147,4 +147,38 @@ export async function deleteServiceAction(serviceId: string): Promise<void> {
   revalidatePath("/services/manage");
   revalidatePath("/map");
   revalidatePath(`/providers/${existingService.provider_record_ID}`);
+}
+
+export type MarkServiceUpToDateResult = { ok: true; confirmedAt: string } | { ok: false; message: string };
+
+// The reasons this can fail that the person can do something about (signed out, no permission, service gone) come back as a message to
+// show them; anything else (Airtable, say) is logged here, and they are only told to try again. It returns a result and doesn't throw,
+// because in production the message of an error thrown from a Server Action doesn't reach the browser.
+export async function markServiceUpToDateAction(serviceId: string): Promise<MarkServiceUpToDateResult> {
+  let existingService: Service;
+
+  try {
+    const context = await getAuthContext();
+    assertCanWrite(context);
+
+    existingService = await requireOwnedService(serviceId, context);
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : "Could not update this service." };
+  }
+
+  let confirmedAt: string;
+
+  try {
+    confirmedAt = await confirmService(serviceId);
+  } catch (error) {
+    console.error(`markServiceUpToDateAction: could not set Last Confirmed on service ${serviceId}: ${String(error)}`);
+
+    return { ok: false, message: "Couldn't save. Please try again." };
+  }
+
+  revalidatePath("/services/manage");
+  revalidatePath("/map");
+  revalidatePath(`/providers/${existingService.provider_record_ID}`);
+
+  return { ok: true, confirmedAt };
 }

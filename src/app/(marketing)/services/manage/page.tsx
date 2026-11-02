@@ -5,9 +5,10 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { getProviderContext, getServicesForCurrentProvider } from "@/features/services/manage/provider-context";
 import { ProviderPicker } from "@/components/services/ProviderPicker";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
+import { ServiceUpdatedStatus } from "@/components/services/ServiceUpdatedStatus";
 import { getTableSchema } from "@/lib/airtable";
 import { getReadableTextColor } from "@/lib/colors";
-import { formatRelativeUpdateDate } from "@/lib/dates";
+import { formatRelativeUpdateDate, isUpdatedToday } from "@/lib/dates";
 
 // What Search Services shows for a status that has no color in Airtable.
 const STATUS_FALLBACK_COLOR = "#cbd5e1";
@@ -119,7 +120,12 @@ export default async function ManageServicesPage() {
                             >
                               {service.status}
                             </span>
-                            <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                            <ServiceUpdatedStatus
+                              serviceId={service.id}
+                              serviceName={service.name}
+                              updatedLabel={formatRelativeUpdateDate(service.last_modified)}
+                              isUpdatedToday={isUpdatedToday(service.last_modified)}
+                            />
                           </div>
                         </div>
 
