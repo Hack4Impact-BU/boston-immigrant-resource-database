@@ -7,10 +7,11 @@ import Sidebar from "@/components/marketing/Sidebar";
 import { splitServiceTypes } from "@/components/marketing/providers/service-types";
 import { DeleteServiceButton } from "@/components/services/DeleteServiceButton";
 import { EditServiceLink } from "@/components/services/EditServiceLink";
+import { ServiceUpdatedStatus } from "@/components/services/ServiceUpdatedStatus";
 import { getAllServices, getProviderById } from "@/app/api/airtable";
 import { getTableSchema, getUserProviderId, getUserRole } from "@/lib/airtable";
 import { getReadableTextColor } from "@/lib/colors";
-import { formatRelativeUpdateDate } from "@/lib/dates";
+import { formatRelativeUpdateDate, isUpdatedToday } from "@/lib/dates";
 import { buildOpenStreetMapEmbedUrl } from "@/lib/openstreetmap";
 
 export const dynamic = "force-dynamic";
@@ -328,7 +329,17 @@ export default async function ProviderDetailsPage({ params }: ProviderDetailsPag
                           >
                             {service.status}
                           </span>
-                          <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                          {/* Whoever can edit the provider's services can also mark one up to date (see ServiceUpdatedStatus); everyone else sees the date. */}
+                          {canEditThisProvider ? (
+                            <ServiceUpdatedStatus
+                              serviceId={service.id}
+                              serviceName={service.name}
+                              updatedLabel={formatRelativeUpdateDate(service.last_modified)}
+                              isUpdatedToday={isUpdatedToday(service.last_modified)}
+                            />
+                          ) : (
+                            <p className="text-[13px] text-slate-500">{formatRelativeUpdateDate(service.last_modified)}</p>
+                          )}
                         </div>
                       </div>
                       {emailRegisterButtons}
