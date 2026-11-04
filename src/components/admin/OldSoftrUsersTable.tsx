@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateOldSoftrUserFieldAction } from "@/features/admin/old-softr-users/manage-old-softr-users";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 type FieldOptionColors = Record<string, string>;
 
@@ -449,6 +450,7 @@ export default function OldSoftrUsersTable({
             Clear All
           </button>
         ) : null}
+        <AdminResultCount shown={sortedUsers.length} total={users.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">

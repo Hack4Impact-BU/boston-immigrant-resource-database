@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { createServiceTypeAction, updateServiceTypeNameAction } from "@/features/admin/service-types/manage-service-types";
 import type { AdminServiceTypeRecord } from "@/lib/airtable";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 type ColumnField = "name" | "lastModified";
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -333,6 +334,9 @@ export default function ServiceTypesTable({ serviceTypes: initialServiceTypes }:
         >
           + Add Service Type
         </button>
+      </div>
+      <div className="flex shrink-0">
+        <AdminResultCount shown={sortedServiceTypes.length} total={serviceTypes.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">

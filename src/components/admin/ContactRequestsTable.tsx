@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateContactRequestFieldAction } from "@/features/admin/contact-requests/manage-contact-requests";
 import type { AdminContactRequestRecord, FieldOptionColors } from "@/lib/airtable";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 export type ContactRequestColumn = {
   field: string;
@@ -551,6 +552,7 @@ export default function ContactRequestsTable({
             Clear All
           </button>
         ) : null}
+        <AdminResultCount shown={sortedRequests.length} total={requests.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateFeedbackFieldAction } from "@/features/admin/feedback/manage-feedback";
 import type { AdminFeedbackRecord, FieldOptionColors } from "@/lib/airtable";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 export type FeedbackColumn = {
   field: string;
@@ -531,6 +532,7 @@ export default function FeedbackTable({
             Clear All
           </button>
         ) : null}
+        <AdminResultCount shown={sortedFeedback.length} total={feedback.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">

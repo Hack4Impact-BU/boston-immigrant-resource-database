@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateMouNoteAction } from "@/features/admin/mou-responses/manage-mou-notes";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 export type MouColumn = {
   field: string;
@@ -408,6 +409,7 @@ export default function MouResponsesTable({
             Clear All
           </button>
         ) : null}
+        <AdminResultCount shown={sortedRows.length} total={rows.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">

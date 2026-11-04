@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SelectAllButton } from "@/components/ui/select-all-button";
 import { updateUserFieldAction } from "@/features/admin/users/manage-users";
 import type { AdminUserRecord, FieldOptionColors, UpdateUserAsAdminInput } from "@/lib/airtable";
+import { AdminResultCount } from "@/components/admin/AdminResultCount";
 
 type EditableField = keyof UpdateUserAsAdminInput;
 type ColumnField = EditableField | "clerkUserId" | "providerId" | "createdTime";
@@ -492,6 +493,7 @@ export default function UsersTable({
             Clear All
           </button>
         ) : null}
+        <AdminResultCount shown={sortedUsers.length} total={users.length} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
