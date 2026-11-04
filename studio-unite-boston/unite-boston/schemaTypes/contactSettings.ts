@@ -8,7 +8,7 @@ export default {
       title: 'Contact Reasons',
       type: 'array',
       of: [{type: 'string'}],
-      initialValue: ['More information', 'Requesting Access'],
+      initialValue: ['More Information', 'Requesting Access'],
     },
     {
       name: 'contactMethods',

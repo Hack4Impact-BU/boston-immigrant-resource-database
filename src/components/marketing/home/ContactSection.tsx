@@ -11,10 +11,10 @@ import { cn } from "@/lib/utils";
 
 export default function ContactSection() {
   const [contactMethod, setContactMethod] = useState<string>("Email");
-  const [contactReason, setContactReason] = useState<string>("More information");
+  const [contactReason, setContactReason] = useState<string>("More Information");
   const [contactMethods, setContactMethods] = useState<string[]>(["Email", "Phone"]);
   const [contactReasons, setContactReasons] = useState<string[]>([
-    "More information",
+    "More Information",
     "Requesting Access"
   ]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -196,7 +196,7 @@ export default function ContactSection() {
               onClick={() => {
                 setStatus("idle");
                 setContactMethod("Email");
-                setContactReason("More information");
+                setContactReason("More Information");
               }}
             >
               Cancel
