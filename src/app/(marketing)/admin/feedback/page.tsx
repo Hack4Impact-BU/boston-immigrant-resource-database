@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import FeedbackTable, { type FeedbackColumn } from "@/components/admin/FeedbackTable";
 import { getAllFeedbackForAdmin, getTableSchema, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ export default async function FeedbackPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Support/Feedback Requests</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {feedback.length} entr{feedback.length === 1 ? "y" : "ies"} in the User Support / Feedback table.
+              {formatCount(feedback.length)} entr{feedback.length === 1 ? "y" : "ies"} in the User Support / Feedback table.
               Changes save automatically when you click away from a field.
             </p>
           </div>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import UsersTable from "@/components/admin/UsersTable";
 import { getAllUsersForAdmin, getUserFieldOptionColors, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export default async function ManageUsersPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Users</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {users.length} account{users.length === 1 ? "" : "s"} in the User table. Changes save automatically
+              {formatCount(users.length)} account{users.length === 1 ? "" : "s"} in the User table. Changes save automatically
               when you click away from a field.
             </p>
           </div>

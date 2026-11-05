@@ -5,6 +5,7 @@ import Sidebar from "@/components/marketing/Sidebar";
 import MouResponsesTable, { type MouColumn } from "@/components/admin/MouResponsesTable";
 import { fetchPublicSheetAsCsv, findHeaderByPrefix, parseSheetCsv } from "@/lib/googleSheets";
 import { getAllMouNotes, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +123,7 @@ export default async function MouResponsesPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">MOU Responses</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {rows.length} response{rows.length === 1 ? "" : "s"} from the BIRD MOU Google Form, read live from this{" "}
+              {formatCount(rows.length)} response{rows.length === 1 ? "" : "s"} from the BIRD MOU Google Form, read live from this{" "}
               <a
                 href={`https://docs.google.com/spreadsheets/d/${MOU_SHEET_ID}/`}
                 target="_blank"

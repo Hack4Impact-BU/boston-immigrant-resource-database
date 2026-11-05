@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import OldSoftrUsersTable, { type OldSoftrUserColumn } from "@/components/admin/OldSoftrUsersTable";
 import { getAllOldSoftrUsersForAdmin, getTableSchema, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function OldSoftrUsersPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Old Softr Users</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {oldSoftrUsers.length} legacy user{oldSoftrUsers.length === 1 ? "" : "s"} migrated from Softr.
+              {formatCount(oldSoftrUsers.length)} legacy user{oldSoftrUsers.length === 1 ? "" : "s"} migrated from Softr.
               Admin Notes save automatically when you click away from the field.
             </p>
           </div>

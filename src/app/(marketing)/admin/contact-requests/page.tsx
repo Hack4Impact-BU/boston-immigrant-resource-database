@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import ContactRequestsTable, { type ContactRequestColumn } from "@/components/admin/ContactRequestsTable";
 import { getAllContactUsRequestsForAdmin, getTableSchema, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ export default async function ManageContactRequestsPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Contact Us Requests</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {requests.length} request{requests.length === 1 ? "" : "s"} in the Contact Us Requests table. Changes
+              {formatCount(requests.length)} request{requests.length === 1 ? "" : "s"} in the Contact Us Requests table. Changes
               save automatically when you click away from a field.
             </p>
           </div>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/marketing/Sidebar";
 import ServiceTypesTable from "@/components/admin/ServiceTypesTable";
 import { getAllServiceTypesForAdmin, getUserRole } from "@/lib/airtable";
+import { formatCount } from "@/lib/format-count";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function ServiceTypesPage() {
           <div className="shrink-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Manage Service Types</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {serviceTypes.length} service type{serviceTypes.length === 1 ? "" : "s"}.
+              {formatCount(serviceTypes.length)} service type{serviceTypes.length === 1 ? "" : "s"}.
               Changes save automatically when you click away from a field.
             </p>
           </div>
