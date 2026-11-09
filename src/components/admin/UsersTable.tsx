@@ -12,6 +12,10 @@ type ColumnField = EditableField | "clerkUserId" | "providerId" | "createdTime";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 const ROLE_OPTIONS = ["Admin", "Provider", "Viewer"] as const;
+// What a drop-down says for "no value": the blank option of a select in a row, and, for the Role filter, the option that matches a user
+// with no role (a user can have none). They are the same words so that the filter and the cells agree.
+const NO_VALUE_LABEL = "— (none)";
+const ROLE_FILTER_OPTIONS = [...ROLE_OPTIONS, NO_VALUE_LABEL] as const;
 const ACCESS_OPTIONS = ["approved", "pending", "rejected"] as const;
 
 // Order matches what's asked: Role/Access moved to sit right after Last Name.
@@ -63,6 +67,13 @@ function formatCreatedTime(isoString: string): string {
 function getDisplayValue(user: AdminUserRecord, field: ColumnField): string {
   if (field === "createdTime") return formatCreatedTime(user.createdTime);
   return user[field] ?? "";
+}
+
+// What a user is matched by in a filter: their value, which for a user with no role would be "", so that is the "no value" option instead.
+function getFilterValue(user: AdminUserRecord, field: ColumnField): string {
+  const value = getDisplayValue(user, field);
+
+  return field === "userRole" && value === "" ? NO_VALUE_LABEL : value;
 }
 
 // Simple relative-luminance check so text stays readable against both Airtable's
@@ -233,7 +244,7 @@ function EditableSelectCell({
         title={value}
         className="w-full cursor-pointer truncate rounded-md border border-transparent px-2 py-1.5 pr-14 text-sm font-medium outline-none transition-colors hover:border-slate-200 focus:border-sky-300 focus:ring-1 focus:ring-sky-200"
       >
-        {allowBlank ? <option value="">— (none)</option> : null}
+        {allowBlank ? <option value="">{NO_VALUE_LABEL}</option> : null}
         {options.map((option) => (
           <option
             key={option}
@@ -380,7 +391,7 @@ export default function UsersTable({
     if (activeEntries.length === 0) return users;
 
     return users.filter((user) =>
-      activeEntries.every(([field, values]) => values.includes(getDisplayValue(user, field as ColumnField))),
+      activeEntries.every(([field, values]) => values.includes(getFilterValue(user, field as ColumnField))),
     );
   }, [users, activeFilters]);
 
@@ -468,7 +479,7 @@ export default function UsersTable({
       <div className="flex shrink-0 flex-wrap gap-2">
         <FilterDropdown
           label="Role"
-          options={ROLE_OPTIONS}
+          options={ROLE_FILTER_OPTIONS}
           optionColors={fieldColors.userRole ?? {}}
           selected={activeFilters.userRole ?? []}
           onChange={(values) => setActiveFilters((previous) => ({ ...previous, userRole: values }))}
